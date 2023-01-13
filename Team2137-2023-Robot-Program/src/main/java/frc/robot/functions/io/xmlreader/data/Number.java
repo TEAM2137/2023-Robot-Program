@@ -80,8 +80,8 @@ public class Number extends Entity {
     }
 
     @Override
-    public NetworkTable pullFromNetworkTable(NetworkTable instance) {
-        NetworkTable table = super.pullFromNetworkTable(instance);
+    public NetworkTable pullFromNetworkTable() {
+        NetworkTable table = super.pullFromNetworkTable();
 
         setValue(table.getEntry("Value").getDouble(getValue()));
 
@@ -89,8 +89,8 @@ public class Number extends Entity {
     }
 
     @Override
-    public NetworkTable removeFromNetworkTable(NetworkTable instance) {
-        NetworkTable table = super.removeFromNetworkTable(instance);
+    public NetworkTable removeFromNetworkTable() {
+        NetworkTable table = super.removeFromNetworkTable();
 
         table.getEntry("Value").unpublish();
 

@@ -77,8 +77,8 @@ public class Threshold extends Entity {
     }
 
     @Override
-    public NetworkTable pullFromNetworkTable(NetworkTable instance) {
-        NetworkTable table = super.pullFromNetworkTable(instance);
+    public NetworkTable pullFromNetworkTable() {
+        NetworkTable table = super.pullFromNetworkTable();
 
         setUpperValue(table.getEntry("High").getDouble(getUpperValue()));
         setLowerValue(table.getEntry("Low").getDouble(getLowerValue()));
@@ -87,8 +87,8 @@ public class Threshold extends Entity {
     }
 
     @Override
-    public NetworkTable removeFromNetworkTable(NetworkTable instance) {
-        NetworkTable table = super.removeFromNetworkTable(instance);
+    public NetworkTable removeFromNetworkTable() {
+        NetworkTable table = super.removeFromNetworkTable();
 
         table.getEntry("High").unpublish();
         table.getEntry("Low").unpublish();

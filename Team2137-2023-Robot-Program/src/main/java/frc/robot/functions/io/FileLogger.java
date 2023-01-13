@@ -22,10 +22,13 @@ import frc.robot.library.units.Time2d;
 import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /**
  * FileLogger class - Filelogger creates a local text file on the roborio that then can be read from a laptop
@@ -65,7 +68,6 @@ public class FileLogger {
     private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("MMdd_HHmmss_SSS");
     private String tagString = "";
 
-    private static NetworkTable smartDashboard;
     private static ScheduledThreadPoolExecutor flushExecutor;
 
     /**
@@ -212,6 +214,11 @@ public class FileLogger {
         write(toWrite + "\n");
     }
 
+    public void runnableLogAction(int minDebug, Runnable run) {
+        if (minDebug >= debug)
+            run.run();
+    }
+
     /**
      * List all the files in the Log directory
      * Then if there is more than the max log amount then delete
@@ -227,32 +234,6 @@ public class FileLogger {
             for (int i = maxLogFiles; i < fileList.length; i++) {
                 fileList[i].delete();
             }
-        }
-    }
-
-    /**
-     * Method to manually log the current network table (Preferably the SmartDashboard)
-     * (The method is recursive and probably should not be run by the main thread.)
-     */
-    public synchronized void logNetworkTables() {
-        printNetworkTable(smartDashboard, 0);
-    }
-
-    /**
-     * Private function that does the work for @logNetworkTables
-     * @param table - Current table to be printed
-     * @param layer - Recursion depth
-     */
-    private synchronized void printNetworkTable(NetworkTable table, int layer){
-        String line = "NT-";
-        for(String key : table.getKeys()) {
-            line += key + "-" + table.getEntry(key).getString("Error") + ", ";
-        }
-
-        writeLine(line);
-
-        for(String subTableKey : table.getSubTables()) {
-            printNetworkTable(table.getSubTable(subTableKey), layer + 1);
         }
     }
 

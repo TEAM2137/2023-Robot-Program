@@ -77,15 +77,14 @@ public class Robot extends TimedRobot {
       switch (key) {
         case "ImplementChanges":
           if (implementChanges.getBoolean(false)) {
-            settingReader.getRobot().pullFromNetworkTable(configurationNetworkTable);
+            settingReader.getRobot().pullFromNetworkTable();
 
-            settingReader.getRobot().callOnChange();
             implementChanges.setBoolean(false);
           }
           break;
         case "FlushConfigurationToXML":
           if (flushConfigurationToXML.getBoolean(false)) {
-            settingReader.getRobot().pullFromNetworkTable(configurationNetworkTable);
+            settingReader.getRobot().pullFromNetworkTable();
             settingReader.getRobot().updateElement();
             settingReader.write();
             flushConfigurationToXML.setBoolean(false);
@@ -97,7 +96,7 @@ public class Robot extends TimedRobot {
             implementChanges.setBoolean(false);
             flushConfigurationToXML.setBoolean(false);
           } else {
-            settingReader.getRobot().removeFromNetworkTable(configurationNetworkTable);
+            settingReader.getRobot().removeFromNetworkTable();
             implementChanges.unpublish();
             flushConfigurationToXML.unpublish();
           }

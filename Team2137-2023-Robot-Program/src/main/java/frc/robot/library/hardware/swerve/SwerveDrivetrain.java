@@ -69,10 +69,6 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
             e.printStackTrace();
         }
 
-
-        SwerveModuleState[] states = calculateSwerveMotorSpeeds(1, 1, 0, 1, 1, Constants.DriveControlType.RAW);
-        System.out.println("[" + states[0].getRotation2d().getRadians() + ", "+ states[1].getRotation2d().getRadians() + ", "+ states[2].getRotation2d().getRadians() + ", "+ states[3].getRotation2d().getRadians() + "]");
-
         Gyro gyro = (Gyro) getEntity("Pigeon");
 //        pigeonIMU = new PigeonIMU(encoder.getID());
 //        pigeonIMU.configFactoryDefault();
@@ -80,7 +76,10 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
     }
 
     @Override
-    public void periodic() {}
+    public void periodic() {
+        SwerveModuleState[] states = calculateSwerveMotorSpeeds(1, 0, 0, 2, 2, Constants.DriveControlType.RAW);
+        setSwerveModuleStates(states);
+    }
 
     public SwerveModuleState[] calculateSwerveMotorSpeedsFieldCentric(double xMag, double yMag, double rMag, double trackWidth, double wheelBase, Constants.DriveControlType controlType) {
         return calculateSwerveMotorSpeeds(Constants.convertFrame(getAngle().getRadians(), Constants.createFrameMatrix(xMag, yMag, rMag)), trackWidth, wheelBase, controlType);
@@ -125,13 +124,9 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         double d = yMag + (rMag * (wheelBase / 2.0));
 
         double[][] speeds = new double[][] {
-//                new double[] {Math.sqrt(b * b + d * d), normalizeRadianAngle(Math.atan2(b, d))}, // Left Front
                 new double[] {Math.sqrt(b * b + d * d), -Math.atan2(b, d)}, // Left Front
-//                new double[] {Math.sqrt(a * a + d * d), normalizeRadianAngle(Math.atan2(a, d))}, // Left Back
                 new double[] {Math.sqrt(a * a + d * d), -Math.atan2(a, d)}, // Left Back
-                new double[] {Math.sqrt(b * b + c * c), -Math.atan2(b, c)}, // Right Front (Below Left Back before)
-//                new double[] {Math.sqrt(b * b + c * c), normalizeRadianAngle(Math.atan2(b, c))}, // Right Front
-//                new double[] {Math.sqrt(a * a + c * c), normalizeRadianAngle(Math.atan2(a, c))}, // Right Back
+                new double[] {Math.sqrt(b * b + c * c), -Math.atan2(b, c)}, // Right Front
                 new double[] {Math.sqrt(a * a + c * c), -Math.atan2(a, c)}, // Right Back
         };
 

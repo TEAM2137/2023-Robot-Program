@@ -371,40 +371,25 @@ public class EntityGroup extends Entity {
     }
 
     @Override
-    public NetworkTable removeFromNetworkTable(NetworkTable instance) {
-        NetworkTable subInstance;
-        if(getName().equalsIgnoreCase("Default"))
-            subInstance = super.removeFromNetworkTable(getGroupType(), instance);
-        else
-            subInstance = super.removeFromNetworkTable(instance);
+    public NetworkTable removeFromNetworkTable() {
+        NetworkTable subInstance = super.removeFromNetworkTable();
 
-        hardwareEntities.forEach((a, b) -> b.removeFromNetworkTable(subInstance));
-        settingsEntities.forEach((a, b) -> b.removeFromNetworkTable(subInstance));
-        childSubsystem.forEach((a, b) -> b.removeFromNetworkTable(subInstance));
+        hardwareEntities.forEach((a, b) -> b.removeFromNetworkTable());
+        settingsEntities.forEach((a, b) -> b.removeFromNetworkTable());
+        childSubsystem.forEach((a, b) -> b.removeFromNetworkTable());
 
         return subInstance;
     }
 
     @Override
-    public NetworkTable pullFromNetworkTable(NetworkTable instance) {
-        NetworkTable subInstance;
-        if(getName().equalsIgnoreCase("Default"))
-            subInstance = super.removeFromNetworkTable(getGroupType(), instance);
-        else
-            subInstance = super.removeFromNetworkTable(instance);
+    public NetworkTable pullFromNetworkTable() {
+        NetworkTable subInstance = super.removeFromNetworkTable();
 
-        hardwareEntities.forEach((a, b) -> b.pullFromNetworkTable(subInstance));
-        settingsEntities.forEach((a, b) -> b.pullFromNetworkTable(subInstance));
-        childSubsystem.forEach((a, b) -> b.pullFromNetworkTable(subInstance));
+        hardwareEntities.forEach((a, b) -> b.pullFromNetworkTable());
+        settingsEntities.forEach((a, b) -> b.pullFromNetworkTable());
+        childSubsystem.forEach((a, b) -> b.pullFromNetworkTable());
 
         return subInstance;
-    }
-
-    @Override
-    public void callOnChange() {
-        hardwareEntities.forEach((a, b) -> b.callOnChange());
-        settingsEntities.forEach((a, b) -> b.callOnChange());
-        childSubsystem.forEach((a, b) -> b.callOnChange());
     }
 
     @Override

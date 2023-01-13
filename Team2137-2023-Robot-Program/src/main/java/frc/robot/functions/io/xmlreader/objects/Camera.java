@@ -51,8 +51,8 @@ public class Camera extends Entity {
     }
 
     @Override
-    public NetworkTable removeFromNetworkTable(NetworkTable instance) {
-        NetworkTable table = super.removeFromNetworkTable(instance);
+    public NetworkTable removeFromNetworkTable() {
+        NetworkTable table = super.removeFromNetworkTable();
 
         table.getEntry("ID").unpublish();
 

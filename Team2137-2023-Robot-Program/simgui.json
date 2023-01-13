@@ -11,6 +11,18 @@
           "open": true
         },
         "open": true
+      },
+      "XMLConfiguration": {
+        "Robot": {
+          "2021 Intake": {
+            "Intake Motor": {
+              "open": true
+            },
+            "open": true
+          },
+          "open": true
+        },
+        "open": true
       }
     }
   }

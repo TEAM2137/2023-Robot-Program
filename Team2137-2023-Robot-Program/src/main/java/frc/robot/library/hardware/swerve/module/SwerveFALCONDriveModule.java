@@ -56,6 +56,7 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
     private Constants.DriveControlType mDriveControlType = Constants.DriveControlType.RAW;
     private final SwerveModuleState.SwerveModulePositions mSwerveDrivePosition;
 
+
     public SwerveFALCONDriveModule(Element element, int depth, boolean printprocess, FileLogger fileLogger) {
         super(element, depth, printprocess, fileLogger);
 
@@ -228,7 +229,7 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
             configDrivetrainControlType(Constants.DriveControlType.DISTANCE);
         }
 
-        driveMotor.set(ControlMode.Position, distance2d.getValue(Distance2d.DistanceUnits.FEET) / dblWheelConversionValue * 2048);
+        driveMotor.set(ControlMode.Position, distance2d.getValue(Distance2d.DistanceUnits.FEET) /  dblDriveWheelRotationPerFoot.getValue(Distance2d.DistanceUnits.FEET) * 2048);
     }
 
     /**

@@ -114,8 +114,8 @@ public class Encoder extends Entity {
     }
 
     @Override
-    public NetworkTable pullFromNetworkTable(NetworkTable instance) {
-        NetworkTable table = super.pullFromNetworkTable(instance);
+    public NetworkTable pullFromNetworkTable() {
+        NetworkTable table = super.pullFromNetworkTable();
 
         //TODO add type
         setInverted(table.getEntry("Inverted").getBoolean(inverted()));
@@ -125,8 +125,8 @@ public class Encoder extends Entity {
         return table;
     }
     @Override
-    public NetworkTable removeFromNetworkTable(NetworkTable instance) {
-        NetworkTable table = super.removeFromNetworkTable(instance);
+    public NetworkTable removeFromNetworkTable() {
+        NetworkTable table = super.removeFromNetworkTable();
 
         table.getEntry("Inverted").unpublish();
         table.getEntry("ID").unpublish();

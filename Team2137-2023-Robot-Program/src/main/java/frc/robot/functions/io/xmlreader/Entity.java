@@ -28,7 +28,7 @@ public class Entity {
     private final String strName;
     private Element savedElement;
     private boolean boolIsHardwareDevice = true;
-    private Runnable OnChangeCallback;
+    private NetworkTable currentInstance;
     private Callable<Boolean> onDestroyCallback;
 
     /**
@@ -93,11 +93,6 @@ public class Entity {
         }
 
         return defaultReturn;
-//        NodeList list = element.getElementsByTagName(name);
-//        if(list.getLength() > 0)
-//            return list.item(0).getTextContent();
-//        else
-//            return defaultReturn;
     }
 
     /**
@@ -172,30 +167,6 @@ public class Entity {
     }
 
     /**
-     * Gets the callback value for when a value has changed
-     * @return - Runnable callback
-     */
-    public Runnable getOnChangeCallback() {
-        return OnChangeCallback;
-    }
-
-    /**
-     * Registers a callback value to run when the values have changed
-     * @param OnChangeCallback - Runnable object to call
-     */
-    public void setOnChangeCallback(Runnable OnChangeCallback) {
-        this.OnChangeCallback = OnChangeCallback;
-    }
-
-    /**
-     * Calls the OnChange callback registered in the function
-     */
-    public void callOnChange() {
-        if(OnChangeCallback != null)
-            this.OnChangeCallback.run();
-    }
-
-    /**
      * Gets a callable for the OnDestroy Function
      * @return - the onDestroy Callable
      */
@@ -222,34 +193,24 @@ public class Entity {
      * @return - SubTable instance
      */
     public NetworkTable addToNetworkTable(NetworkTable instance) {
-        return instance.getSubTable(getName());
+        currentInstance = instance.getSubTable(getName());
+        return currentInstance;
     }
 
     /**
      * Gets the value from the Network Table and sets it to the objects
-     * @param instance - Parent Network Table Instance
      * @return - SubTable instance
      */
-    public NetworkTable pullFromNetworkTable(NetworkTable instance) {
-        return instance.getSubTable(getName());
+    public NetworkTable pullFromNetworkTable() {
+        return currentInstance;
     }
 
     /**
      * To be implemented but removes this Entity SubTable in the Network Tables
      * Child classes should extend this and add all XML values
-     * @param instance - Parent Network table instance
      */
-    public NetworkTable removeFromNetworkTable(NetworkTable instance) {
-        return instance.getSubTable(getName());
-    }
-
-    /**
-     * To be implemented but removes this Entity SubTable in the Network Tables
-     * Child classes should extend this and add all XML values
-     * @param instance - Parent Network table instance
-     */
-    public NetworkTable removeFromNetworkTable(String name, NetworkTable instance) {
-        return instance.getSubTable(name);
+    public NetworkTable removeFromNetworkTable() {
+        return currentInstance;
     }
 
     /**
@@ -260,6 +221,11 @@ public class Entity {
      */
     protected NetworkTable addToNetworkTable(String name, NetworkTable instance) {
         return instance.getSubTable(name);
+    }
+
+
+    public void addTemporaryReadingToTable(String key, double value) {
+
     }
 
     /**
@@ -286,8 +252,4 @@ public class Entity {
 
         return savedElement;
     }
-
-//    public void periodic() {
-//        Robot.deviceCallList.remove(this);
-//    }
 }
