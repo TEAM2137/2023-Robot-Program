@@ -44,6 +44,11 @@ public class Speed2d {
         return new Speed2d(value);
     }
 
+    public double getCTREVelocityUnit(Distance2d wheelConversionFactor) {
+        double rotationPerSec = (wheelConversionFactor.getValue(Distance2d.DistanceUnits.FEET) * getValue());
+        return (rotationPerSec * 2048) / 10; //Return counts per 100ms
+    }
+
     @Override
     public String toString() {
         return distance.getValue(Distance2d.DistanceUnits.FEET)/time.getValue(Time2d.TimeUnits.SECONDS) + " F/S";

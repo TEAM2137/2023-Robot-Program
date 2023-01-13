@@ -38,14 +38,17 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
 
     private static final int intDriveVelocityPIDSlotID = 0;
     private static final int intDriveDistancePIDSlotID = 1;
-    private TalonFX driveMotor;
-    private TalonFX turningMotor;
-    private CANCoder encoder;
+
+    private final TalonFX driveMotor;
+    private final TalonFX turningMotor;
+    private final CANCoder encoder;
+
     private SimpleMotorFeedforward driveFeedForward;
-    private PIDController turningPIDController;
-    private Rotation2d turnMotorSetpoint = Rotation2d.fromDegrees(0);
-    private double dblWheelConversionValue;//Rotations per Foot
+    private Rotation2d goalModuleAngle;
+
+    private Distance2d dblDriveWheelRotationPerFoot;//Rotations per Unit
     private Number dblWheelDiameter;
+
     private Speed2d mDriveVelocityGoal = new Speed2d(0);
     private Distance2d mDriveDistanceGoal = Distance2d.fromFeet(0);
     private final Motor mDriveMotorObj;
@@ -70,12 +73,10 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
         this.driveMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, drive.getCurrentLimit(), drive.getCurrentLimit(), 1));
         this.driveMotor.setNeutralMode(NeutralMode.Brake);
         this.driveMotor.configOpenloopRamp(drive.getRampRate());
-        this.driveMotor.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
+        this.driveMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor, 0, 10);
 
-        TalonFXPIDSetConfiguration config = new TalonFXPIDSetConfiguration();
-        config.selectedFeedbackSensor = FeedbackDevice.CTRE_MagEncoder_Absolute;
         dblWheelDiameter = (Number) this.getEntity("DriveTrain-WheelDiameter");
-        dblWheelConversionValue = (Math.PI * (dblWheelDiameter.getValue() / 12.0)) / this.mDriveMotorObj.getGearRatio(); //Rotations per Foot (Moves PI/3 feet every rotation of wheel then divde by gear ratio
+        dblDriveWheelRotationPerFoot = Distance2d.fromFeet((Math.PI * (dblWheelDiameter.getValue() / 12.0)) / this.mDriveMotorObj.getGearRatio()); //Rotations per Foot (Moves PI/3 feet every rotation of wheel then divde by gear ratio
 
         this.mTurnMotorObj = turn;
 
@@ -85,17 +86,19 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
         this.turningMotor.setInverted(turn.inverted());
         this.turningMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, drive.getCurrentLimit(), drive.getCurrentLimit(), 1));
         this.turningMotor.setNeutralMode(NeutralMode.Brake);
-        this.turningMotor.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, 0, 10);
+        this.turningMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor, 0, 10);
+
+        PID tmpPID = turn.getPID(0);
+        this.turningMotor.config_kP(0, tmpPID.getP());
+        this.turningMotor.config_kI(0, tmpPID.getI());
+        this.turningMotor.config_kD(0, tmpPID.getD());
 
         // Encoder setup
         this.encoder = new CANCoder(encoder.getID());
         this.encoder.configAbsoluteSensorRange(AbsoluteSensorRange.Signed_PlusMinus180); // -180 to 180
         this.encoder.configMagnetOffset(encoder.getOffset());
 
-//        this.turningPID.enableContinuousInput(-180, 180); // allows module to wrap properl
-
-        this.driveFeedForward = drive.getPID(intDriveVelocityPIDSlotID).getWPIFeedForwardController();
-
+        //this.driveFeedForward = drive.getPID(intDriveVelocityPIDSlotID).getWPIFeedForwardController();
     }
 
     @Override
@@ -109,7 +112,6 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
 
     @Override
     public void periodic() {
-
     }
 
     /**
@@ -129,8 +131,13 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
      */
     @Override
     public void setModuleAngle(Rotation2d angle) {
-        turnMotorSetpoint = angle;
-        this.turningMotor.set(TalonFXControlMode.Position, angle.getDegrees() / 360 / this.mTurnMotorObj.getGearRatio() * 2048);
+        goalModuleAngle = angle;
+        Rotation2d changeInAngle = goalModuleAngle.minus(getModuleAngle());
+
+        //(Amount of revolution) * (Motor Rev Per Wheel Rev) * (Count Per Motor Rev)
+        double changeInCount = (changeInAngle.getRadians() / (Math.PI * 2)) * mTurnMotorObj.getGearRatio() * 2048;
+
+        this.turningMotor.set(ControlMode.Position, this.turningMotor.getSelectedSensorPosition() + changeInCount);
     }
 
 
@@ -159,9 +166,8 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
             configDrivetrainControlType(Constants.DriveControlType.VELOCITY);
         }
 
-        double rotationPerSecond = speed.getValue(Distance2d.DistanceUnits.FEET, Time2d.TimeUnits.SECONDS) * dblWheelConversionValue;
-        this.driveMotor.set(TalonFXControlMode.Velocity, rotationPerSecond * 2048 / 10,
-                DemandType.ArbitraryFeedForward, driveFeedForward.calculate(speed.getValue(Distance2d.DistanceUnits.METER, Time2d.TimeUnits.SECONDS))); //In Ticks per 100ms and Meter per second
+        this.driveMotor.set(TalonFXControlMode.Velocity, speed.getCTREVelocityUnit(dblDriveWheelRotationPerFoot));//,
+//                DemandType.ArbitraryFeedForward, driveFeedForward.calculate(speed.getValue(Distance2d.DistanceUnits.METER, Time2d.TimeUnits.SECONDS))); //In Ticks per 100ms and Meter per second
     }
 
     @Override
@@ -176,7 +182,7 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
      */
     @Override
     public Speed2d getDriveVelocity() {
-        return new Speed2d(Distance2d.DistanceUnits.FEET, Time2d.TimeUnits.SECONDS, (driveMotor.getSensorCollection().getIntegratedSensorVelocity() * 10 / 2048) * dblWheelConversionValue);
+        return new Speed2d(Distance2d.DistanceUnits.FEET, Time2d.TimeUnits.SECONDS, (driveMotor.getSensorCollection().getIntegratedSensorVelocity() * 10 / 2048) * dblDriveWheelRotationPerFoot.getValue(Distance2d.DistanceUnits.FEET));
     }
 
     /**
@@ -206,7 +212,7 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
      */
     @Override
     public Distance2d getCurrentDrivePosition() {
-        return Distance2d.fromUnit(Distance2d.DistanceUnits.INCH, (this.encoder.getPosition() / 2048) * dblWheelConversionValue);
+        return Distance2d.fromUnit(Distance2d.DistanceUnits.INCH, (this.encoder.getPosition() / 2048) * dblDriveWheelRotationPerFoot.getValue(Distance2d.DistanceUnits.FEET));
     }
 
     /**
@@ -266,7 +272,6 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
                 break;
         }
     }
-
 
     public SwerveModuleState getSwerveModuleState() {
         switch (mDriveControlType) {
