@@ -1,0 +1,205 @@
+<?xml version="1.0"?>
+<Robot>
+        <DriveTrain type="SWERVE" name="Swerve Falcon">
+            <Gyro>
+                <Name>Pigeon</Name>
+                <ID>4</ID>
+                <Type>PIGEON</Type>
+                <Inverted>false</Inverted>
+                <Offset>0</Offset>
+            </Gyro>
+
+            <SwerveModule type="FALCON" name="LeftFront">
+                <Motor>
+                    <Note>This is the Left Front Turn Motor on the Swerve Module</Note>
+                    <Name>Turn Motor</Name>
+                    <ID>11</ID>
+                    <Type>FALCON</Type>
+                    <Inverted>false</Inverted>
+                    <GearRatio>1</GearRatio>
+                    <CurrentLimit>60</CurrentLimit>
+                    <RampRate>0</RampRate>
+                    <PID Slot="0">
+                        <P>0.03</P>
+                        <I>0.0</I>
+                        <D>0.000883</D>
+                        <FF>0.75</FF>
+                    </PID>
+                </Motor>
+
+                <Motor>
+                    <Name>Drive Motor</Name>
+                    <ID>10</ID>
+                    <Type>FALCON</Type>
+                    <Inverted>false</Inverted>
+                    <GearRatio>1</GearRatio>
+                    <CurrentLimit>60</CurrentLimit>
+                    <RampRate>0</RampRate>
+                    <PID Slot="0">
+                        <P>0.07</P>
+                        <I>0.0</I>
+                        <D>0.0</D>
+
+                        <S>0.5</S>
+                        <V>2.15</V>
+                        <A>0</A>
+                    </PID>
+                </Motor>
+
+                <Encoder>
+                    <Name>Turn Encoder</Name>
+                    <ID>12</ID>
+                    <Type>CTRE_CAN_ABS</Type>
+                    <Inverted>false</Inverted>
+                    <Offset>-199.2507</Offset>
+                </Encoder>
+            </SwerveModule>
+
+            <SwerveModule type="SIMULATION" name="LeftBack">
+                <Motor>
+                    <Note>This is the Left Front Back Motor on the Swerve Module</Note>
+                    <Name>Turn Motor</Name>
+                    <ID>21</ID>
+                    <Type>FALCON</Type>
+                    <Inverted>false</Inverted>
+                    <GearRatio>1</GearRatio>
+                    <CurrentLimit>60</CurrentLimit>
+                    <RampRate>0</RampRate>
+                    <PID Slot="0">
+                        <P>0.03</P>
+                        <I>0.0</I>
+                        <D>0.000883</D>
+                        <FF>0.75</FF>
+                    </PID>
+                </Motor>
+
+                <Motor>
+                    <Name>Drive Motor</Name>
+                    <ID>20</ID>
+                    <Type>FALCON</Type>
+                    <Inverted>false</Inverted>
+                    <GearRatio>1</GearRatio>
+                    <CurrentLimit>60</CurrentLimit>
+                    <RampRate>0</RampRate>
+                    <PID Slot="0">
+                        <P>0.07</P>
+                        <I>0.0</I>
+                        <D>0.0</D>
+
+                        <S>0.5</S>
+                        <V>2.15</V>
+                        <A>0</A>
+                    </PID>
+                </Motor>
+
+                <Encoder>
+                    <Name>Turn Encoder</Name>
+                    <ID>22</ID>
+                    <Type>CTRE_CAN_ABS</Type>
+                    <Inverted>false</Inverted>
+                    <Offset>-152.6001</Offset>
+                </Encoder>
+            </SwerveModule>
+
+            <SwerveModule type="SIMULATION" name="RightFront">
+                <Motor>
+                    <Note>This is the Right Front Motor on the Swerve Module</Note>
+                    <Name>Turn Motor</Name>
+                    <ID>16</ID>
+                    <Type>FALCON</Type>
+                    <Inverted>false</Inverted>
+                    <GearRatio>1</GearRatio>
+                    <CurrentLimit>60</CurrentLimit>
+                    <RampRate>0</RampRate>
+                    <PID Slot="0">
+                        <P>0.03</P>
+                        <I>0.0</I>
+                        <D>0.000883</D>
+                        <FF>0.75</FF>
+                    </PID>
+                </Motor>
+
+                <Motor>
+                    <Name>Drive Motor</Name>
+                    <ID>15</ID>
+                    <Type>FALCON</Type>
+                    <Inverted>false</Inverted>
+                    <GearRatio>1</GearRatio>
+                    <CurrentLimit>60</CurrentLimit>
+                    <RampRate>0</RampRate>
+                    <PID Slot="0">
+                        <P>0.07</P>
+                        <I>0.0</I>
+                        <D>0.0</D>
+
+                        <S>0.5</S>
+                        <V>2.15</V>
+                        <A>0</A>
+                    </PID>
+                </Motor>
+
+                <Encoder>
+                    <Name>Turn Encoder</Name>
+                    <ID>17</ID>
+                    <Type>CTRE_CAN_ABS</Type>
+                    <Inverted>false</Inverted>
+                    <Offset>-169.1894</Offset>
+                </Encoder>
+            </SwerveModule>
+
+            <SwerveModule type="SIMULATION" name="RightBack">
+                <Motor>
+                    <Note>This is the Right Back Back Motor on the Swerve Module</Note>
+                    <Name>Turn Motor</Name>
+                    <ID>26</ID>
+                    <Type>FALCON</Type>
+                    <Inverted>false</Inverted>
+                    <GearRatio>1</GearRatio>
+                    <CurrentLimit>60</CurrentLimit>
+                    <RampRate>0</RampRate>
+                    <PID Slot="0">
+                        <P>0.03</P>
+                        <I>0.0</I>
+                        <D>0.000883</D>
+                        <FF>0.75</FF>
+                    </PID>
+                </Motor>
+
+                <Motor>
+                    <Name>Drive Motor</Name>
+                    <ID>25</ID>
+                    <Type>FALCON</Type>
+                    <Inverted>false</Inverted>
+                    <GearRatio>1</GearRatio>
+                    <CurrentLimit>60</CurrentLimit>
+                    <RampRate>0</RampRate>
+                    <PID Slot="0">
+                        <P>0.07</P>
+                        <I>0.0</I>
+                        <D>0.0</D>
+
+                        <S>0.5</S>
+                        <V>2.15</V>
+                        <A>0</A>
+                    </PID>
+                </Motor>
+
+                <Encoder>
+                    <Name>Turn Encoder</Name>
+                    <ID>27</ID>
+                    <Type>CTRE_CAN_ABS</Type>
+                    <Inverted>false</Inverted>
+                    <Offset>-21.6156</Offset>
+                </Encoder>
+            </SwerveModule>
+        </DriveTrain>
+
+    <Settings>
+        <DriveTrain-WheelDiameter unit="in">4.0</DriveTrain-WheelDiameter>
+        <DriveTrain-ConversionFactor>1.53995</DriveTrain-ConversionFactor>
+        <DriveTrain-Length unit="in">24.5</DriveTrain-Length>
+        <DriveTrain-Width unit="in">21.5</DriveTrain-Width>
+        <DriveTrain-MaxSpeed unit="fps">15</DriveTrain-MaxSpeed>
+        <DriveTrain-MaxAccel>8.0</DriveTrain-MaxAccel>
+    </Settings>
+</Robot>
