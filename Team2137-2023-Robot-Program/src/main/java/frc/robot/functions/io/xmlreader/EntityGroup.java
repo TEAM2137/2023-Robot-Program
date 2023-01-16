@@ -445,6 +445,6 @@ public class EntityGroup extends Entity {
 //    }
 
     public void periodic() {
-        Robot.subSystemCallList.remove(this);
+        //Robot.subSystemCallList.remove(this);
     }
 }

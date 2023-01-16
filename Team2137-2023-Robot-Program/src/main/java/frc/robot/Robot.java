@@ -57,7 +57,6 @@ public class Robot extends TimedRobot {
     fileLogger = new FileLogger(10, Constants.RobotState.MAIN, Constants.StandardFileAndDirectoryLocations.GenericFileLoggerDir.getFileLocation(isSimulation), isSimulation);
     fileLogger.writeEvent(0, FileLogger.EventType.Status, "Started FileLogger Continuing with code...");
 
-
     fileLogger.writeEvent(0, FileLogger.EventType.Status, "Opening Settings XML File...");
     settingReader = new XMLSettingReader(Constants.StandardFileAndDirectoryLocations.GenericSettings.getFileLocation(isSimulation), true, fileLogger);
     fileLogger.writeEvent(0, FileLogger.EventType.Status, "Opening Step XML File...");
@@ -119,6 +118,9 @@ public class Robot extends TimedRobot {
     // and running subsystem periodic() methods.  This must be called from the robot's periodic
     // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
+    for (EntityGroup subSystem : subSystemCallList) {
+      subSystem.periodic();
+    }
   }
 
   /** This function is called once each time the robot enters Disabled mode. */
@@ -228,10 +230,6 @@ public class Robot extends TimedRobot {
         testClass.periodic();
         break;
     }
-
-//    for (EntityGroup subSystem : subSystemCallList) {
-//      subSystem.periodic();
-//    }
   }
 
   private void clearOpModes() {
@@ -240,7 +238,7 @@ public class Robot extends TimedRobot {
     testClass = null;
     disabledClass = null;
 
-    subSystemCallList.clear();
+    //subSystemCallList.clear();
 
     System.gc(); //Hopefully Garbage Collector takes Opmodes
   }

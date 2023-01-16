@@ -16,6 +16,7 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
@@ -30,7 +31,7 @@ import frc.robot.library.hardware.swerve.module.SwerveModuleState;
 public class Teleop implements OpMode {
 
     private FileLogger logger;
-    private final int mintDebug = 0;
+    private final int mintDebug = 8;
 
     private EntityGroup mRobotSubsystem;
     private XMLSettingReader mSettingReader;
@@ -38,12 +39,16 @@ public class Teleop implements OpMode {
 
     private Runnable mCurrentDrivetrainPeriodRunnable;
 
-    private final Gamepad mDriverController = new Gamepad(0);
-    private final Gamepad mOperatorController = new Gamepad(1);
+    private XboxController mDriverController;
+    //private final Gamepad mOperatorController = new Gamepad(1);
 
     @Override
     public void init(XMLSettingReader xmlSettingReader, XMLStepReader xmlStepReader, FileLogger fileLogger) {
         this.logger = fileLogger;
+
+        mDriverController = new XboxController(0);
+
+        logger.writeEvent(0, "Controller Connect: " + mDriverController.isConnected());
 
         this.mSettingReader = xmlSettingReader;
         this.mRobotSubsystem = this.mSettingReader.getRobot();
@@ -51,19 +56,17 @@ public class Teleop implements OpMode {
         switch(mRobotSubsystem.getEntityGroupByType("DriveTrain").getName()) {
             case "Swerve Falcon":
             case "Swerve NEO":
+            case "Swerve Simulation":
                 logger.writeEvent(0, mRobotSubsystem.getEntityGroupByType("DriveTrain").getName());
                 mCurrentDrivetrainPeriodRunnable = this::SwerveDrivetrainPeriodic;
                 this.mDrivetrain = (SwerveDrivetrain) mRobotSubsystem.getEntityGroupByType("DriveTrain");
                 break;
         }
-
-        mDrivetrain.leftFrontModule.setModuleAngle(Rotation2d.fromDegrees(90));
     }
 
     @Override
     public void periodic() {
-        SmartDashboard.putNumber("Left Front Module Actual Angle", mDrivetrain.leftFrontModule.getModuleAngle().getDegrees());
-//        mCurrentDrivetrainPeriodRunnable.run();
+        mCurrentDrivetrainPeriodRunnable.run();
     }
 
     @Override
@@ -73,20 +76,21 @@ public class Teleop implements OpMode {
 
     private void SwerveDrivetrainPeriodic() {
         logger.setTag("SwerveDrivetrainPeriodic()");
-        double xMag = mDriverController.getX(Gamepad.Hand.kLeft, 0.1);
-        double yMag = mDriverController.getY(Gamepad.Hand.kLeft, 0.1);
-        double rMag = mDriverController.getX(Gamepad.Hand.kRight, 0.1); //TODO must fix TrackWidth
-        SwerveModuleState[] state = ((SwerveDrivetrain) mDrivetrain).calculateSwerveMotorSpeeds(xMag, yMag, rMag, 1, 1, Constants.DriveControlType.RAW);
+        double xMag = mDriverController.getRawAxis(0);
+        double yMag = mDriverController.getLeftY();
+        double rMag = mDriverController.getRightX(); //TODO must fix TrackWidth
+        logger.writeLine("Q~" + Constants.StandardFileLoggerKeys.DRIVER_CONTROLLER_LOG_KEY.getKey() + "~" + xMag + " " + yMag + " " + rMag);
+        SwerveModuleState[] states = ((SwerveDrivetrain) mDrivetrain).calculateSwerveMotorSpeeds(xMag, yMag, rMag, 1, 1, Constants.DriveControlType.RAW);
 
-        SmartDashboard.putNumber(logger.getTag() + "-RightBackPower", state[0].getRawPowerValue());
-        SmartDashboard.putNumber(logger.getTag() + "-RightBackAngle", state[0].getRotation2d().getDegrees());
-        SmartDashboard.putNumber(logger.getTag() + "-LeftBackPower", state[1].getRawPowerValue());
-        SmartDashboard.putNumber(logger.getTag() + "-LeftBackAngle", state[1].getRotation2d().getDegrees());
-        SmartDashboard.putNumber(logger.getTag() + "-RightFrontPower", state[2].getRawPowerValue());
-        SmartDashboard.putNumber(logger.getTag() + "-RightFrontAngle", state[2].getRotation2d().getDegrees());
-        SmartDashboard.putNumber(logger.getTag() + "-LeftFrontPower", state[3].getRawPowerValue());
-        SmartDashboard.putNumber(logger.getTag() + "-LeftFrontAngle", state[3].getRotation2d().getDegrees());
+//        SmartDashboard.putNumber(logger.getTag() + "-RightBackPower", state[0].getRawPowerValue());
+//        SmartDashboard.putNumber(logger.getTag() + "-RightBackAngle", state[0].getRotation2d().getDegrees());
+//        SmartDashboard.putNumber(logger.getTag() + "-LeftBackPower", state[1].getRawPowerValue());
+//        SmartDashboard.putNumber(logger.getTag() + "-LeftBackAngle", state[1].getRotation2d().getDegrees());
+//        SmartDashboard.putNumber(logger.getTag() + "-RightFrontPower", state[2].getRawPowerValue());
+//        SmartDashboard.putNumber(logger.getTag() + "-RightFrontAngle", state[2].getRotation2d().getDegrees());
+//        SmartDashboard.putNumber(logger.getTag() + "-LeftFrontPower", state[3].getRawPowerValue());
+//        SmartDashboard.putNumber(logger.getTag() + "-LeftFrontAngle", state[3].getRotation2d().getDegrees());
 
-        ((SwerveDrivetrain) mDrivetrain).setSwerveModuleStates(state);
+        ((SwerveDrivetrain) mDrivetrain).setSwerveModuleStates(states);
     }
 }

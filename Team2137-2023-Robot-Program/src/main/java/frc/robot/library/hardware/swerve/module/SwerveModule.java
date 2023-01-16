@@ -39,10 +39,13 @@ public interface SwerveModule {
             switch (getDriveControlType()) {
                 case VELOCITY:
                     value = getDriveVelocity().getValue(Distance2d.DistanceUnits.FEET, Time2d.TimeUnits.SECONDS);
+                    break;
                 case DISTANCE:
                     value = getCurrentDrivePosition().getValue(Distance2d.DistanceUnits.FEET);
+                    break;
                 case RAW:
                     value = getRawDrivePower();
+                    break;
             }
 
             log.writeEvent(6, getSwerveModuleLocation().toString(), String.valueOf(value));

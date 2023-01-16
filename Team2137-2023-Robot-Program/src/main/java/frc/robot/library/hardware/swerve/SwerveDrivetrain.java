@@ -77,8 +77,6 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
     @Override
     public void periodic() {
-        SwerveModuleState[] states = calculateSwerveMotorSpeeds(1, 0, 0, 2, 2, Constants.DriveControlType.RAW);
-        setSwerveModuleStates(states);
     }
 
     public SwerveModuleState[] calculateSwerveMotorSpeedsFieldCentric(double xMag, double yMag, double rMag, double trackWidth, double wheelBase, Constants.DriveControlType controlType) {

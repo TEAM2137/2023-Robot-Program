@@ -38,7 +38,6 @@ public class SwerveModuleState {
         }
 
         public static SwerveModulePositions getPositionFromString(String value) {
-            System.out.println(value);
 
             if(value.equalsIgnoreCase("leftfront"))
                 return LEFT_FRONT;
@@ -125,5 +124,47 @@ public class SwerveModuleState {
                 return "Velocity: " + getSpeed2d().getValue(Distance2d.DistanceUnits.FEET, Time2d.TimeUnits.SECONDS) + "ft/s Angle: " + getRotation2d().getRadians();
         }
         return "";
+    }
+
+    public void writeToFileLoggerReplayFormat(FileLogger fileLogger) {
+        fileLogger.setTag("");
+
+        String key = "";
+        switch(getPosition()) {
+            case LEFT_FRONT:
+                key = Constants.StandardFileLoggerKeys.LEFT_FRONT_SWERVE_STATE.getKey();
+                break;
+            case LEFT_BACK:
+                key = Constants.StandardFileLoggerKeys.LEFT_BACK_SWERVE_STATE.getKey();
+                break;
+            case RIGHT_FRONT:
+                key = Constants.StandardFileLoggerKeys.RIGHT_FRONT_SWERVE_STATE.getKey();
+                break;
+            case RIGHT_BACK:
+                key = Constants.StandardFileLoggerKeys.RIGHT_BACK_SWERVE_STATE.getKey();
+                break;
+        }
+        
+        StringBuilder builder = new StringBuilder();
+        builder.append("Q~").append(key).append("~");
+        builder.append(getRotation2d().getDegrees()).append(" ");
+
+        switch(getControlType()) {
+            case DISTANCE:
+                builder.append(getDistance2d().getValue(Distance2d.DistanceUnits.FEET));
+
+                break;
+            case VELOCITY:
+                builder.append(getSpeed2d().getValue(Distance2d.DistanceUnits.FEET, Time2d.TimeUnits.SECONDS));
+                break;
+            case RAW:
+                builder.append(getRawPowerValue());
+                break;
+        }
+
+        builder.append(" ");
+
+        if(getRotation2d().getDegrees() != 0)
+            fileLogger.writeLine(builder.toString());
     }
 }

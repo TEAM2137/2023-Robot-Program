@@ -240,6 +240,11 @@ public class SwerveNEODriveModule extends EntityGroup implements SwerveModule {
         this.mDrivePIDController.setD(pid.getD());
     }
 
+    @Override
+    public DriveControlType getDriveControlType() {
+        return mDriveControlType;
+    }
+
     public SwerveModuleState getSwerveModuleState() {
         switch (mDriveControlType) {
             case DISTANCE:
@@ -249,5 +254,10 @@ public class SwerveNEODriveModule extends EntityGroup implements SwerveModule {
             default:
                 return new SwerveModuleState(mDriveMotor.get(), getModuleAngle(), mSwerveDrivePosition);
         }
+    }
+
+    @Override
+    public SwerveModuleState.SwerveModulePositions getSwerveModuleLocation() {
+        return mSwerveDrivePosition;
     }
 }

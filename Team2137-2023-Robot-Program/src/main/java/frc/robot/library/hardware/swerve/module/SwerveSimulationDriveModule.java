@@ -56,40 +56,30 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
     private int periodBetweenRecords = 100;
     private long lastRecordTime;
 
+    private FileLogger logger;
+
     private final SwerveModuleState.SwerveModulePositions mSwerveDrivePosition;
 
     public SwerveSimulationDriveModule(Element element, int depth, boolean printProcess, FileLogger fileLogger) {
         super(element, depth, printProcess, fileLogger);
 
-        fileLogger.writeEvent(0, FileLogger.EventType.Error, "SwerveModuleCreated " + this.getName());
+        fileLogger.writeEvent(0, FileLogger.EventType.Error, "Simulated SwerveModuleCreated " + this.getName());
 
         mSwerveDrivePosition = SwerveModuleState.SwerveModulePositions.getPositionFromString(this.getName());
-        
+
+        logger = fileLogger;
+
         lastRecordTime = System.currentTimeMillis();
     }
 
     @Override
     public void periodic() {
-        /*
-        if(lastRecordTime + periodBetweenRecords > System.currentTimeMillis()) {
-            SwerveModuleState state;
-            switch(mDriveControlType) {
-                case DISTANCE:
-                    state = new SwerveModuleState(mDriveDistanceCurrent, turningCurrent, swerveModulePosition);
-                    break;
-                case RAW:
-                    state = new SwerveModuleState(mDriveRawPercent, turningCurrent, swerveModulePosition);
-                    break;
-                default:
-                    state = new SwerveModuleState(mDriveVelocityCurrent, turningCurrent, swerveModulePosition);
-                    break;
-            }
-            swervePastStates.add(state);
+//        if(lastRecordTime + periodBetweenRecords > System.currentTimeMillis()) {
+            getSwerveModuleState().writeToFileLoggerReplayFormat(logger);
 
-            lastRecordTime = System.currentTimeMillis();
+//            lastRecordTime = System.currentTimeMillis();
             //System.out.println(state.toString());
-        }
-         */
+//        }
     }
 
     @Override
@@ -153,15 +143,24 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
         mDriveControlType = control;
     }
 
-    //TODO Fix for actual Values
+    @Override
+    public Constants.DriveControlType getDriveControlType() {
+        return mDriveControlType;
+    }
+
     public SwerveModuleState getSwerveModuleState() {
         switch(mDriveControlType) {
             case DISTANCE:
                 return new SwerveModuleState(mDriveDistanceCurrent, turningCurrent, mSwerveDrivePosition);
-            case RAW:
+            case VELOCITY:
                 return new SwerveModuleState(mDriveVelocityCurrent, turningCurrent, mSwerveDrivePosition);
             default:
                 return new SwerveModuleState(mDriveRawPercent, turningCurrent, mSwerveDrivePosition);
         }
+    }
+
+    @Override
+    public SwerveModuleState.SwerveModulePositions getSwerveModuleLocation() {
+        return mSwerveDrivePosition;
     }
 }

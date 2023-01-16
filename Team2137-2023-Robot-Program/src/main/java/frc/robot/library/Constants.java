@@ -23,6 +23,26 @@ import java.io.File;
 
 public final class Constants {
 
+    //region Standard FileLogger Value Keys
+    public enum StandardFileLoggerKeys {
+        LEFT_FRONT_SWERVE_STATE ("SSLF"),
+        LEFT_BACK_SWERVE_STATE ("SSLB"),
+        RIGHT_FRONT_SWERVE_STATE ("SSRF"),
+        RIGHT_BACK_SWERVE_STATE ("SSRB"),
+        DRIVER_CONTROLLER_LOG_KEY ("XCDL");
+
+        final String key;
+
+        StandardFileLoggerKeys(String value) {
+            key = value;
+        }
+
+        public String getKey() {
+            return key;
+        }
+    }
+    //region
+
     //region File Locations
     public enum StandardFileAndDirectoryLocations {
         GenericSettings("Settings.xml"),

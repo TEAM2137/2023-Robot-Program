@@ -191,7 +191,7 @@ public class FileLogger {
     public synchronized void write(String Message) {
 
         if (!getTag().equals(""))
-            rawWrite(getDateString() + "~" + getTag() + "~"  + Message);
+            rawWrite(getDateString() + "-" + getTag() + "-"  + Message);
         else
             rawWrite(getDateString() + "-" + Message);
     }
