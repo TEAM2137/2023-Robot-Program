@@ -22,6 +22,9 @@ import com.ctre.phoenix.sensors.CANCoder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.data.PID;
@@ -53,9 +56,9 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
     private Distance2d mDriveDistanceGoal = Distance2d.fromFeet(0);
     private final Motor mDriveMotorObj;
     private final Motor mTurnMotorObj;
-    private Constants.DriveControlType mDriveControlType = Constants.DriveControlType.RAW;
+    private FileLogger logger;
+    private Constants.DriveControlType mDriveControlType = Constants.DriveControlType.UNDEFINED;
     private final SwerveModuleState.SwerveModulePositions mSwerveDrivePosition;
-
 
     public SwerveFALCONDriveModule(Element element, int depth, boolean printprocess, FileLogger fileLogger) {
         super(element, depth, printprocess, fileLogger);
@@ -99,6 +102,17 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
         this.encoder.configAbsoluteSensorRange(AbsoluteSensorRange.Signed_PlusMinus180); // -180 to 180
         this.encoder.configMagnetOffset(encoder.getOffset());
 
+        logger = fileLogger;
+
+        initializeSwerveDebug(logger, getCurrentNetworkInstance());
+
+        logger.addScheduledDataLogger(8, "ModuleAngleIntegratedSensorPosition", getCurrentNetworkInstance(), (log, entry) -> {
+            double currentIntegratedSensorPosition = this.turningMotor.getSelectedSensorPosition();
+
+            log.writeEvent(8, getName() + "ModuleAngleIntegratedSensorPosition", String.valueOf(currentIntegratedSensorPosition));
+            entry.setDouble(currentIntegratedSensorPosition);
+        });
+
         //this.driveFeedForward = drive.getPID(intDriveVelocityPIDSlotID).getWPIFeedForwardController();
     }
 
@@ -113,6 +127,7 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
 
     @Override
     public void periodic() {
+        logger.publishAllScheduled();
     }
 
     /**
@@ -249,6 +264,7 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
      */
     @Override
     public void configDrivetrainControlType(Constants.DriveControlType control) {
+
         switch (control) {
             case VELOCITY:
                 PID tmpPIDVelocity = this.mDriveMotorObj.getPID(intDriveVelocityPIDSlotID);
@@ -274,6 +290,11 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
         }
     }
 
+    @Override
+    public Constants.DriveControlType getDriveControlType() {
+        return mDriveControlType;
+    }
+
     public SwerveModuleState getSwerveModuleState() {
         switch (mDriveControlType) {
             case DISTANCE:
@@ -284,4 +305,10 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
                 return new SwerveModuleState(driveMotor.getMotorOutputPercent(), getModuleAngle(), mSwerveDrivePosition);
         }
     }
+
+    @Override
+    public SwerveModuleState.SwerveModulePositions getSwerveModuleLocation() {
+        return mSwerveDrivePosition;
+    }
+
 }

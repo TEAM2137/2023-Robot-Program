@@ -14,14 +14,25 @@
 
 package frc.robot.functions.io.xmlreader;
 
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableEvent;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import frc.robot.functions.io.FileLogger;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import javax.security.auth.callback.Callback;
+import java.io.File;
+import java.security.KeyPair;
+import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class Entity {
 
@@ -220,12 +231,12 @@ public class Entity {
      * @return - SubTable instance
      */
     protected NetworkTable addToNetworkTable(String name, NetworkTable instance) {
-        return instance.getSubTable(name);
+        currentInstance = instance.getSubTable(name);
+        return currentInstance;
     }
 
-
-    public void addTemporaryReadingToTable(String key, double value) {
-
+    public NetworkTable getCurrentNetworkInstance() {
+        return currentInstance;
     }
 
     /**

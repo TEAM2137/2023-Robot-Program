@@ -15,9 +15,9 @@
 package frc.robot.functions.io;
 
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.library.Constants.RobotState;
-import frc.robot.library.units.Time2d;
 
 import java.io.*;
 import java.time.LocalDateTime;
@@ -26,9 +26,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
+import java.util.function.BiConsumer;
 
 /**
  * FileLogger class - Filelogger creates a local text file on the roborio that then can be read from a laptop
@@ -70,6 +71,22 @@ public class FileLogger {
 
     private static ScheduledThreadPoolExecutor flushExecutor;
 
+    public List<ScheduleDebugEntry> scheduledDebugEntries = new ArrayList<>();
+
+    private class ScheduleDebugEntry {
+        public NetworkTableEntry entry;
+        public BiConsumer<FileLogger, NetworkTableEntry> consumer;
+        public String key;
+        public int debug;
+
+        public ScheduleDebugEntry(int _debug, String _key, NetworkTableEntry _entry, BiConsumer<FileLogger, NetworkTableEntry> _consumer) {
+            entry = _entry;
+            key = _key;
+            debug = _debug;
+            consumer = _consumer;
+        }
+    }
+
     /**
      * Constructor for Filelogger, (creates file, starts flushing thread)
      * @param _debug - Debug choice
@@ -103,14 +120,6 @@ public class FileLogger {
         flush();
         flushExecutor = new ScheduledThreadPoolExecutor(1);
         flushExecutor.scheduleAtFixedRate(this::flush, 0, 100, TimeUnit.MILLISECONDS);
-    }
-
-    /**
-     * Function that instead of flushing at every write, writes only after certain time
-     * @param periodTime - Time between writes and often should be same run period as robot
-     */
-    private synchronized void startThreadedNetworkTable(int periodTime) {
-//        flushExecutor.scheduleAtFixedRate(this::logNetworkTables, 0, periodTime, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -237,6 +246,10 @@ public class FileLogger {
         }
     }
 
+    public int getDebug() {
+        return debug;
+    }
+
     /**
      * Close the FileLogger writer
      */
@@ -264,5 +277,36 @@ public class FileLogger {
      */
     public void setTag(String name) {
         tagString = name;
+    }
+
+    public void addScheduledDataLogger(int debug, String key, NetworkTable table, BiConsumer<FileLogger, NetworkTableEntry> consumer) {
+        NetworkTableEntry entry = table.getEntry(key);
+
+        ScheduleDebugEntry scheduleDebugEntry = new ScheduleDebugEntry(debug, key, entry, consumer);
+        scheduledDebugEntries.add(scheduleDebugEntry);
+    }
+
+    public void publishAllScheduled() {
+        for (ScheduleDebugEntry entry : scheduledDebugEntries) {
+            if(entry.debug >= debug) {
+                setTag(entry.key);
+                entry.consumer.accept(this, entry.entry);
+            }
+        }
+
+        setTag("");
+    }
+
+    public void removeAllScheduled() {
+        scheduledDebugEntries.clear();
+    }
+
+    public void removeScheduled(String value) {
+        for (int i = 0; i < scheduledDebugEntries.size(); i++) {
+            if(scheduledDebugEntries.get(i).key.equals(value)) {
+                scheduledDebugEntries.remove(i);
+                return;
+            }
+        }
     }
 }

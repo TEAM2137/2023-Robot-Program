@@ -139,7 +139,8 @@ public final class Constants {
     public enum DriveControlType {
         RAW ("Raw"),
         VELOCITY ("Velocity"),
-        DISTANCE ("Distance");
+        DISTANCE ("Distance"),
+        UNDEFINED ("Undefined");
 
         private final String name;
 
