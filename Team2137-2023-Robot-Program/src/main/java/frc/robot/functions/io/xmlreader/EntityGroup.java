@@ -15,6 +15,7 @@
 package frc.robot.functions.io.xmlreader;
 
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
 import frc.robot.Robot;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.data.Number;
@@ -49,6 +50,8 @@ public class EntityGroup extends Entity {
     private final HashMap<String, Entity> hardwareEntities = new HashMap<>(); //Child devices
     private final HashMap<String, Entity> settingsEntities = new HashMap<>(); //Child devices
     private final HashMap<String, EntityGroup> childSubsystem = new HashMap<>(); //Child device groups
+
+    private String entityPath = "root";
 
     private FileLogger logger;
     public static boolean autoClassCreationEnabled = true;
@@ -137,12 +140,16 @@ public class EntityGroup extends Entity {
      * Takes in a part of the xml file and parses it into variables and subtypes using recursion
      * @param element - Portion of the XML File
      */
-    public EntityGroup(Element element, int depth, boolean printprocess, FileLogger fileLogger) {
+    public EntityGroup(Element element, int depth, EntityGroup parent, FileLogger fileLogger) {
         super(element); //Supply super with info
         logger = fileLogger;
         type = element.getTagName(); //Record the Tag Name or the Type
         Robot.subSystemCallList.add(this);
-        findEntities(element, depth, printprocess, logger);
+
+        if(parent != null)
+            entityPath = parent.entityPath + getName();
+
+        findEntities(element, depth, logger);
     }
 
     public Class<? extends EntityGroup> createEntityGroup(Element tmp) {
@@ -154,7 +161,7 @@ public class EntityGroup extends Entity {
             return EntityGroup.class;
     }
 
-    protected void findEntities(Node element, int depth, boolean printProcess, FileLogger fileLogger) {
+    protected void findEntities(Node element, int depth, FileLogger fileLogger) {
         NodeList list = element.getChildNodes();
         if (list.getLength() > 1) {
             for(int i = 0; i < list.getLength(); i++) {
@@ -169,13 +176,11 @@ public class EntityGroup extends Entity {
                         if(e == null)
                             continue;
 
-                        if (printProcess) {
-                            fileLogger.rawWrite("\t".repeat(depth + 1) + tmp.getTagName() + " - " + e.getName() + "\n");
+                        fileLogger.rawWrite("\t".repeat(depth + 1) + tmp.getTagName() + " - " + e.getName() + "\n");
 
-                            StringBuilder outputBuilder = new StringBuilder();
-                            e.constructTreeItemPrintout(outputBuilder, depth + 1);
-                            fileLogger.rawWrite(outputBuilder.toString() + "\n");
-                        }
+                        StringBuilder outputBuilder = new StringBuilder();
+                        e.constructTreeItemPrintout(outputBuilder, depth + 1);
+                        fileLogger.rawWrite(outputBuilder.toString() + "\n");
 
                         if(!e.isHardwareDevice())
                             settingsEntities.put(e.getName().toUpperCase(), e);
@@ -183,9 +188,7 @@ public class EntityGroup extends Entity {
                             hardwareEntities.put(e.getName().toUpperCase(), e);
 
                     } else {
-                        if (printProcess) {
-                            fileLogger.rawWrite("\n" + "\t".repeat(depth + 1) + tmp.getTagName() + " - " + getNodeOrAttribute(tmp, "name", null) + "\n");
-                        }
+                        fileLogger.rawWrite("\n" + "\t".repeat(depth + 1) + tmp.getTagName() + " - " + getNodeOrAttribute(tmp, "name", null) + "\n");
 
                         Class<? extends EntityGroup> entityGroupClass;
                         if(autoClassCreationEnabled) {
@@ -198,7 +201,7 @@ public class EntityGroup extends Entity {
                             if(entityGroupClass == null) {
                                 logger.writeEvent(0, FileLogger.EventType.Error, tmp.getTagName());
                             }
-                            EntityGroup returner = entityGroupClass.getDeclaredConstructor(Element.class, int.class, boolean.class, FileLogger.class).newInstance(tmp, depth + 1, printProcess, logger);
+                            EntityGroup returner = entityGroupClass.getDeclaredConstructor(Element.class, int.class, EntityGroup.class, FileLogger.class).newInstance(tmp, depth + 1, this, logger);
 
                             childSubsystem.put(returner.getName().toUpperCase(), returner);
                         } catch (NoSuchMethodException e) {

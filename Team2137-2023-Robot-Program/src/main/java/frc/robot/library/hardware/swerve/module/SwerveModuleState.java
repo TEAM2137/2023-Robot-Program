@@ -152,7 +152,6 @@ public class SwerveModuleState {
         switch(getControlType()) {
             case DISTANCE:
                 builder.append(getDistance2d().getValue(Distance2d.DistanceUnits.FEET));
-
                 break;
             case VELOCITY:
                 builder.append(getSpeed2d().getValue(Distance2d.DistanceUnits.FEET, Time2d.TimeUnits.SECONDS));
@@ -164,7 +163,6 @@ public class SwerveModuleState {
 
         builder.append(" ");
 
-        if(getRotation2d().getDegrees() != 0)
-            fileLogger.writeLine(builder.toString());
+        fileLogger.writeLine(builder.toString());
     }
 }

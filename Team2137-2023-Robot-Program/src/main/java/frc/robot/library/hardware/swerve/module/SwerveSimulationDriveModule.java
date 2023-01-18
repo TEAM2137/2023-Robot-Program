@@ -20,6 +20,7 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.objects.Encoder;
@@ -60,8 +61,8 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
 
     private final SwerveModuleState.SwerveModulePositions mSwerveDrivePosition;
 
-    public SwerveSimulationDriveModule(Element element, int depth, boolean printProcess, FileLogger fileLogger) {
-        super(element, depth, printProcess, fileLogger);
+    public SwerveSimulationDriveModule(Element element, int depth, EntityGroup parent, FileLogger fileLogger) {
+        super(element, depth, parent, fileLogger);
 
         fileLogger.writeEvent(0, FileLogger.EventType.Error, "Simulated SwerveModuleCreated " + this.getName());
 
@@ -69,13 +70,17 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
 
         logger = fileLogger;
 
+        configDrivetrainControlType(Constants.DriveControlType.RAW);
+
         lastRecordTime = System.currentTimeMillis();
     }
 
     @Override
     public void periodic() {
+        SmartDashboard.putNumber(mSwerveDrivePosition + "Speed", getRawDrivePower());
+        SmartDashboard.putNumber(mSwerveDrivePosition + "Angle", getModuleAngle().getDegrees());
 //        if(lastRecordTime + periodBetweenRecords > System.currentTimeMillis()) {
-            getSwerveModuleState().writeToFileLoggerReplayFormat(logger);
+//            getSwerveModuleState().writeToFileLoggerReplayFormat(logger);
 
 //            lastRecordTime = System.currentTimeMillis();
             //System.out.println(state.toString());

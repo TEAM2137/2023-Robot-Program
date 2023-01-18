@@ -56,8 +56,8 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
     private Constants.DriveControlType mDriveControlType = Constants.DriveControlType.UNDEFINED;
     private final SwerveModuleState.SwerveModulePositions mSwerveDrivePosition;
 
-    public SwerveFALCONDriveModule(Element element, int depth, boolean printprocess, FileLogger fileLogger) {
-        super(element, depth, printprocess, fileLogger);
+    public SwerveFALCONDriveModule(Element element, int depth, EntityGroup parent, FileLogger fileLogger) {
+        super(element, depth, parent, fileLogger);
 
         //region Drive Motor Setup
         this.mDriveMotorObj = (Motor) getEntity("Drive Motor");
@@ -70,7 +70,6 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
         this.mDriveMotor.configOpenloopRamp(mDriveMotorObj.getRampRate());
         this.mDriveMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor, 0, 10);
         //endregion
-
 
         //region Turn Motor Setup
         this.mTurnMotorObj = (Motor) getEntity("Turn Motor");
@@ -107,15 +106,6 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
 
         //region Logging Setup
         logger = fileLogger;
-
-        initializeSwerveDebug(logger, getCurrentNetworkInstance());
-
-        logger.addScheduledDataLogger(8, "ModuleAngleIntegratedSensorPosition", getCurrentNetworkInstance(), (log, entry) -> {
-            double currentIntegratedSensorPosition = this.mTurnMotor.getSelectedSensorPosition();
-
-            log.writeEvent(8, getName() + "ModuleAngleIntegratedSensorPosition", String.valueOf(currentIntegratedSensorPosition));
-            entry.setDouble(currentIntegratedSensorPosition);
-        });
         //endregion
 
         //this.mDriveMotorObjFeedForward = mDriveMotorObj.getPID(intDriveVelocityPIDSlotID).getWPIFeedForwardController();
@@ -132,7 +122,6 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
 
     @Override
     public void periodic() {
-        logger.publishAllScheduled();
     }
 
     /**

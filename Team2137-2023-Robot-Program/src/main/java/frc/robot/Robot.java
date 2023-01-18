@@ -58,7 +58,7 @@ public class Robot extends TimedRobot {
     fileLogger.writeEvent(0, FileLogger.EventType.Status, "Started FileLogger Continuing with code...");
 
     fileLogger.writeEvent(0, FileLogger.EventType.Status, "Opening Settings XML File...");
-    settingReader = new XMLSettingReader(Constants.StandardFileAndDirectoryLocations.GenericSettings.getFileLocation(isSimulation), true, fileLogger);
+    settingReader = new XMLSettingReader(Constants.StandardFileAndDirectoryLocations.GenericSettings.getFileLocation(isSimulation),  fileLogger);
     fileLogger.writeEvent(0, FileLogger.EventType.Status, "Opening Step XML File...");
     stepReader = new XMLStepReader(Constants.StandardFileAndDirectoryLocations.GenericStepList.getFileLocation(isSimulation), fileLogger);
     fileLogger.writeEvent(0, "Steps" + stepReader.getSteps().size());

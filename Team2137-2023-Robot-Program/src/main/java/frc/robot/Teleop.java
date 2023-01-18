@@ -76,20 +76,14 @@ public class Teleop implements OpMode {
 
     private void SwerveDrivetrainPeriodic() {
         logger.setTag("SwerveDrivetrainPeriodic()");
-        double xMag = mDriverController.getRawAxis(0);
-        double yMag = mDriverController.getLeftY();
-        double rMag = mDriverController.getRightX(); //TODO must fix TrackWidth
-        logger.writeLine("Q~" + Constants.StandardFileLoggerKeys.DRIVER_CONTROLLER_LOG_KEY.getKey() + "~" + xMag + " " + yMag + " " + rMag);
+        double xMag = Constants.deadband(mDriverController.getLeftX(), 0.05); //TODO fix deadbad to be triangulated not single axis
+        double yMag = -Constants.deadband(mDriverController.getLeftY(), 0.05);
+        double rMag = Constants.deadband(mDriverController.getRightX(), 0.05); //TODO must fix TrackWidth
         SwerveModuleState[] states = ((SwerveDrivetrain) mDrivetrain).calculateSwerveMotorSpeeds(xMag, yMag, rMag, 1, 1, Constants.DriveControlType.RAW);
 
-//        SmartDashboard.putNumber(logger.getTag() + "-RightBackPower", state[0].getRawPowerValue());
-//        SmartDashboard.putNumber(logger.getTag() + "-RightBackAngle", state[0].getRotation2d().getDegrees());
-//        SmartDashboard.putNumber(logger.getTag() + "-LeftBackPower", state[1].getRawPowerValue());
-//        SmartDashboard.putNumber(logger.getTag() + "-LeftBackAngle", state[1].getRotation2d().getDegrees());
-//        SmartDashboard.putNumber(logger.getTag() + "-RightFrontPower", state[2].getRawPowerValue());
-//        SmartDashboard.putNumber(logger.getTag() + "-RightFrontAngle", state[2].getRotation2d().getDegrees());
-//        SmartDashboard.putNumber(logger.getTag() + "-LeftFrontPower", state[3].getRawPowerValue());
-//        SmartDashboard.putNumber(logger.getTag() + "-LeftFrontAngle", state[3].getRotation2d().getDegrees());
+        for(SwerveModuleState state : states) {
+            state.writeToFileLoggerReplayFormat(logger);
+        }
 
         ((SwerveDrivetrain) mDrivetrain).setSwerveModuleStates(states);
     }

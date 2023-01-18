@@ -53,8 +53,8 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
     private PigeonIMU pigeonIMU;
 
-    public SwerveDrivetrain(Element element, int depth, boolean printProcess, FileLogger fileLogger) {
-        super(element, depth, printProcess, fileLogger);
+    public SwerveDrivetrain(Element element, int depth, EntityGroup parent, FileLogger fileLogger) {
+        super(element, depth, parent, fileLogger);
 
         logger = fileLogger;
 
@@ -127,17 +127,6 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
                 new double[] {Math.sqrt(b * b + c * c), -Math.atan2(b, c)}, // Right Front
                 new double[] {Math.sqrt(a * a + c * c), -Math.atan2(a, c)}, // Right Back
         };
-
-        double max = 0;
-        for(double[] moduleState : speeds) {
-            if(Math.abs(moduleState[0]) > max) {
-                max = Math.abs(moduleState[0]);
-            }
-        }
-
-        for(double[] moduleState : speeds) {
-                moduleState[0] /= max;
-        }
 
         if (controlType == Constants.DriveControlType.VELOCITY) {
             return new SwerveModuleState[]{

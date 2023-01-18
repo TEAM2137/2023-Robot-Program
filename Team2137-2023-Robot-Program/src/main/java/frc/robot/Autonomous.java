@@ -102,7 +102,6 @@ public class Autonomous implements OpMode {
     @Override
     public void end() {
         logger.writeEvent(0, EventType.Status, "Autonomous Ending");
-        logger.close();
     }
     //endregion
 

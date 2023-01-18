@@ -20,6 +20,18 @@
             },
             "open": true
           },
+          "Swerve Simulation": {
+            "RightBack": {
+              "Drive Motor": {
+                "open": true
+              },
+              "Turn Encoder": {
+                "open": true
+              },
+              "open": true
+            },
+            "open": true
+          },
           "open": true
         },
         "open": true

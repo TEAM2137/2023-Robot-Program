@@ -49,8 +49,8 @@ public class SwerveNEODriveModule extends EntityGroup implements SwerveModule {
     private DriveControlType mDriveControlType = DriveControlType.RAW;
     private final SwerveModuleState.SwerveModulePositions mSwerveDrivePosition;
 
-    public SwerveNEODriveModule(Element element, int depth, boolean printprocess, FileLogger fileLogger) {
-        super(element, depth, printprocess, fileLogger);
+    public SwerveNEODriveModule(Element element, int depth, EntityGroup parent, FileLogger fileLogger) {
+        super(element, depth, parent, fileLogger);
 
         Motor drive = (Motor) getEntity("Drive Motor");
         Motor turn = (Motor) getEntity("True Motor");

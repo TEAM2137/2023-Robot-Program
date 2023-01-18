@@ -71,22 +71,6 @@ public class FileLogger {
 
     private static ScheduledThreadPoolExecutor flushExecutor;
 
-    public List<ScheduleDebugEntry> scheduledDebugEntries = new ArrayList<>();
-
-    private class ScheduleDebugEntry {
-        public NetworkTableEntry entry;
-        public BiConsumer<FileLogger, NetworkTableEntry> consumer;
-        public String key;
-        public int debug;
-
-        public ScheduleDebugEntry(int _debug, String _key, NetworkTableEntry _entry, BiConsumer<FileLogger, NetworkTableEntry> _consumer) {
-            entry = _entry;
-            key = _key;
-            debug = _debug;
-            consumer = _consumer;
-        }
-    }
-
     /**
      * Constructor for Filelogger, (creates file, starts flushing thread)
      * @param _debug - Debug choice
@@ -279,34 +263,4 @@ public class FileLogger {
         tagString = name;
     }
 
-    public void addScheduledDataLogger(int debug, String key, NetworkTable table, BiConsumer<FileLogger, NetworkTableEntry> consumer) {
-        NetworkTableEntry entry = table.getEntry(key);
-
-        ScheduleDebugEntry scheduleDebugEntry = new ScheduleDebugEntry(debug, key, entry, consumer);
-        scheduledDebugEntries.add(scheduleDebugEntry);
-    }
-
-    public void publishAllScheduled() {
-        for (ScheduleDebugEntry entry : scheduledDebugEntries) {
-            if(entry.debug >= debug) {
-                setTag(entry.key);
-                entry.consumer.accept(this, entry.entry);
-            }
-        }
-
-        setTag("");
-    }
-
-    public void removeAllScheduled() {
-        scheduledDebugEntries.clear();
-    }
-
-    public void removeScheduled(String value) {
-        for (int i = 0; i < scheduledDebugEntries.size(); i++) {
-            if(scheduledDebugEntries.get(i).key.equals(value)) {
-                scheduledDebugEntries.remove(i);
-                return;
-            }
-        }
-    }
 }

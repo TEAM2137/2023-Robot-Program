@@ -43,10 +43,6 @@ public class XMLSettingReader {
     private int maxSettingsFileHistory = 8;
 
     public XMLSettingReader(String dir, FileLogger logger) {
-        this(dir, false, logger);
-    }
-
-    public XMLSettingReader(String dir, boolean printTreeMap, FileLogger logger) {
         log = logger;
         this.settingFile = new File(dir);
 
@@ -80,7 +76,7 @@ public class XMLSettingReader {
 
         NodeList entities = document.getChildNodes();
         log.writeEvent(6, FileLogger.EventType.Status, "Starting recursive search in XML File...");
-        robotEntityGroup = new EntityGroup((Element) entities.item(0), 0, printTreeMap, log);
+        robotEntityGroup = new EntityGroup((Element) entities.item(0), 0, null, log);
     }
 
     public void write() {
