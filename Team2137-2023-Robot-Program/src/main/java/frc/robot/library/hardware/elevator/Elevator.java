@@ -61,5 +61,15 @@ public class Elevator extends EntityGroup {
     public double getRotation() {
         return rotation;
     }
+
+    public void logElevatorState() {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append("QES~");
+        builder.append(distance);
+        builder.append(rotation);
+
+        logger.writeLine(builder.toString());
+    }
     
 }
