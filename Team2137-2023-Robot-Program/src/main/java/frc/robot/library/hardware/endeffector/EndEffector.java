@@ -20,11 +20,6 @@ public class EndEffector extends EntityGroup {
         // TODO: Initialize pneumatics here
     }
 
-//    @Override
-//    public boolean onDestroy(){
-//        return false;
-//    }
-
     @Override
     public void periodic(){
         // Update dashboard stats
@@ -56,5 +51,17 @@ public class EndEffector extends EntityGroup {
         closed = isClosed; // Set to new state
 
         // TODO: Change pneumatics to new state
+    }
+
+    /**
+     * Logs the state of the end effector and writes it to file
+     */
+    public void logEndEffectorState(){
+        StringBuilder builder = new StringBuilder();
+
+        builder.append("Q~EES~"); // Starting string mirroring Q~SWDSE
+        builder.append(Boolean.toString(closed)).append(" ");
+
+        logger.writeLine(builder.toString());
     }
 }
