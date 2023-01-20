@@ -23,7 +23,7 @@ import java.util.List;
 
 public class VelocityGenerator {
 
-    private List<Speed2d> speeds = new ArrayList<>();
+    private final List<Speed2d> speeds = new ArrayList<>();
 
     //Corner percent is the amount to stretch the original slow down determined by the percent of curve (degree change / 180)
     public VelocityGenerator(List<PoseWithCurvature> poses, Speed2d maxDrivetrainVelocity, Speed2d maxDrivetrainAcceleration, double cornerPercent) {//, Speed2d startSpeed, Speed2d endSpeed) {

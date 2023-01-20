@@ -17,6 +17,7 @@ package frc.robot.functions.io.xmlreader.data;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import frc.robot.functions.io.xmlreader.Entity;
+import frc.robot.functions.io.xmlreader.EntityGroup;
 import org.w3c.dom.Element;
 
 public class Threshold extends Entity {

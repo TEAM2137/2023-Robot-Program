@@ -88,11 +88,13 @@ public class FileLogger {
         this.logFileDirectory = directory;
 //        this.logFileDirectory = "/home/lvuser/File Logger/";
 
+        System.out.println(this.logFileDirectory + this.logName);
         try {
             writer = new FileWriter(this.logFileDirectory + this.logName);
             writer.write("MMdd_HHmmss_SSS-Type: Event\n");
             flush();
         } catch (IOException e) {
+            DriverStation.reportError(e.toString(), true);
             e.printStackTrace();
         }
         startThreadedFlush();
@@ -100,7 +102,7 @@ public class FileLogger {
     }
 
     private synchronized void startThreadedFlush() {
-        writeEvent(0, EventType.Status, "Starting Threaded File Flush with 100ms periods");
+        //writeEvent(0, EventType.Status, "Starting Threaded File Flush with 100ms periods");
         flush();
         flushExecutor = new ScheduledThreadPoolExecutor(1);
         flushExecutor.scheduleAtFixedRate(this::flush, 0, 100, TimeUnit.MILLISECONDS);

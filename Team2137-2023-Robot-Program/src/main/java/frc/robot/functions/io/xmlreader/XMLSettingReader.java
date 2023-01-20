@@ -38,9 +38,11 @@ public class XMLSettingReader {
 
     private Document document;
     private final File settingFile;
-    private EntityGroup robotEntityGroup;
-    private FileLogger log;
-    private int maxSettingsFileHistory = 8;
+    private final FileLogger log;
+    private final int maxSettingsFileHistory = 8;
+
+    public static EntityGroup robotEntityGroup;
+    public static EntityGroup settingsEntityGroup;
 
     public XMLSettingReader(String dir, FileLogger logger) {
         log = logger;
@@ -74,9 +76,19 @@ public class XMLSettingReader {
             return;
         }
 
-        NodeList entities = document.getChildNodes();
+        Element rootElement = (Element) document.getChildNodes().item(0);
+
+        Element robotEntities =  (Element) rootElement.getElementsByTagName("Hardware").item(0);
+        Element settingsEntities =  (Element) rootElement.getElementsByTagName("Settings").item(0);
+
         log.writeEvent(6, FileLogger.EventType.Status, "Starting recursive search in XML File...");
-        robotEntityGroup = new EntityGroup((Element) entities.item(0), 0, null, log);
+        settingsEntityGroup = new EntityGroup(settingsEntities, null, log);
+        robotEntityGroup = new EntityGroup(robotEntities, null, log);
+
+        StringBuilder builder = new StringBuilder();
+        robotEntityGroup.constructTreeItemPrintout(builder, 1);
+        settingsEntityGroup.constructTreeItemPrintout(builder, 1);
+        log.writeLine(builder.toString());
     }
 
     public void write() {
@@ -90,16 +102,26 @@ public class XMLSettingReader {
             name = name.substring(0, name.length() - 4);
             String dir = this.settingFile.getParentFile().getAbsolutePath();
 
-            Files.copy(this.settingFile.toPath(), (new File(dir + "\\" + name + dateString + ".xml")).toPath());
+            Files.copy(this.settingFile.toPath(), (new File(dir + "/" + name + dateString + ".xml")).toPath());
             removeUnusedFiles(dir, name);
 
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
             Transformer transformer = transformerFactory.newTransformer();
-            transformer.setOutputProperty(OutputKeys.INDENT, "no");
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
             DOMSource source = new DOMSource(document);
 
-            StreamResult file = new StreamResult(settingFile);
-            transformer.transform(source, file);
+            StreamResult result = new StreamResult(settingFile);
+            transformer.transform(source, result);
+
+//            FileOutputStream fop = new FileOutputStream(settingFile);
+//
+//            // get the content in bytes
+//            String xmlString = result.getWriter().toString();
+//            byte[] contentInBytes = xmlString.getBytes();
+//
+//            fop.write(contentInBytes);
+//            fop.flush();
+//            fop.close();
         } catch (Exception e) {
             e.printStackTrace();
         }

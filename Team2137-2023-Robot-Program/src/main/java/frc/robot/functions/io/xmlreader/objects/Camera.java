@@ -16,6 +16,7 @@ package frc.robot.functions.io.xmlreader.objects;
 
 import edu.wpi.first.networktables.NetworkTable;
 import frc.robot.functions.io.xmlreader.Entity;
+import frc.robot.functions.io.xmlreader.EntityGroup;
 import org.w3c.dom.Element;
 
 public class Camera extends Entity {

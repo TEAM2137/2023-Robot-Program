@@ -48,11 +48,12 @@ public class Robot extends TimedRobot {
   public void robotInit() {
     boolean isSimulation = isSimulation();
 
-    if(Constants.StandardFileAndDirectoryLocations.GenerateAllStandardDirectories(isSimulation)) { //@TODO replace with driver station value
-      System.out.println("Created new Standard Directories for FRC Robot");
-    } else {
-      System.out.println("Using existing Standard Directories");
-    }
+    System.out.println(System.getProperty("user.home"));
+//    if(Constants.StandardFileAndDirectoryLocations.GenerateAllStandardDirectories(isSimulation)) { //@TODO replace with driver station value
+//      System.out.println("Created new Standard Directories for FRC Robot");
+//    } else {
+//      System.out.println("Using existing Standard Directories");
+//    }
 
     fileLogger = new FileLogger(10, Constants.RobotState.MAIN, Constants.StandardFileAndDirectoryLocations.GenericFileLoggerDir.getFileLocation(isSimulation), isSimulation);
     fileLogger.writeEvent(0, FileLogger.EventType.Status, "Started FileLogger Continuing with code...");

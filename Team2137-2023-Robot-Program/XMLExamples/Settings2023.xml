@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <Robot>
+    <Hardware>
         <DriveTrain type="SWERVE" name="Swerve Falcon">
             <Gyro>
                 <Name>Pigeon</Name>
@@ -16,7 +17,7 @@
                     <ID>11</ID>
                     <Type>FALCON</Type>
                     <Inverted>false</Inverted>
-                    <GearRatio>1</GearRatio>
+                    <GearRatio>12.8</GearRatio>
                     <CurrentLimit>60</CurrentLimit>
                     <RampRate>0</RampRate>
                     <PID Slot="0">
@@ -29,10 +30,10 @@
 
                 <Motor>
                     <Name>Drive Motor</Name>
-                    <ID>10</ID>
+                    <ID>9</ID>
                     <Type>FALCON</Type>
                     <Inverted>false</Inverted>
-                    <GearRatio>1</GearRatio>
+                    <GearRatio>6.86</GearRatio>
                     <CurrentLimit>60</CurrentLimit>
                     <RampRate>0</RampRate>
                     <PID Slot="0">
@@ -51,18 +52,18 @@
                     <ID>12</ID>
                     <Type>CTRE_CAN_ABS</Type>
                     <Inverted>false</Inverted>
-                    <Offset>-199.2507</Offset>
+                    <Offset>122.34</Offset>
                 </Encoder>
             </SwerveModule>
 
-            <SwerveModule type="SIMULATION" name="LeftBack">
+            <SwerveModule type="FALCON" name="LeftBack">
                 <Motor>
                     <Note>This is the Left Front Back Motor on the Swerve Module</Note>
                     <Name>Turn Motor</Name>
                     <ID>21</ID>
                     <Type>FALCON</Type>
                     <Inverted>false</Inverted>
-                    <GearRatio>1</GearRatio>
+                    <GearRatio>12.8</GearRatio>
                     <CurrentLimit>60</CurrentLimit>
                     <RampRate>0</RampRate>
                     <PID Slot="0">
@@ -78,7 +79,7 @@
                     <ID>20</ID>
                     <Type>FALCON</Type>
                     <Inverted>false</Inverted>
-                    <GearRatio>1</GearRatio>
+                    <GearRatio>6.86</GearRatio>
                     <CurrentLimit>60</CurrentLimit>
                     <RampRate>0</RampRate>
                     <PID Slot="0">
@@ -97,18 +98,18 @@
                     <ID>22</ID>
                     <Type>CTRE_CAN_ABS</Type>
                     <Inverted>false</Inverted>
-                    <Offset>-152.6001</Offset>
+                    <Offset>129.90</Offset>
                 </Encoder>
             </SwerveModule>
 
-            <SwerveModule type="SIMULATION" name="RightFront">
+            <SwerveModule type="FALCON" name="RightFront">
                 <Motor>
                     <Note>This is the Right Front Motor on the Swerve Module</Note>
                     <Name>Turn Motor</Name>
                     <ID>16</ID>
                     <Type>FALCON</Type>
                     <Inverted>false</Inverted>
-                    <GearRatio>1</GearRatio>
+                    <GearRatio>12.8</GearRatio>
                     <CurrentLimit>60</CurrentLimit>
                     <RampRate>0</RampRate>
                     <PID Slot="0">
@@ -123,8 +124,8 @@
                     <Name>Drive Motor</Name>
                     <ID>15</ID>
                     <Type>FALCON</Type>
-                    <Inverted>false</Inverted>
-                    <GearRatio>1</GearRatio>
+                    <Inverted>true</Inverted>
+                    <GearRatio>6.86</GearRatio>
                     <CurrentLimit>60</CurrentLimit>
                     <RampRate>0</RampRate>
                     <PID Slot="0">
@@ -143,18 +144,18 @@
                     <ID>17</ID>
                     <Type>CTRE_CAN_ABS</Type>
                     <Inverted>false</Inverted>
-                    <Offset>-169.1894</Offset>
+                    <Offset>100.72</Offset>
                 </Encoder>
             </SwerveModule>
 
-            <SwerveModule type="SIMULATION" name="RightBack">
+            <SwerveModule type="FALCON" name="RightBack">
                 <Motor>
                     <Note>This is the Right Back Back Motor on the Swerve Module</Note>
                     <Name>Turn Motor</Name>
                     <ID>26</ID>
                     <Type>FALCON</Type>
                     <Inverted>false</Inverted>
-                    <GearRatio>1</GearRatio>
+                    <GearRatio>12.8</GearRatio>
                     <CurrentLimit>60</CurrentLimit>
                     <RampRate>0</RampRate>
                     <PID Slot="0">
@@ -169,8 +170,8 @@
                     <Name>Drive Motor</Name>
                     <ID>25</ID>
                     <Type>FALCON</Type>
-                    <Inverted>false</Inverted>
-                    <GearRatio>1</GearRatio>
+                    <Inverted>true</Inverted>
+                    <GearRatio>6.86</GearRatio>
                     <CurrentLimit>60</CurrentLimit>
                     <RampRate>0</RampRate>
                     <PID Slot="0">
@@ -189,17 +190,18 @@
                     <ID>27</ID>
                     <Type>CTRE_CAN_ABS</Type>
                     <Inverted>false</Inverted>
-                    <Offset>-21.6156</Offset>
+                    <Offset>-8.61</Offset>
                 </Encoder>
             </SwerveModule>
         </DriveTrain>
+    </Hardware>
 
     <Settings>
-        <DriveTrain-WheelDiameter unit="in">4.0</DriveTrain-WheelDiameter>
-        <DriveTrain-ConversionFactor>1.53995</DriveTrain-ConversionFactor>
-        <DriveTrain-Length unit="in">24.5</DriveTrain-Length>
-        <DriveTrain-Width unit="in">21.5</DriveTrain-Width>
-        <DriveTrain-MaxSpeed unit="fps">15</DriveTrain-MaxSpeed>
-        <DriveTrain-MaxAccel>8.0</DriveTrain-MaxAccel>
+        <Number name="DriveTrain-WheelDiameter" unit="in">4.0</Number>
+        <Number name="DriveTrain-ConversionFactor">1.53995</Number>
+        <Number name="DriveTrain-Length" unit="in">24.5</Number>
+        <Number name="DriveTrain-Width" unit="in">21.5</Number>
+        <Number name="DriveTrain-MaxSpeed" unit="fps">15</Number>
+        <Number name="DriveTrain-MaxAccel" unit="fps2">8.0</Number>
     </Settings>
 </Robot>

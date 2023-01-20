@@ -37,20 +37,20 @@ public class SwerveNEODriveModule extends EntityGroup implements SwerveModule {
     private static final int intDriveDistancePIDSlotID = 1;
     public CANSparkMax mDriveMotor;
     public CANSparkMax mTurnMotor;
-    private RelativeEncoder mTurnMotorEncoder;
-    private RelativeEncoder mDriveMotorEncoder;
-    private CANCoder mTurnEncoder;
-    private SparkMaxPIDController mDrivePIDController;
-    private PIDController mTurnPIDController;
+    private final RelativeEncoder mTurnMotorEncoder;
+    private final RelativeEncoder mDriveMotorEncoder;
+    private final CANCoder mTurnEncoder;
+    private final SparkMaxPIDController mDrivePIDController;
+    private final PIDController mTurnPIDController;
     private Speed2d mDriveVelocityGoal = new Speed2d(0);
     private Distance2d mDriveDistanceGoal = Distance2d.fromFeet(0);
     private Rotation2d turningSetPoint;
-    private Motor mDriveMotorObj;
+    private final Motor mDriveMotorObj;
     private DriveControlType mDriveControlType = DriveControlType.RAW;
     private final SwerveModuleState.SwerveModulePositions mSwerveDrivePosition;
 
-    public SwerveNEODriveModule(Element element, int depth, EntityGroup parent, FileLogger fileLogger) {
-        super(element, depth, parent, fileLogger);
+    public SwerveNEODriveModule(Element element, EntityGroup parent, FileLogger fileLogger) {
+        super(element, parent, fileLogger);
 
         Motor drive = (Motor) getEntity("Drive Motor");
         Motor turn = (Motor) getEntity("True Motor");

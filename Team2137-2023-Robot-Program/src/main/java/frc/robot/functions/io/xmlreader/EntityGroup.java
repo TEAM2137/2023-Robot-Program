@@ -47,8 +47,7 @@ import java.util.function.BiConsumer;
 public class EntityGroup extends Entity {
 
     private final String type; //Type of EntityGroup (Intake, Climber, etc.)
-    private final HashMap<String, Entity> hardwareEntities = new HashMap<>(); //Child devices
-    private final HashMap<String, Entity> settingsEntities = new HashMap<>(); //Child devices
+    private final HashMap<String, Entity> childEntities = new HashMap<>(); //Child devices
     private final HashMap<String, EntityGroup> childSubsystem = new HashMap<>(); //Child device groups
 
     private String entityPath = "root";
@@ -140,16 +139,16 @@ public class EntityGroup extends Entity {
      * Takes in a part of the xml file and parses it into variables and subtypes using recursion
      * @param element - Portion of the XML File
      */
-    public EntityGroup(Element element, int depth, EntityGroup parent, FileLogger fileLogger) {
+    public EntityGroup(Element element, EntityGroup parent, FileLogger fileLogger) {
         super(element); //Supply super with info
         logger = fileLogger;
         type = element.getTagName(); //Record the Tag Name or the Type
         Robot.subSystemCallList.add(this);
 
         if(parent != null)
-            entityPath = parent.entityPath + getName();
+            entityPath = parent.entityPath + "/" + getName();
 
-        findEntities(element, depth, logger);
+        findEntities(element, logger);
     }
 
     public Class<? extends EntityGroup> createEntityGroup(Element tmp) {
@@ -161,8 +160,9 @@ public class EntityGroup extends Entity {
             return EntityGroup.class;
     }
 
-    protected void findEntities(Node element, int depth, FileLogger fileLogger) {
+    protected void findEntities(Node element, FileLogger fileLogger) {
         NodeList list = element.getChildNodes();
+
         if (list.getLength() > 1) {
             for(int i = 0; i < list.getLength(); i++) {
                 if(list.item(i).getNodeType() == Node.ELEMENT_NODE) {
@@ -176,19 +176,16 @@ public class EntityGroup extends Entity {
                         if(e == null)
                             continue;
 
-                        fileLogger.rawWrite("\t".repeat(depth + 1) + tmp.getTagName() + " - " + e.getName() + "\n");
+                        //fileLogger.rawWrite("\t".repeat(depth + 1) + tmp.getTagName() + " - " + e.getName() + "\n");
 
-                        StringBuilder outputBuilder = new StringBuilder();
-                        e.constructTreeItemPrintout(outputBuilder, depth + 1);
-                        fileLogger.rawWrite(outputBuilder.toString() + "\n");
+//                        StringBuilder outputBuilder = new StringBuilder();
+//                        e.constructTreeItemPrintout(outputBuilder, depth + 1);
+//                        fileLogger.rawWrite(outputBuilder.toString() + "\n");
 
-                        if(!e.isHardwareDevice())
-                            settingsEntities.put(e.getName().toUpperCase(), e);
-                        else
-                            hardwareEntities.put(e.getName().toUpperCase(), e);
+                        childEntities.put(e.getName().toUpperCase(), e);
 
                     } else {
-                        fileLogger.rawWrite("\n" + "\t".repeat(depth + 1) + tmp.getTagName() + " - " + getNodeOrAttribute(tmp, "name", null) + "\n");
+                        //fileLogger.rawWrite("\n" + "\t".repeat(depth + 1) + tmp.getTagName() + " - " + getNodeOrAttribute(tmp, "name", null) + "\n");
 
                         Class<? extends EntityGroup> entityGroupClass;
                         if(autoClassCreationEnabled) {
@@ -201,13 +198,15 @@ public class EntityGroup extends Entity {
                             if(entityGroupClass == null) {
                                 logger.writeEvent(0, FileLogger.EventType.Error, tmp.getTagName());
                             }
-                            EntityGroup returner = entityGroupClass.getDeclaredConstructor(Element.class, int.class, EntityGroup.class, FileLogger.class).newInstance(tmp, depth + 1, this, logger);
+
+                            EntityGroup returner = entityGroupClass.getDeclaredConstructor(Element.class, EntityGroup.class, FileLogger.class).newInstance(tmp, this, logger);
 
                             childSubsystem.put(returner.getName().toUpperCase(), returner);
                         } catch (NoSuchMethodException e) {
                             fileLogger.writeLine("Could not find constructor for " + tmp.getTagName() + " device");
                         } catch (Exception e) {
                             fileLogger.writeLine("An exception occurred in the EntityGroup's constructor");
+                            fileLogger.writeLine(e.toString());
                             e.printStackTrace();
                             fileLogger.writeLine("Proceeding with out...");
                         }
@@ -219,15 +218,20 @@ public class EntityGroup extends Entity {
         }
     }
 
+    @Override
+    public void constructTreeItemPrintout(StringBuilder builder, int depth) {
+        super.constructTreeItemPrintout(builder, depth);
+
+        childEntities.forEach((a, b) -> b.constructTreeItemPrintout(builder, depth + 1));
+        childSubsystem.forEach((a, b) -> b.constructTreeItemPrintout(builder, depth + 1));
+    }
+
     /**
      * Add a child device to this deviceGroup
      * @param _device - An child class of Entity type
      */
     public void addEntity(Entity _device) {
-        if(_device.isHardwareDevice())
-            hardwareEntities.put(_device.getName().toUpperCase(), _device);
-        else
-            settingsEntities.put(_device.getName().toUpperCase(), _device);
+        childEntities.put(_device.getName().toUpperCase(), _device);
     }
 
     /**
@@ -285,28 +289,16 @@ public class EntityGroup extends Entity {
      */
     public Entity getEntity(String name) {
         name = name.toUpperCase();
-        Entity result = hardwareEntities.getOrDefault(name, null);
 
-        if(result == null)
-            result = settingsEntities.getOrDefault(name, null);
-
-        return result;
-    }
-
-    public Entity getSettingEntity(String name) {
-        return settingsEntities.getOrDefault(name.toUpperCase(), null);
+        return childEntities.getOrDefault(name, null);
     }
 
     public Entity getHardwareEntity(String name) {
-        return hardwareEntities.getOrDefault(name.toUpperCase(), null);
+        return childEntities.getOrDefault(name.toUpperCase(), null);
     }
 
     public List<Entity> getHardwareEntities() {
-        return new ArrayList<>(hardwareEntities.values());
-    }
-
-    public List<Entity> getSettingEntities() {
-        return new ArrayList<>(settingsEntities.values());
+        return new ArrayList<>(childEntities.values());
     }
 
     /**
@@ -366,8 +358,7 @@ public class EntityGroup extends Entity {
         else
             subInstance = super.addToNetworkTable(instance);
 
-        hardwareEntities.forEach((a, b) -> b.addToNetworkTable(subInstance));
-        settingsEntities.forEach((a, b) -> b.addToNetworkTable(subInstance));
+        childEntities.forEach((a, b) -> b.addToNetworkTable(subInstance));
         childSubsystem.forEach((a, b) -> b.addToNetworkTable(subInstance));
 
         return subInstance;
@@ -377,8 +368,7 @@ public class EntityGroup extends Entity {
     public NetworkTable removeFromNetworkTable() {
         NetworkTable subInstance = super.removeFromNetworkTable();
 
-        hardwareEntities.forEach((a, b) -> b.removeFromNetworkTable());
-        settingsEntities.forEach((a, b) -> b.removeFromNetworkTable());
+        childEntities.forEach((a, b) -> b.removeFromNetworkTable());
         childSubsystem.forEach((a, b) -> b.removeFromNetworkTable());
 
         return subInstance;
@@ -388,8 +378,7 @@ public class EntityGroup extends Entity {
     public NetworkTable pullFromNetworkTable() {
         NetworkTable subInstance = super.removeFromNetworkTable();
 
-        hardwareEntities.forEach((a, b) -> b.pullFromNetworkTable());
-        settingsEntities.forEach((a, b) -> b.pullFromNetworkTable());
+        childEntities.forEach((a, b) -> b.pullFromNetworkTable());
         childSubsystem.forEach((a, b) -> b.pullFromNetworkTable());
 
         return subInstance;
@@ -401,14 +390,7 @@ public class EntityGroup extends Entity {
             boolean flag = true;
         };
 
-        hardwareEntities.forEach((a, b) ->  {
-            try {
-                ref.flag = ref.flag && b.onDestroy();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
-        settingsEntities.forEach((a, b) -> {
+        childEntities.forEach((a, b) ->  {
             try {
                 ref.flag = ref.flag && b.onDestroy();
             } catch (Exception e) {
@@ -432,8 +414,7 @@ public class EntityGroup extends Entity {
     public Element updateElement() {
         super.updateElement();
 
-        hardwareEntities.forEach((a, b) -> b.updateElement());
-        settingsEntities.forEach((a, b) -> b.updateElement());
+        childEntities.forEach((a, b) -> b.updateElement());
         childSubsystem.forEach((a, b) -> b.updateElement());
 
         return getSavedElement();
@@ -446,6 +427,10 @@ public class EntityGroup extends Entity {
 //        else
 //            return super.getName();
 //    }
+
+    public String getEntityPath() {
+        return entityPath + "/";
+    }
 
     public void periodic() {
         //Robot.subSystemCallList.remove(this);

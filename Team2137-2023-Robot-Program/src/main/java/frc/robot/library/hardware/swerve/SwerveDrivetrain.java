@@ -49,12 +49,12 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
     public Motor.MotorTypes driveTrainType;
 
-    private FileLogger logger;
+    private final FileLogger logger;
 
     private PigeonIMU pigeonIMU;
 
-    public SwerveDrivetrain(Element element, int depth, EntityGroup parent, FileLogger fileLogger) {
-        super(element, depth, parent, fileLogger);
+    public SwerveDrivetrain(Element element, EntityGroup parent, FileLogger fileLogger) {
+        super(element, parent, fileLogger);
 
         logger = fileLogger;
 

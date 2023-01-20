@@ -16,12 +16,18 @@ package frc.robot.library.hardware.swerve.module;
 
 import com.ctre.phoenix.motorcontrol.*;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
+import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
+import com.ctre.phoenix.sensors.CANCoderConfiguration;
+import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
+import frc.robot.functions.io.xmlreader.XMLSettingReader;
 import frc.robot.functions.io.xmlreader.data.PID;
 import frc.robot.functions.io.xmlreader.objects.Encoder;
 import frc.robot.functions.io.xmlreader.objects.Motor;
@@ -42,10 +48,10 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
     private final CANCoder mTurnCANEncoder;
 
     private SimpleMotorFeedforward mDriveMotorObjFeedForward;
-    private Rotation2d goalModuleAngle;
+    private Rotation2d goalModuleAngle = Rotation2d.fromDegrees(0);
 
-    private Distance2d dblDriveWheelRotationPerFoot;//Rotations per Unit
-    private Number dblWheelDiameter;
+    private final Distance2d dblDriveWheelRotationPerFoot;//Rotations per Unit
+    private final Number dblWheelDiameter;
 
     private Speed2d mDriveVelocityGoal = new Speed2d(0);
     private Distance2d mDriveDistanceGoal = Distance2d.fromFeet(0);
@@ -56,12 +62,18 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
     private Constants.DriveControlType mDriveControlType = Constants.DriveControlType.UNDEFINED;
     private final SwerveModuleState.SwerveModulePositions mSwerveDrivePosition;
 
-    public SwerveFALCONDriveModule(Element element, int depth, EntityGroup parent, FileLogger fileLogger) {
-        super(element, depth, parent, fileLogger);
+    public SwerveFALCONDriveModule(Element element, EntityGroup parent, FileLogger fileLogger) {
+        super(element, parent, fileLogger);
+
+        //region Logging Setup
+        logger = fileLogger;
+        logger.setTag("SwerveFALCONDriveModule");
+        //endregion
 
         //region Drive Motor Setup
         this.mDriveMotorObj = (Motor) getEntity("Drive Motor");
 
+        logger.writeEvent(4, FileLogger.EventType.Debug, "Initializing Falcon Drive Motor...");
         this.mDriveMotor = new TalonFX(mDriveMotorObj.getID());
         this.mDriveMotor.configFactoryDefault();
         this.mDriveMotor.setInverted(mDriveMotorObj.inverted());
@@ -69,43 +81,52 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
         this.mDriveMotor.setNeutralMode(NeutralMode.Brake);
         this.mDriveMotor.configOpenloopRamp(mDriveMotorObj.getRampRate());
         this.mDriveMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor, 0, 10);
+
+//        TalonFXConfiguration configDrive = new TalonFXConfiguration();
+//        this.mDriveMotor.getAllConfigs(configDrive);
+//        logger.writeEvent(0, getSwerveModuleLocation().toString() + " Drive Motor Configuration", configDrive.toString());
         //endregion
 
         //region Turn Motor Setup
         this.mTurnMotorObj = (Motor) getEntity("Turn Motor");
 
+        logger.writeEvent(4, FileLogger.EventType.Debug, "Initializing Falcon Turn Motor...");
         this.mTurnMotor = new TalonFX(mTurnMotorObj.getID());
         this.mTurnMotor.configFactoryDefault();
         this.mTurnMotor.setInverted(mTurnMotorObj.inverted());
         this.mTurnMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, mDriveMotorObj.getCurrentLimit(), mDriveMotorObj.getCurrentLimit(), 1));
         this.mTurnMotor.setNeutralMode(NeutralMode.Brake);
         this.mTurnMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor, 0, 10);
+        this.mTurnMotor.configSelectedFeedbackCoefficient(1);
+
+//        TalonFXConfiguration config = new TalonFXConfiguration();
+//        this.mTurnMotor.getAllConfigs(config);
+//        logger.writeEvent(0, getSwerveModuleLocation().toString() + " Turn Motor Configuration", config.toString());
 
         PID tmpPID = mTurnMotorObj.getPID(0);
+        logger.writeEvent(4, FileLogger.EventType.Debug, "Configuring Turn Motor PID values...");
         this.mTurnMotor.config_kP(0, tmpPID.getP());
         this.mTurnMotor.config_kI(0, tmpPID.getI());
         this.mTurnMotor.config_kD(0, tmpPID.getD());
+        //tmpPID.addToLogger(logger, getSwerveModuleLocation().toString() + " Turn Motor");
         //endregion
-
 
         //region Turn CAN Encoder Setup
         mTurnCANEncoderObj = (Encoder) getEntity("Turn Encoder");
 
+        logger.writeEvent(4, FileLogger.EventType.Debug, "Initializing Turning CAN Encoder...");
         this.mTurnCANEncoder = new CANCoder(mTurnCANEncoderObj.getID());
+        this.mTurnCANEncoder.configFactoryDefault();
+        this.mTurnCANEncoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
         this.mTurnCANEncoder.configAbsoluteSensorRange(AbsoluteSensorRange.Signed_PlusMinus180); // -180 to 180
         this.mTurnCANEncoder.configMagnetOffset(mTurnCANEncoderObj.getOffset());
         //endregion
 
-
         //region Local Variable Declaration
+        logger.writeEvent(4, FileLogger.EventType.Debug, "Getting Setting Variables from file...");
         mSwerveDrivePosition = SwerveModuleState.SwerveModulePositions.getPositionFromString(this.getName());
-        dblWheelDiameter = (Number) this.getEntity("DriveTrain-WheelDiameter");
+        dblWheelDiameter = (Number) XMLSettingReader.settingsEntityGroup.getEntity("DriveTrain-WheelDiameter");
         dblDriveWheelRotationPerFoot = Distance2d.fromFeet((Math.PI * (dblWheelDiameter.getValue() / 12.0)) / this.mDriveMotorObj.getGearRatio()); //Rotations per Foot (Moves PI/3 feet every rotation of wheel then divde by gear ratio
-        //endregion
-
-
-        //region Logging Setup
-        logger = fileLogger;
         //endregion
 
         //this.mDriveMotorObjFeedForward = mDriveMotorObj.getPID(intDriveVelocityPIDSlotID).getWPIFeedForwardController();
@@ -122,6 +143,12 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
 
     @Override
     public void periodic() {
+        NetworkTableInstance table = NetworkTableInstance.getDefault();
+
+        table.getEntry(getEntityPath() + "Speed").setDouble(getRawDrivePower());
+        table.getEntry(getEntityPath() + "AngleTarget").setDouble(goalModuleAngle.getDegrees());
+        table.getEntry(getEntityPath() + "Angle").setDouble(getModuleAngle().getDegrees());
+        table.getEntry(getEntityPath() + "RawAngleCounts").setDouble(this.mTurnMotor.getSelectedSensorPosition());
     }
 
     /**
@@ -238,7 +265,7 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
             configDrivetrainControlType(Constants.DriveControlType.DISTANCE);
         }
 
-        mDriveMotor.set(ControlMode.Position, distance2d.getValue(Distance2d.DistanceUnits.FEET) /  dblDriveWheelRotationPerFoot.getValue(Distance2d.DistanceUnits.FEET) * 2048);
+        mDriveMotor.set(ControlMode.Position, distance2d.getValue(Distance2d.DistanceUnits.FEET) / dblDriveWheelRotationPerFoot.getValue(Distance2d.DistanceUnits.FEET) * 2048);
     }
 
     /**

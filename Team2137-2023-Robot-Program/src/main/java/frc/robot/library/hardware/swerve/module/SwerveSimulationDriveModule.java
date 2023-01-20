@@ -20,9 +20,14 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
+import frc.robot.functions.io.xmlreader.XMLSettingReader;
+import frc.robot.functions.io.xmlreader.data.Number;
+import frc.robot.functions.io.xmlreader.data.PID;
 import frc.robot.functions.io.xmlreader.objects.Encoder;
 import frc.robot.functions.io.xmlreader.objects.Motor;
 import frc.robot.library.Constants;
@@ -45,24 +50,21 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
     private double mDriveRawGoal = 0;
     private Rotation2d turningSetPoint = Rotation2d.fromDegrees(0);
 
-    private Speed2d mDriveVelocityCurrent = new Speed2d(0);
-    private Distance2d mDriveDistanceCurrent = Distance2d.fromFeet(0);
-    private double mDriveRawPercent = 0;
-    private Rotation2d turningCurrent = Rotation2d.fromDegrees(0);
+    private final Speed2d mDriveVelocityCurrent = new Speed2d(0);
+    private final Distance2d mDriveDistanceCurrent = Distance2d.fromFeet(0);
+    private final double mDriveRawPercent = 0;
+    private final Rotation2d turningCurrent = Rotation2d.fromDegrees(0);
+    private final Number dblWheelDiameter;
 
     private Constants.DriveControlType mDriveControlType = Constants.DriveControlType.RAW;
     //private SwerveModuleState.SwerveModulePositions swerveModulePosition;
 
-    private ArrayList<SwerveModuleState> swervePastStates = new ArrayList<>();
-    private int periodBetweenRecords = 100;
-    private long lastRecordTime;
-
-    private FileLogger logger;
+    private final FileLogger logger;
 
     private final SwerveModuleState.SwerveModulePositions mSwerveDrivePosition;
 
-    public SwerveSimulationDriveModule(Element element, int depth, EntityGroup parent, FileLogger fileLogger) {
-        super(element, depth, parent, fileLogger);
+    public SwerveSimulationDriveModule(Element element, EntityGroup parent, FileLogger fileLogger) {
+        super(element, parent, fileLogger);
 
         fileLogger.writeEvent(0, FileLogger.EventType.Error, "Simulated SwerveModuleCreated " + this.getName());
 
@@ -70,15 +72,18 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
 
         logger = fileLogger;
 
-        configDrivetrainControlType(Constants.DriveControlType.RAW);
+        dblWheelDiameter = (Number) XMLSettingReader.settingsEntityGroup.getEntity("DriveTrain-WheelDiameter");
+        logger.writeEvent(0, FileLogger.EventType.Debug, "WheelDiameter: " + dblWheelDiameter.getValue());
 
-        lastRecordTime = System.currentTimeMillis();
+        configDrivetrainControlType(Constants.DriveControlType.RAW);
     }
 
     @Override
     public void periodic() {
-        SmartDashboard.putNumber(mSwerveDrivePosition + "Speed", getRawDrivePower());
-        SmartDashboard.putNumber(mSwerveDrivePosition + "Angle", getModuleAngle().getDegrees());
+        NetworkTableInstance table = NetworkTableInstance.getDefault();
+        table.getEntry(getEntityPath() + "Speed").setDouble(getRawDrivePower());
+        table.getEntry(getEntityPath() + "Angle").setDouble(getRawDrivePower());
+
 //        if(lastRecordTime + periodBetweenRecords > System.currentTimeMillis()) {
 //            getSwerveModuleState().writeToFileLoggerReplayFormat(logger);
 

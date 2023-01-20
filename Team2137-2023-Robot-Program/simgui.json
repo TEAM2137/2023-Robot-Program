@@ -5,12 +5,45 @@
     }
   },
   "NetworkTables": {
+    "Persistent Values": {
+      "open": false
+    },
+    "Retained Values": {
+      "open": false
+    },
     "transitory": {
       "SmartDashboard": {
+        "XMLConfiguration": {
+          "Robot": {
+            "Swerve Simulation": {
+              "open": true
+            },
+            "open": true
+          },
+          "open": true
+        },
         "XMLConfigurationEntry": {
           "open": true
         },
-        "open": true
+        "open": true,
+        "root": {
+          "Swerve Falcon": {
+            "LeftBack": {
+              "open": true
+            },
+            "LeftFront": {
+              "open": true
+            },
+            "RightBack": {
+              "open": true
+            },
+            "RightFront": {
+              "open": true
+            },
+            "open": true
+          },
+          "open": true
+        }
       },
       "XMLConfiguration": {
         "Robot": {
@@ -21,6 +54,9 @@
             "open": true
           },
           "Swerve Simulation": {
+            "LeftBack": {
+              "open": true
+            },
             "RightBack": {
               "Drive Motor": {
                 "open": true
@@ -28,13 +64,15 @@
               "Turn Encoder": {
                 "open": true
               },
+              "Turn Motor": {
+                "open": true
+              },
               "open": true
             },
             "open": true
           },
           "open": true
-        },
-        "open": true
+        }
       }
     }
   }

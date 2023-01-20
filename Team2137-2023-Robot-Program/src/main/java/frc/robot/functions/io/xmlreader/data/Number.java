@@ -46,11 +46,7 @@ public class Number extends Entity {
     public Number(Element element) {
         super(element);
 
-        String val = getNodeOrAttribute(element, "value", null);
-        if (val == null)
-            value = Double.parseDouble(element.getTextContent());
-        else
-            value = Double.parseDouble(val);
+        value = Double.parseDouble(element.getTextContent());
     }
 
     /**

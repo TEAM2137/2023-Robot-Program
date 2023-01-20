@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <Robot>
+    <Hardware>
         <DriveTrain type="SWERVE" name="Swerve Falcon">
             <Gyro>
                 <Name>Pigeon</Name>
@@ -272,12 +273,14 @@
                 </PID>
             </Motor>
         </Shooter>
+    </Hardware>
 
     <Settings>
-        <DriveTrain-ConversionFactor>1.53995</DriveTrain-ConversionFactor>
-        <DriveTrain-Length unit="in">24.5</DriveTrain-Length>
-        <DriveTrain-Width unit="in">21.5</DriveTrain-Width>
-        <DriveTrain-MaxSpeed unit="fps">15</DriveTrain-MaxSpeed>
-        <DriveTrain-MaxAccel>8.0</DriveTrain-MaxAccel>
+        <Number name="DriveTrain-WheelDiameter" unit="in">4.0</Number>
+        <Number name="DriveTrain-ConversionFactor">1.53995</Number>
+        <Number name="DriveTrain-Length" unit="in">24.5</Number>
+        <Number name="DriveTrain-Width" unit="in">21.5</Number>
+        <Number name="DriveTrain-MaxSpeed" unit="fps">15</Number>
+        <Number name="DriveTrain-MaxAccel" unit="fps2">8.0</Number>
     </Settings>
 </Robot>

@@ -45,30 +45,32 @@ public final class Constants {
 
     //region File Locations
     public enum StandardFileAndDirectoryLocations {
-        GenericSettings("Settings.xml"),
-        GenericStepList("Steps.xml"),
-        GenericFileLoggerDir("\\FileLogs\\"),
+        GenericSettings("Settings.xml", "Settings.xml"),
+        GenericStepList("Steps.xml", "Steps.xml"),
+        GenericFileLoggerDir("FileLogs/", "\\FileLogs\\"), //TODO fix for windows vs Linux
 
         //region 2022 XML File Locations
-        TEAM2137RED1_2022("Team2137_2022_Red1_Steps.xml"),
-        TEAM2137RED2_2022("Team2137_2022_Red2_Steps.xml"),
-        TEAM2137RED3_2022("Team2137_2022_Red3_Steps.xml"),
-        TEAM2137BLUE1_2022("Team2137_2022_Blue1_Steps.xml"),
-        TEAM2137BLUE2_2022("Team2137_2022_Blue2_Steps.xml"),
-        TEAM2137BLUE3_2022("Team2137_2022_Blue3_Steps.xml"),
-        TEAM2137Test_2022("Team2137_2022_Test_Steps.xml"),
-        TEAM2137Settings_2022("Team2137_2022_Settings.xml")
+        TEAM2137RED1_2022("Team2137_2022_Red1_Steps.xml", "Team2137_2022_Red1_Steps.xml"),
+        TEAM2137RED2_2022("Team2137_2022_Red2_Steps.xml", "Team2137_2022_Red2_Steps.xml"),
+        TEAM2137RED3_2022("Team2137_2022_Red3_Steps.xml", "Team2137_2022_Red3_Steps.xml"),
+        TEAM2137BLUE1_2022("Team2137_2022_Blue1_Steps.xml", "Team2137_2022_Blue1_Steps.xml"),
+        TEAM2137BLUE2_2022("Team2137_2022_Blue2_Steps.xml", "Team2137_2022_Blue2_Steps.xml"),
+        TEAM2137BLUE3_2022("Team2137_2022_Blue3_Steps.xml", "Team2137_2022_Blue3_Steps.xml"),
+        TEAM2137Test_2022("Team2137_2022_Test_Steps.xml", "Team2137_2022_Test_Steps.xml"),
+        TEAM2137Settings_2022("Team2137_2022_Settings.xml", "Team2137_2022_Settings.xml")
         //endregion
         ;
 
-        private final String loc;
+        private final String locSim;
+        private final String locRio;
 
         //Uses current users home location (for windows C:/Users/Wyatt)
         public static final String xmlDesktopFileLocation = System.getProperty("user.home") + "\\FRC_ROBOT_FILES\\";
-        public static final String xmlRoboRioFileLocation = System.getProperty("user.home") + "\\FRC_ROBOT_FILES\\";
+        public static final String xmlRoboRioFileLocation = System.getProperty("user.home") + "/FRC_ROBOT_FILES/";
 
-        StandardFileAndDirectoryLocations(String location) {
-            loc = location;
+        StandardFileAndDirectoryLocations(String locationRio, String locationSimulation) {
+            locRio = locationRio;
+            locSim = locationSimulation;
         }
 
         /**
@@ -77,9 +79,9 @@ public final class Constants {
          */
         public String getFileLocation(boolean simulation) {
             if (simulation) {
-                return xmlDesktopFileLocation + loc;
+                return xmlDesktopFileLocation + locSim;
             } else {
-                return xmlRoboRioFileLocation + loc;
+                return xmlRoboRioFileLocation + locRio;
             }
         }
 

@@ -24,8 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Spline {
-    private int m_degree;
-    private SimpleMatrix coefficients;
+    private final int m_degree;
+    private final SimpleMatrix coefficients;
 
     public Spline(int degree, SimpleMatrix coe) {
         m_degree = degree;

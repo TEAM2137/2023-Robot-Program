@@ -175,7 +175,7 @@ public class Autonomous implements OpMode {
         logger.setTag("setSwerveDrivetrainVelocity()");
         switch (step.getStepState()) {
             case STATE_INIT:
-                SwerveDrivetrain swerve = (SwerveDrivetrain) mDrivetrain;
+                SwerveDrivetrain swerve = mDrivetrain;
 
                 Speed2d xVelocity = Speed2d.fromFeetPerSecond(step.getXDistance());
                 Speed2d yVelocity = Speed2d.fromFeetPerSecond(step.getYDistance());

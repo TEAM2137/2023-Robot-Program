@@ -19,6 +19,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.functions.io.xmlreader.Entity;
+import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.data.PID;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -94,7 +95,7 @@ public class Motor extends Entity {
         return this.gearRatio;
     }
 
-    public void setGearRatio(double ratio) { this.gearRatio = ratio; };
+    public void setGearRatio(double ratio) { this.gearRatio = ratio; }
 
     public MotorTypes getMotorType() {
         return this.type;
@@ -143,6 +144,7 @@ public class Motor extends Entity {
     @Override
     public void constructTreeItemPrintout(StringBuilder builder, int depth) {
         super.constructTreeItemPrintout(builder, depth);
+
         buildStringTabbedData(builder, depth, "ID", String.valueOf(id));
         buildStringTabbedData(builder, depth, "Type", type.toString());
         buildStringTabbedData(builder, depth, "Inverted", String.valueOf(inverted));
@@ -236,7 +238,7 @@ public class Motor extends Entity {
 
     public enum MotorClass {
         Brushless,
-        Brushed;
+        Brushed
     }
 
     public enum MotorTypes {

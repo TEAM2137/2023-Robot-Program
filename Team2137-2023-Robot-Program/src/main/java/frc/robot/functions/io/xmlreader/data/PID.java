@@ -16,7 +16,9 @@ package frc.robot.functions.io.xmlreader.data;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.Entity;
+import frc.robot.functions.io.xmlreader.EntityGroup;
 import org.w3c.dom.Element;
 
 public class PID extends Entity {
@@ -162,6 +164,12 @@ public class PID extends Entity {
 
     public SimpleMotorFeedforward getWPIFeedForwardController() {
         return new SimpleMotorFeedforward(S, V, A);
+    }
+
+    public void addToLogger(FileLogger logger, String tag) {
+        logger.writeEvent(0, tag + " P", String.valueOf(P));
+        logger.writeEvent(0, tag + " I", String.valueOf(I));
+        logger.writeEvent(0, tag + " D", String.valueOf(D));
     }
 
     @Override

@@ -14,17 +14,13 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.XMLSettingReader;
 import frc.robot.functions.io.xmlreader.XMLStepReader;
 import frc.robot.library.*;
-import frc.robot.library.hardware.DriveTrain;
-import frc.robot.library.hardware.Gamepad;
 import frc.robot.library.hardware.swerve.SwerveDrivetrain;
 import frc.robot.library.hardware.swerve.module.SwerveModuleState;
 
@@ -66,6 +62,7 @@ public class Teleop implements OpMode {
 
     @Override
     public void periodic() {
+        NetworkTableInstance.getDefault().getTable("TableTest").getEntry("Test Value").setDouble(1);
         mCurrentDrivetrainPeriodRunnable.run();
     }
 
@@ -79,12 +76,12 @@ public class Teleop implements OpMode {
         double xMag = Constants.deadband(mDriverController.getLeftX(), 0.05); //TODO fix deadbad to be triangulated not single axis
         double yMag = -Constants.deadband(mDriverController.getLeftY(), 0.05);
         double rMag = Constants.deadband(mDriverController.getRightX(), 0.05); //TODO must fix TrackWidth
-        SwerveModuleState[] states = ((SwerveDrivetrain) mDrivetrain).calculateSwerveMotorSpeeds(xMag, yMag, rMag, 1, 1, Constants.DriveControlType.RAW);
+        SwerveModuleState[] states = mDrivetrain.calculateSwerveMotorSpeeds(xMag, yMag, rMag, 1, 1, Constants.DriveControlType.RAW);
 
         for(SwerveModuleState state : states) {
             state.writeToFileLoggerReplayFormat(logger);
         }
 
-        ((SwerveDrivetrain) mDrivetrain).setSwerveModuleStates(states);
+        mDrivetrain.setSwerveModuleStates(states);
     }
 }

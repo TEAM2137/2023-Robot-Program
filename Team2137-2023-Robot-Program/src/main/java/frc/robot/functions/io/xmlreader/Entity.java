@@ -36,6 +36,7 @@ import java.util.function.Function;
 
 public class Entity {
 
+    private String path;
     private final String strName;
     private Element savedElement;
     private boolean boolIsHardwareDevice = true;
@@ -54,6 +55,16 @@ public class Entity {
 //        Robot.deviceCallList.put(strName, this);
     }
 
+    public Entity(String name, String defaultValue) {
+        if(name == null) {
+            strName = defaultValue;
+        } else {
+            strName = name;
+        }
+
+        onDestroyCallback = () -> false;
+    }
+
     /**
      * Constructs a new Entity with Element linkage
      * Usage: Entity is the main type of the XML File and represents any of the elements whether it is hardware or
@@ -61,7 +72,7 @@ public class Entity {
      * @param element
      */
     public Entity(Element element) {
-        this(getNodeOrAttribute(element, "name", null));
+        this(getNodeOrAttribute(element, "name", null), element.getTagName());
 
         savedElement = element;
     }
@@ -159,7 +170,8 @@ public class Entity {
      * @param depth - Current depth (amount of tabs to add)
      */
     public void constructTreeItemPrintout(StringBuilder builder, int depth) {
-        buildStringTabbedData(builder, depth, "Name", getName());
+        builder.append("\n");
+        buildStringTabbedData(builder, Math.max(0, depth - 1), "Name", getName());
     }
 
     /**
