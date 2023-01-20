@@ -1,5 +1,7 @@
 package frc.robot.library.hardware.endeffector;
 
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
@@ -8,22 +10,23 @@ import org.w3c.dom.Element;
 public class EndEffector extends EntityGroup {
 
     private FileLogger logger;
-    private boolean closed = false; // Informational value to see if the end effector is closed
 
-    // TODO: Add pneumatics here
+    private Solenoid leftJaw;
+    private Solenoid rightJaw;
 
     public EndEffector(Element element, int depth, boolean printProcess, FileLogger fileLogger){
         super(element, depth, printProcess, fileLogger);
 
         logger = fileLogger;
 
-        // TODO: Initialize pneumatics here
+        leftJaw = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
+        rightJaw = new Solenoid(PneumaticsModuleType.CTREPCM, 2);
     }
 
     @Override
     public void periodic(){
         // Update dashboard stats
-        SmartDashboard.putBoolean("End Effector Closed", closed);
+        SmartDashboard.putBoolean("End Effector Closed", getClosed());
     }
 
     /**
@@ -31,14 +34,14 @@ public class EndEffector extends EntityGroup {
      * @return Returns true if closed, and false if open.
      */
     public boolean getClosed() {
-        return closed;
+        return leftJaw.get() && rightJaw.get();
     }
 
     /**
      * Toggles the end effector state. Useful for mapping button presses to the end effector.
      */
     public void toggleEffectorState() {
-        setEffectorState(!closed);
+        setEffectorState(!getClosed());
     }
 
     /**
@@ -46,11 +49,8 @@ public class EndEffector extends EntityGroup {
      * @param isClosed New state of the end effector. True is closed and false is open.
      */
     public void setEffectorState(boolean isClosed){
-        if(closed == isClosed) return; // Early leave to not waste time opening an open claw
-
-        closed = isClosed; // Set to new state
-
-        // TODO: Change pneumatics to new state
+        leftJaw.set(isClosed);
+        rightJaw.set(isClosed);
     }
 
     /**
@@ -60,7 +60,7 @@ public class EndEffector extends EntityGroup {
         StringBuilder builder = new StringBuilder();
 
         builder.append("Q~EES~"); // Starting string mirroring Q~SWDSE
-        builder.append(Boolean.toString(closed)).append(" ");
+        builder.append(getClosed()).append(" ");
 
         logger.writeLine(builder.toString());
     }
