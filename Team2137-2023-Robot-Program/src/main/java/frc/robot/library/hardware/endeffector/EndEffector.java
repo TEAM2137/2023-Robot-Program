@@ -13,14 +13,14 @@ import org.w3c.dom.Element;
 
 public class EndEffector extends EntityGroup {
 
-    private FileLogger logger;
+    private final FileLogger logger;
 
     private double pitchTarget = 0;
 
-    private Solenoid leftJaw;
-    private Solenoid rightJaw;
+    private final Solenoid leftJaw;
+    private final Solenoid rightJaw;
 
-    private CANSparkMax pitchMotor;
+    private final CANSparkMax pitchMotor;
 
     private final RelativeEncoder pitchEncoder;
 
@@ -70,6 +70,9 @@ public class EndEffector extends EntityGroup {
 
         // Update dashboard stats
         SmartDashboard.putBoolean("End Effector Closed", getClosed());
+        SmartDashboard.putNumber("Pitch (Degrees)", getPitchDegrees());
+        SmartDashboard.putNumber("Pitch (Ticks)", getPitch());
+        SmartDashboard.putNumber("Target Pitch (Ticks)", pitchTarget);
 
         // PID stats
         SmartDashboard.putNumber("P Gain", kP);
