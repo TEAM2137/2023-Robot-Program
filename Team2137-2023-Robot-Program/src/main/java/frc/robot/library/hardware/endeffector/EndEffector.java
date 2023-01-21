@@ -2,12 +2,13 @@ package frc.robot.library.hardware.endeffector;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.SparkMaxPIDController;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
-import frc.robot.functions.io.xmlreader.data.PID;
 import org.w3c.dom.Element;
 
 public class EndEffector extends EntityGroup {
@@ -21,11 +22,23 @@ public class EndEffector extends EntityGroup {
 
     private CANSparkMax pitchMotor;
 
-    // TODO: PID for pitchMotor
-    private PID pitchPID = new PID(0.25, 0.25, 0.0, "Pitch Motor");
+    private final RelativeEncoder pitchEncoder;
+
+    private final SparkMaxPIDController pitchPIDController;
+    private final double kP, kI, kD, kFF; // PID constants
+
+    private final double maxVel, maxAccel;
 
     public EndEffector(Element element, int depth, boolean printProcess, FileLogger fileLogger){
         super(element, depth, printProcess, fileLogger);
+
+        kP = 0.5;
+        kI = 0.5;
+        kD = 0.5;
+        kFF = 0.00015;
+
+        maxVel = 60;
+        maxAccel = 45;
 
         logger = fileLogger;
 
@@ -33,19 +46,36 @@ public class EndEffector extends EntityGroup {
         rightJaw = new Solenoid(PneumaticsModuleType.CTREPCM, 2);
 
         pitchMotor = new CANSparkMax(3, CANSparkMaxLowLevel.MotorType.kBrushless);
+        pitchEncoder = pitchMotor.getEncoder();
+        pitchPIDController = pitchMotor.getPIDController();
 
-        // TODO: PID for pitchMotor
-//        pitchMotor.getPIDController().setP(pitchPID.getP());
-//        pitchMotor.getPIDController().setI(pitchPID.getI());
-//        pitchMotor.getPIDController().setD(pitchPID.getD());
+        // PID for pitchMotor
+        pitchPIDController.setP(kP);
+        pitchPIDController.setI(kI);
+        pitchPIDController.setD(kD);
+        pitchPIDController.setFF(kFF);
+        pitchPIDController.setOutputRange(-1.0, 1.0);
+
+        int smartMotionSlot = 0;
+        pitchPIDController.setSmartMotionMaxAccel(maxAccel, smartMotionSlot);
+        pitchPIDController.setSmartMotionMinOutputVelocity(0, smartMotionSlot);
+        pitchPIDController.setSmartMotionMaxVelocity(maxVel, smartMotionSlot);
+        pitchPIDController.setSmartMotionAllowedClosedLoopError(0, smartMotionSlot);
     }
 
     @Override
     public void periodic(){
-        // TODO: Move to pitch logic
+        // Move to pitch logic
+        pitchPIDController.setReference(pitchTarget, CANSparkMax.ControlType.kSmartMotion);
 
         // Update dashboard stats
         SmartDashboard.putBoolean("End Effector Closed", getClosed());
+
+        // PID stats
+        SmartDashboard.putNumber("P Gain", kP);
+        SmartDashboard.putNumber("I Gain", kI);
+        SmartDashboard.putNumber("D Gain", kD);
+        SmartDashboard.putNumber("Feed Forward", kFF);
     }
 
     /**
@@ -97,7 +127,7 @@ public class EndEffector extends EntityGroup {
      * @return Pitch in encoder counts
      */
     public double getPitch(){
-        return pitchMotor.getEncoder().getPosition();
+        return pitchEncoder.getPosition();
     }
 
     /**
