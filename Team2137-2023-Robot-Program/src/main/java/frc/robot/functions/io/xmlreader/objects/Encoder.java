@@ -109,7 +109,7 @@ public class Encoder extends Entity {
         entryID.setDouble(id);
 
         NetworkTableEntry entryOffset = table.getEntry("Offset");
-        entryOffset.setString(String.valueOf(offset));
+        entryOffset.setDouble(offset);
 
         return table;
     }
@@ -118,10 +118,12 @@ public class Encoder extends Entity {
     public NetworkTable pullFromNetworkTable() {
         NetworkTable table = super.pullFromNetworkTable();
 
+
         //TODO add type
         setInverted(table.getEntry("Inverted").getBoolean(inverted()));
         setID((int) table.getEntry("ID").getDouble(id));
-        setOffset(table.getEntry("Offset").getDouble(getOffset()));
+        //setOffset(table.getEntry("Offset").getDouble(getOffset()));
+        setOffset(table.getEntry("Offset").getDouble(offset));
 
         return table;
     }

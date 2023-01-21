@@ -65,13 +65,14 @@ public class Robot extends TimedRobot {
     fileLogger.writeEvent(0, "Steps" + stepReader.getSteps().size());
 
     configurationNetworkTable = NetworkTableInstance.getDefault().getTable("XMLConfiguration");
+    NetworkTable smartDashboardTable = NetworkTableInstance.getDefault().getTable("SmartDashboard");
 
-    NetworkTableEntry implementChanges = configurationNetworkTable.getEntry("ImplementChanges");
-    NetworkTableEntry flushConfigurationToXML = configurationNetworkTable.getEntry("FlushConfigurationToXML");
-    NetworkTableEntry enterConfigurationMode = configurationNetworkTable.getEntry("EnterConfigurationMode");
+    NetworkTableEntry implementChanges = smartDashboardTable.getEntry("ImplementChanges");
+    NetworkTableEntry flushConfigurationToXML = smartDashboardTable.getEntry("FlushConfigurationToXML");
+    NetworkTableEntry enterConfigurationMode = smartDashboardTable.getEntry("EnterConfigurationMode");
     enterConfigurationMode.setBoolean(false);
 
-    configurationNetworkTable.addListener(EnumSet.of(NetworkTableEvent.Kind.kValueAll), (table, key, event) -> {
+    smartDashboardTable.addListener(EnumSet.of(NetworkTableEvent.Kind.kValueAll), (table, key, event) -> {
       System.out.println("updated: " + key);
       System.out.println("Name: " + enterConfigurationMode.getName());
       switch (key) {
@@ -86,6 +87,12 @@ public class Robot extends TimedRobot {
           if (flushConfigurationToXML.getBoolean(false)) {
             settingReader.getRobot().pullFromNetworkTable();
             settingReader.getRobot().updateElement();
+
+            StringBuilder builder = new StringBuilder();
+            settingReader.getRobot().constructTreeItemPrintout(builder, 0);
+            fileLogger.writeLine(builder.toString());
+
+            fileLogger.writeEvent(0, "Writing to XML file....");
             settingReader.write();
             flushConfigurationToXML.setBoolean(false);
           }
@@ -96,9 +103,9 @@ public class Robot extends TimedRobot {
             implementChanges.setBoolean(false);
             flushConfigurationToXML.setBoolean(false);
           } else {
-            settingReader.getRobot().removeFromNetworkTable();
-            implementChanges.unpublish();
-            flushConfigurationToXML.unpublish();
+//            settingReader.getRobot().removeFromNetworkTable();
+//            implementChanges.unpublish();
+//            flushConfigurationToXML.unpublish();
           }
           break;
       }

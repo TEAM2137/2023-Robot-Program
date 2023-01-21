@@ -39,7 +39,7 @@ public class XMLSettingReader {
     private Document document;
     private final File settingFile;
     private final FileLogger log;
-    private final int maxSettingsFileHistory = 8;
+    private final int maxSettingsFileHistory = 15;
 
     public static EntityGroup robotEntityGroup;
     public static EntityGroup settingsEntityGroup;
@@ -107,21 +107,11 @@ public class XMLSettingReader {
 
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
             Transformer transformer = transformerFactory.newTransformer();
-            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            transformer.setOutputProperty(OutputKeys.INDENT, "no");
             DOMSource source = new DOMSource(document);
 
             StreamResult result = new StreamResult(settingFile);
             transformer.transform(source, result);
-
-//            FileOutputStream fop = new FileOutputStream(settingFile);
-//
-//            // get the content in bytes
-//            String xmlString = result.getWriter().toString();
-//            byte[] contentInBytes = xmlString.getBytes();
-//
-//            fop.write(contentInBytes);
-//            fop.flush();
-//            fop.close();
         } catch (Exception e) {
             e.printStackTrace();
         }

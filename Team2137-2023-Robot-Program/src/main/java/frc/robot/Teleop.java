@@ -62,7 +62,6 @@ public class Teleop implements OpMode {
 
     @Override
     public void periodic() {
-        NetworkTableInstance.getDefault().getTable("TableTest").getEntry("Test Value").setDouble(1);
         mCurrentDrivetrainPeriodRunnable.run();
     }
 

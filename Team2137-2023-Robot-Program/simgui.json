@@ -46,6 +46,18 @@
         }
       },
       "XMLConfiguration": {
+        "Hardware": {
+          "Swerve Falcon": {
+            "LeftFront": {
+              "Turn Encoder": {
+                "open": true
+              },
+              "open": true
+            },
+            "open": true
+          },
+          "open": true
+        },
         "Robot": {
           "2021 Intake": {
             "Intake Motor": {
@@ -72,7 +84,8 @@
             "open": true
           },
           "open": true
-        }
+        },
+        "open": true
       }
     }
   }

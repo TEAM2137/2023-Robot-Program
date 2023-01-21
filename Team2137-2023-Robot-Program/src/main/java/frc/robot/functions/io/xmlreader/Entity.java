@@ -36,7 +36,6 @@ import java.util.function.Function;
 
 public class Entity {
 
-    private String path;
     private final String strName;
     private Element savedElement;
     private boolean boolIsHardwareDevice = true;
