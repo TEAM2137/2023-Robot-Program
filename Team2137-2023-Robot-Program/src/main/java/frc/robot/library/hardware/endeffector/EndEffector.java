@@ -16,6 +16,8 @@ public class EndEffector extends EntityGroup {
     private final FileLogger logger;
 
     private double pitchTarget = 0;
+    private double pitchSpeed = 0;
+    private boolean targetMode = false;
 
     private final Solenoid leftJaw;
     private final Solenoid rightJaw;
@@ -66,8 +68,11 @@ public class EndEffector extends EntityGroup {
     @Override
     public void periodic(){
         // Move to pitch logic
-        pitchPIDController.setReference(pitchTarget, CANSparkMax.ControlType.kSmartMotion);
-
+        if(targetMode) {
+            pitchPIDController.setReference(pitchTarget, CANSparkMax.ControlType.kSmartMotion);
+        }else{
+            pitchPIDController.setReference(pitchSpeed, CANSparkMax.ControlType.kVelocity);
+        }
         // Update dashboard stats
         SmartDashboard.putBoolean("End Effector Closed", getClosed());
         SmartDashboard.putNumber("Pitch (Degrees)", getPitchDegrees());
@@ -110,7 +115,8 @@ public class EndEffector extends EntityGroup {
      * @param speed Speed of the motor in range from -1 to 1
      */
     public void setPitchMotorSpeed(double speed) {
-        pitchMotor.set(speed);
+        pitchSpeed = speed;
+        targetMode = false;
     }
 
     /**
@@ -121,8 +127,13 @@ public class EndEffector extends EntityGroup {
         setPitchMotorSpeed(rpm / 60.0 * 2048 / 10.0);
     }
 
-    public void setTargetPitch(double degrees, double rpm){
+    /**
+     * Uses PID to move to the target pitch
+     * @param degrees Position in degrees to set the pitch
+     */
+    public void setTargetPitch(double degrees){
         pitchTarget = degrees / 360 * 4096;
+        targetMode = true;
     }
 
     /**
