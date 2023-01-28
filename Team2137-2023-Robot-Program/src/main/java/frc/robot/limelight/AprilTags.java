@@ -11,8 +11,8 @@ public class AprilTags {
     private static NetworkTableEntry botpose;
     private static double[] pose;
 
-    private static final double fieldSizeX = 651.22;
-    private static final double fieldSizeY = 319;
+    public static final double fieldSizeX = 651.22;
+    public static final double fieldSizeY = 319;
 
     private static double posX;
     private static double posY;
@@ -63,7 +63,7 @@ public class AprilTags {
     /**
      * @return the x position of the robot relative to the bottom left corner of the field (inches)
      */
-    public static double getFieldX() {
+    public static double getX() {
         return posX;
     }
 
@@ -77,7 +77,7 @@ public class AprilTags {
     /**
      * @return the y position of the robot relative to the bottom left corner of the field (inches)
      */
-    public static double getFieldY() {
+    public static double getY() {
         return posY;
     }
 
