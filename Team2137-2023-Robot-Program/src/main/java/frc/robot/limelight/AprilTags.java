@@ -71,7 +71,7 @@ public class AprilTags {
      * @return the amount the robot moved on the x axis since the last update (inches)
      */
     public static double getXVelocity() {
-        return posY;
+        return velocityX;
     }
     
     /**
@@ -85,7 +85,7 @@ public class AprilTags {
      * @return the amount the robot moved on the y axis since the last update (inches)
      */
     public static double getYVelocity() {
-        return posY;
+        return velocityY;
     }
 
      /**
