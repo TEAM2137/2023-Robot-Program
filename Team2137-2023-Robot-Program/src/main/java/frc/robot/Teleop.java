@@ -14,6 +14,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.apriltag.AprilTag;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
@@ -27,6 +28,7 @@ import frc.robot.library.hardware.DriveTrain;
 import frc.robot.library.hardware.Gamepad;
 import frc.robot.library.hardware.swerve.SwerveDrivetrain;
 import frc.robot.library.hardware.swerve.module.SwerveModuleState;
+import frc.robot.limelight.AprilTags;
 
 public class Teleop implements OpMode {
 
@@ -62,11 +64,14 @@ public class Teleop implements OpMode {
                 this.mDrivetrain = (SwerveDrivetrain) mRobotSubsystem.getEntityGroupByType("DriveTrain");
                 break;
         }
+
+        AprilTags.init();
     }
 
     @Override
     public void periodic() {
         mCurrentDrivetrainPeriodRunnable.run();
+        AprilTags.updateValues();
     }
 
     @Override
