@@ -19,8 +19,7 @@ public class EndEffector extends EntityGroup {
     private double pitchSpeed = 0;
     private boolean targetMode = false;
 
-    private final Solenoid leftJaw;
-    private final Solenoid rightJaw;
+    private final Solenoid jaw;
 
     private final CANSparkMax pitchMotor;
 
@@ -44,8 +43,7 @@ public class EndEffector extends EntityGroup {
 
         logger = fileLogger;
 
-        leftJaw = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
-        rightJaw = new Solenoid(PneumaticsModuleType.CTREPCM, 2);
+        jaw = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
 
         pitchMotor = new CANSparkMax(3, CANSparkMaxLowLevel.MotorType.kBrushless);
         pitchEncoder = pitchMotor.getEncoder();
@@ -91,7 +89,7 @@ public class EndEffector extends EntityGroup {
      * @return Returns true if closed, and false if open.
      */
     public boolean getClosed() {
-        return leftJaw.get() && rightJaw.get();
+        return jaw.get();
     }
 
     /**
@@ -106,8 +104,7 @@ public class EndEffector extends EntityGroup {
      * @param isClosed New state of the end effector. True is closed and false is open.
      */
     public void setEffectorState(boolean isClosed){
-        leftJaw.set(isClosed);
-        rightJaw.set(isClosed);
+        jaw.set(isClosed);
     }
 
     /**
