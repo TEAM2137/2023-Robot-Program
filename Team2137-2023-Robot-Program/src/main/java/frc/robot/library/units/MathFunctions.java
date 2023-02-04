@@ -5,5 +5,7 @@ public interface MathFunctions<T> {
     T divide(double scalar);
 
     T add(double scalar);
+
+    T add(T other);
     T minus(double scalar);
 }

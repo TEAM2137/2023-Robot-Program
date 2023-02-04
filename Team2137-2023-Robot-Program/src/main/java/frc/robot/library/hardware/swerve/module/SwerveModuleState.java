@@ -14,6 +14,7 @@
 package frc.robot.library.hardware.swerve.module;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.library.Constants;
 import frc.robot.library.units.*;
@@ -53,12 +54,20 @@ public class SwerveModuleState {
 
     private Rotation2d rotation2d;
 
+    private Acceleration acceleration;
     private Velocity speed2d;
     private Distance distance2d;
     private Double rawPowerValue;
 
     private final Constants.DriveControlType controlType;
     private final SwerveModulePositions position;
+
+    public SwerveModuleState(Acceleration _accel, Rotation2d _rotation2d, SwerveModulePositions pos) {
+        rotation2d = _rotation2d;
+        acceleration = _accel;
+        controlType = Constants.DriveControlType.ACCELERATION;
+        position = pos;
+    }
 
     public SwerveModuleState(Velocity _speed, Rotation2d _rotation2d, SwerveModulePositions pos) {
         rotation2d = _rotation2d;
@@ -81,6 +90,22 @@ public class SwerveModuleState {
         position = pos;
     }
 
+    public SwerveModuleState(Number _number, Rotation2d _angle, SwerveModulePositions pos) {
+        if(_number instanceof Velocity) {
+            speed2d = (Velocity) _number;
+            controlType = Constants.DriveControlType.VELOCITY;
+        } else if(_number instanceof Distance) {
+            distance2d = (Distance) _number;
+            controlType = Constants.DriveControlType.DISTANCE;
+        } else {
+            rawPowerValue = _number.getValueInDefaultUnit();
+            controlType = Constants.DriveControlType.RAW;
+        }
+
+        rotation2d = _angle;
+        position = pos;
+    }
+
     public SwerveModuleState(Number _number, Angle _angle, SwerveModulePositions pos) {
         if(_number instanceof Velocity) {
             speed2d = (Velocity) _number;
@@ -88,6 +113,9 @@ public class SwerveModuleState {
         } else if(_number instanceof Distance) {
             distance2d = (Distance) _number;
             controlType = Constants.DriveControlType.DISTANCE;
+        } else if (_number instanceof Acceleration) {
+            acceleration = (Acceleration) _number;
+            controlType = Constants.DriveControlType.ACCELERATION;
         } else {
             rawPowerValue = _number.getValueInDefaultUnit();
             controlType = Constants.DriveControlType.RAW;
@@ -119,6 +147,13 @@ public class SwerveModuleState {
             throw new NullPointerException("Can not give Raw Power when State is a different Control Type");
     }
 
+    public Acceleration getAcceleration() {
+        if(acceleration != null)
+            return acceleration;
+        else
+            throw new NullPointerException("Can not give Acceleration when State is a different Control Type");
+    }
+
     public double getRawPowerValue() {
         if(rawPowerValue != null)
             return rawPowerValue;
@@ -134,10 +169,10 @@ public class SwerveModuleState {
                 rawPowerValue = -rawPowerValue;
                 break;
             case DISTANCE:
-                distance2d = distance2d.times(-1.0);
+                distance2d = (Distance) distance2d.times(-1.0);
                 break;
             case VELOCITY:
-                speed2d = speed2d.times(-1.0);
+                speed2d = (Velocity) speed2d.times(-1.0);
                 break;
         }
     }

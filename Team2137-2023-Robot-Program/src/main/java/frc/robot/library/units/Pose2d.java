@@ -1,5 +1,7 @@
 package frc.robot.library.units;
 
+import edu.wpi.first.math.geometry.Rotation2d;
+
 public class Pose2d<T extends Number> {
     T x;
     T y;
@@ -20,5 +22,12 @@ public class Pose2d<T extends Number> {
 
     public Angle getTheta() {
         return theta;
+    }
+
+    public void mutableAddVector(Vector2d<T> vector, Angle angle) {
+        x = (T) x.add(vector.x);
+        y = (T) y.add(vector.y);
+
+        theta = (Angle) theta.add(angle);
     }
 }

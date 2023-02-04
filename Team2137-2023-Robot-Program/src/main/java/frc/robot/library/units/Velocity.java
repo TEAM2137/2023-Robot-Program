@@ -5,7 +5,7 @@ import org.w3c.dom.Element;
 import static frc.robot.library.units.Units.Unit.CTRE_VELOCITY;
 import static frc.robot.library.units.Units.Unit.METER_PER_SECOND;
 
-public class Velocity extends Number implements MathFunctions<Velocity> {
+public class Velocity extends Number {
     /**
      * Constructs Number with simple Name and Value but DOES NOT have reference to XML Element
      *
@@ -36,42 +36,6 @@ public class Velocity extends Number implements MathFunctions<Velocity> {
     @Override
     public Units.Unit getPrimaryUnit() {
         return METER_PER_SECOND;
-    }
-
-    /**
-     * @param scalar
-     * @return
-     */
-    @Override
-    public Velocity times(double scalar) {
-        return new Velocity(getValue() * scalar, getOriginalUnit());
-    }
-
-    /**
-     * @param scalar
-     * @return
-     */
-    @Override
-    public Velocity divide(double scalar) {
-        return new Velocity(getValue() * scalar, getOriginalUnit());
-    }
-
-    /**
-     * @param scalar
-     * @return
-     */
-    @Override
-    public Velocity add(double scalar) {
-        return new Velocity(getValue() * scalar, getOriginalUnit());
-    }
-
-    /**
-     * @param scalar
-     * @return
-     */
-    @Override
-    public Velocity minus(double scalar) {
-        return new Velocity(getValue() * scalar, getOriginalUnit());
     }
 
     public Velocity getCTREVelocityUnit(Distance wheelConversionFactor) {

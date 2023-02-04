@@ -86,13 +86,12 @@ public class Teleop implements OpMode {
 
     private void SwerveDrivetrainPeriodic() {
         logger.setTag("SwerveDrivetrainPeriodic()");
-        //Pair<Double, Double> xy = Constants.joyStickRadialDeadband(mDriverController.getLeftX(), -mDriverController.getLeftY(), 0.08);
-        Pair<Double, Double> xy = Pair.of(mDriverController.getLeftX(), -mDriverController.getLeftY());
+        Pair<Double, Double> xy = Constants.joyStickSlopedDeadband(mDriverController.getLeftX(), -mDriverController.getLeftY(), 0.08);
 
-        //double rMag = Math.sin(Constants.deadband(mDriverController.getRightX(), 0.08)); //TODO must fix TrackWidth
-        double rMag = 0;
+        double rMag = Constants.deadband(mDriverController.getRightX(), 0.08) * 35; //TODO must fix TrackWidth
 
         SwerveModuleState[] states = mKinematic.getSwerveModuleState(xy.getFirst(), xy.getSecond(), rMag);
+        System.out.println(rMag);
         for(SwerveModuleState state : states) {
             System.out.println(state.toString());
         }

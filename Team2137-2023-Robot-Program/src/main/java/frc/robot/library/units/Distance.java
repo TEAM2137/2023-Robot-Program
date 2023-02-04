@@ -2,7 +2,7 @@ package frc.robot.library.units;
 
 import org.w3c.dom.Element;
 
-public class Distance extends Number implements MathFunctions<Distance> {
+public class Distance extends Number {
 
     /**
      * Constructs Number with simple Name and Value but DOES NOT have reference to XML Element
@@ -34,41 +34,5 @@ public class Distance extends Number implements MathFunctions<Distance> {
     @Override
     public Units.Unit getPrimaryUnit() {
         return Units.Unit.METER;
-    }
-
-    /**
-     * @param scalar
-     * @return
-     */
-    @Override
-    public Distance times(double scalar) {
-        return new Distance(getValue() * scalar, getOriginalUnit());
-    }
-
-    /**
-     * @param scalar
-     * @return
-     */
-    @Override
-    public Distance divide(double scalar) {
-        return new Distance(getValue() / scalar, getOriginalUnit());
-    }
-
-    /**
-     * @param scalar
-     * @return
-     */
-    @Override
-    public Distance add(double scalar) {
-        return new Distance(getValue() + scalar, getOriginalUnit());
-    }
-
-    /**
-     * @param scalar
-     * @return
-     */
-    @Override
-    public Distance minus(double scalar) {
-        return new Distance(getValue() - scalar, getOriginalUnit());
     }
 }

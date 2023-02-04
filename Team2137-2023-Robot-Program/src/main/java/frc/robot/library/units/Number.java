@@ -26,7 +26,7 @@ import java.lang.reflect.InvocationTargetException;
  * has the ability to be published to the Smartdashboard
  * and to the XML file
  */
-public class Number extends Entity {
+public class Number extends Entity implements MathFunctions<Number> {
 
     private double value;
     private Units.Unit ogUnit;
@@ -204,5 +204,30 @@ public class Number extends Entity {
         getSavedElement().setTextContent(String.valueOf(value));
 
         return getSavedElement();
+    }
+
+    @Override
+    public Number times(double scalar) {
+        return Number.create(value * scalar, ogUnit);
+    }
+
+    @Override
+    public Number divide(double scalar) {
+        return Number.create(value / scalar, ogUnit);
+    }
+
+    @Override
+    public Number add(double scalar) {
+        return Number.create(value + scalar, ogUnit);
+    }
+
+    @Override
+    public Number add(Number num) {
+        return Number.create(value + num.getValue(ogUnit), ogUnit);
+    }
+
+    @Override
+    public Number minus(double scalar) {
+        return Number.create(value - scalar, ogUnit);
     }
 }

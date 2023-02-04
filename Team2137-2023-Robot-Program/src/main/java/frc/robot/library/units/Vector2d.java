@@ -14,6 +14,8 @@
 
 package frc.robot.library.units;
 
+import edu.wpi.first.math.geometry.Rotation2d;
+
 public class Vector2d<T extends Number> {
     T x;
     T y;
@@ -23,15 +25,17 @@ public class Vector2d<T extends Number> {
         y = _y;
     }
 
+    public Vector2d(T _m, Rotation2d theta) {
+        double xVal = _m.getValueInPrimaryUnit() * Math.cos(theta.getRadians());
+        double yVal = _m.getValueInPrimaryUnit() * Math.sin(theta.getRadians());
+        x = (T) Number.create(xVal, _m.getPrimaryUnit());
+        y = (T) Number.create(yVal, _m.getPrimaryUnit());
+    }
+
     public Vector2d normalize() {
         double length = Math.sqrt(Math.pow(x.getValue(), 2) + Math.pow(y.getValue(), 2));
 
-        T newX = (T) x.clone();
-        newX.setValue(x.getValue() / length);
-        T newY = (T) y.clone();
-        newY.setValue(y.getValue() / length);
-
-        return new Vector2d(newX, newY);
+        return new Vector2d(x.divide(length), y.divide(length));
     }
 
     public Vector2d scale(double scale) {

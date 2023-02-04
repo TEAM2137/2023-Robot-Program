@@ -16,6 +16,10 @@ public class SwerveKinematics<T extends Number> {
     private static SimpleMatrix forwardKinematicForm;
     private static SimpleMatrix inverseKinematicForm;
 
+    private static Pose2d<Distance> latestRobotPosition;
+    private static Pose2d<Velocity> latestRobotVelocity;
+    private static double lastTime;
+
     public SwerveKinematics(Distance robotXLength, Distance robotYLength) {
         inverseKinematicForm = new SimpleMatrix(new double[][] {
                 //Left Front
@@ -33,6 +37,7 @@ public class SwerveKinematics<T extends Number> {
         });
 
         forwardKinematicForm = inverseKinematicForm.pseudoInverse();
+        lastTime = System.currentTimeMillis();
     }
 
     private SimpleMatrix getForwardKinematic(SimpleMatrix moduleComponentVelocity) {
@@ -41,6 +46,46 @@ public class SwerveKinematics<T extends Number> {
 
     private SimpleMatrix getInverseKinematic(SimpleMatrix robotComponentVelocity) {
         return inverseKinematicForm.mult(robotComponentVelocity);
+    }
+
+    public Pose2d<Distance> updateSwerveKinematics(SwerveModuleState[] currentVelocityState) {
+        Vector2d<Velocity> module1Components = null;
+        Vector2d<Velocity> module2Components = null;
+        Vector2d<Velocity> module3Components = null;
+        Vector2d<Velocity> module4Components = null;
+
+        for(SwerveModuleState state : currentVelocityState) {
+            switch(state.getPosition()) {
+                case LEFT_FRONT:
+                    module1Components = new Vector2d<Velocity>(state.getSpeed2d(), state.getRotation2d());
+                    break;
+                case RIGHT_FRONT:
+                    module2Components = new Vector2d<Velocity>(state.getSpeed2d(), state.getRotation2d());
+                    break;
+                case LEFT_BACK:
+                    module3Components = new Vector2d<Velocity>(state.getSpeed2d(), state.getRotation2d());
+                    break;
+                case RIGHT_BACK:
+                    module4Components = new Vector2d<Velocity>(state.getSpeed2d(), state.getRotation2d());
+                    break;
+            }
+        }
+
+        SimpleMatrix currentVelocities = new SimpleMatrix(new double[][] {
+                new double[] { module1Components.getX().getValueInPrimaryUnit() },
+                new double[] { module1Components.getY().getValueInPrimaryUnit() },
+                new double[] { module2Components.getX().getValueInPrimaryUnit() },
+                new double[] { module2Components.getY().getValueInPrimaryUnit() },
+                new double[] { module3Components.getX().getValueInPrimaryUnit() },
+                new double[] { module3Components.getY().getValueInPrimaryUnit() },
+                new double[] { module4Components.getX().getValueInPrimaryUnit() },
+                new double[] { module4Components.getY().getValueInPrimaryUnit() },
+        });
+
+        SimpleMatrix robotComponents = getForwardKinematic(currentVelocities);
+
+        double dt = System.currentTimeMillis() - lastTime;
+        latestRobotPosition.mutableAddVector(new Vector2d<Distance>(robotComponents.get(0, 0) * dt, robotComponents.get(1, 0) * dt), );
     }
 
     //Returns Left Front, Right Front, Right Back, Left Back
@@ -71,6 +116,6 @@ public class SwerveKinematics<T extends Number> {
         double rad = Math.atan2(y, x);
         double mag = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
         Rotation2d offset = Rotation2d.fromDegrees(90);
-        return new SwerveModuleState(Number.create(mag, unit), new Angle(rad + offset.getRadians(), Units.Unit.RADIAN), pos);
+        return new SwerveModuleState(Number.create(mag, unit), Rotation2d.fromRadians(rad).plus(offset), pos);
     }
 }

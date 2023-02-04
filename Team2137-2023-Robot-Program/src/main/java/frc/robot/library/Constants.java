@@ -168,6 +168,7 @@ public final class Constants {
         RAW ("Raw"),
         VELOCITY ("Velocity"),
         DISTANCE ("Distance"),
+        ACCELERATION ("Acceleration"),
         UNDEFINED ("Undefined");
 
         private final String name;
@@ -267,16 +268,21 @@ public final class Constants {
         if(Math.abs(value) < deadband) {
             return 0;
         } else {
-            return (value - deadband) / (1 - deadband);
+            return value;
         }
     }
-    public static Pair<Double, Double> joyStickRadialDeadband(double x1, double y1, double deadband) {
-        double distance = Math.sqrt(Math.pow(x1, 2) + Math.pow(y1, 2));
-        if(distance < deadband) {
-            return new Pair<Double, Double>(0.0, 0.0);
-        } else {
-            return new Pair<Double, Double>((x1 - deadband) / (1 - deadband), (y1 - deadband) / (1 - deadband));
+    public static Pair<Double, Double> joyStickSlopedDeadband(double x1, double y1, double deadband) {
+        double newX = 0;
+        double newY = 0;
+        if(Math.abs(x1) > deadband) {
+            newX = (x1 - deadband) / (1 - deadband);
         }
+
+        if(Math.abs(y1) > deadband) {
+            newY = (y1 - deadband) / (1 - deadband);
+        }
+
+        return new Pair<Double, Double>(newX, newY);
     }
 
     //////Exception Classes//////
