@@ -18,11 +18,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.spline.PoseWithCurvature;
-import frc.robot.functions.splines.QuinticSpline;
-import frc.robot.functions.splines.VelocityGenerator;
-import frc.robot.library.units.Distance2d;
-import frc.robot.library.units.Speed2d;
-import frc.robot.library.units.Vector2d;
+import frc.robot.library.units.Distance;
+import frc.robot.library.units.Units;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -34,14 +31,14 @@ import java.util.Map;
 public class PurePursuitGenerator {
 
     public List<Translation2d> pointList;
-    private final Distance2d lookAheadDistance;
+    private final Distance lookAheadDistance;
 
-    public PurePursuitGenerator(List<Translation2d> points, Distance2d _lookAheadDistance) {
+    public PurePursuitGenerator(List<Translation2d> points, Distance _lookAheadDistance) {
         pointList = points;
         lookAheadDistance = _lookAheadDistance;
     }
 
-    public PurePursuitGenerator(Distance2d _lookAheadDistance, List<PoseWithCurvature> pose) {
+    public PurePursuitGenerator(Distance _lookAheadDistance, List<PoseWithCurvature> pose) {
         pointList = new ArrayList<>();
         for(PoseWithCurvature a : pose) {
             pointList.add(a.poseMeters.getTranslation());
@@ -50,7 +47,7 @@ public class PurePursuitGenerator {
     }
 
     public Map.Entry<Transform2d, Map.Entry<Translation2d, Translation2d>> calculateGoalPose(Translation2d currentPosition) {
-        Map.Entry<Translation2d, Map.Entry<Translation2d, Translation2d>> lookAheadInfo = getLookaheadPoint(currentPosition.getX(), currentPosition.getY(), lookAheadDistance.getValue(Distance2d.DistanceUnits.FEET));
+        Map.Entry<Translation2d, Map.Entry<Translation2d, Translation2d>> lookAheadInfo = getLookaheadPoint(currentPosition.getX(), currentPosition.getY(), lookAheadDistance.getValue(Units.Unit.FOOT));
 
 //        if (lookAhead == null) {
 //            for(int i = 1; i < pointList.size(); i++) {

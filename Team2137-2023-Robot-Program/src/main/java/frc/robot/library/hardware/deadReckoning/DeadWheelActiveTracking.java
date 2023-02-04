@@ -12,67 +12,109 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//package frc.robot.library.hardware.deadReckoning;
-//
-//import com.ctre.phoenix.sensors.CANCoder;
-//import edu.wpi.first.math.geometry.Rotation2d;
-//import frc.robot.functions.io.xmlreader.objects.Encoder;
-//import frc.robot.library.Constants;
-//import frc.robot.library.units.Distance2d;
-//import org.ejml.simple.SimpleMatrix;
-//
-///**
-// * Dead wheel tracking can not work on TeleOp!!
-// *
-// * If a robot is traveling at full speed circa de 13 fps in the 10ms refresh period the robot can travel a total of
-// * 1.56in so any slight change in direction can not be detected properly but in straight lines in accurate.
-// */
-//public class DeadWheelActiveTracking {
-//
-//    private final CANCoder xCANCoder;
-//    private final CANCoder yCANCoder;
-//
-//    private final double xConversionFactor = 1; //Counts for every inch
-//    private final double yConversionFactor = 1; //Counts for every inch
-//
-//    private final Distance2d previousXReading = Distance2d.fromUnit(Distance2d.DistanceUnits.INCH, 0);
-//    private final Distance2d previousYReading = Distance2d.fromUnit(Distance2d.DistanceUnits.INCH, 0);
-//
-//
-//    private final Distance2d xValue = Distance2d.fromUnit(Distance2d.DistanceUnits.INCH, 0);
-//    private final Distance2d yValue = Distance2d.fromUnit(Distance2d.DistanceUnits.INCH, 0);
-//
-//    public DeadWheelActiveTracking(Encoder xDirectionController, Encoder yDirectionController, Distance2d xOffset, Distance2d yOffset) {
-//        xCANCoder = new CANCoder(xDirectionController.getCANID());
-//        yCANCoder = new CANCoder(yDirectionController.getCANID());
-//
-//        xCANCoder.setPosition(xOffset.getValue(Distance2d.DistanceUnits.INCH) * xConversionFactor);
-//        yCANCoder.setPosition(yOffset.getValue(Distance2d.DistanceUnits.INCH) * yConversionFactor);
-//    }
-//
-//    public void updateTracking(Rotation2d robotHeading) {
-//        Distance2d changeInXDistance = getCurrentXReading().minus(previousXReading);
-//        Distance2d changeInYDistance = getCurrentYReading().minus(previousYReading);
+package frc.robot.library.hardware.deadReckoning;
+
+import com.ctre.phoenix.sensors.CANCoder;
+import com.ctre.phoenix.sensors.SensorInitializationStrategy;
+import edu.wpi.first.math.geometry.Rotation2d;
+import frc.robot.functions.io.FileLogger;
+import frc.robot.functions.io.xmlreader.EntityGroup;
+import frc.robot.functions.io.xmlreader.objects.Encoder;
+import frc.robot.library.Constants;
+import frc.robot.library.units.Distance;
+import frc.robot.library.units.Velocity;
+import org.ejml.simple.SimpleMatrix;
+import org.w3c.dom.Element;
+
+import static frc.robot.library.units.Units.Unit.*;
+
+
+public class DeadWheelActiveTracking extends EntityGroup {
+
+    private Encoder xEncoderObj;
+    private Encoder yEncoderObj;
+
+    private final CANCoder xCANCoder;
+    private final CANCoder yCANCoder;
+
+    private Distance wheelDiameter;
+
+    private double xConversionFactor = 1; //Counts for every inch
+    private double yConversionFactor = 1; //Counts for every inch
+
+    private final Distance previousXReading = new Distance(0, FOOT);
+    private final Distance previousYReading = new Distance(0, FOOT);
+
+    private Distance xValue = new Distance(0, FOOT);
+    private Distance yValue = new Distance(0, FOOT);
+
+    private Velocity xSpeed = new Velocity(0, FEET_PER_SECOND);
+    private Velocity ySpeed = new Velocity(0, FEET_PER_SECOND);
+
+    public DeadWheelActiveTracking(Element element, EntityGroup parent, FileLogger fileLogger) {
+        super(element, parent, fileLogger);
+
+        xEncoderObj = (Encoder) parent.getEntity("xCoder");
+        yEncoderObj = (Encoder) parent.getEntity("yCoder");
+
+        xCANCoder = new CANCoder(xEncoderObj.getID());
+        yCANCoder = new CANCoder(yEncoderObj.getID());
+
+        wheelDiameter = (Distance) parent.getEntity("WheelDiameter");
+
+        initialize();
+        this.setOnImplementCallback(this::initialize);
+    }
+
+    public void initialize() {
+        xCANCoder.configFactoryDefault();
+        xCANCoder.configMagnetOffset(xEncoderObj.getOffset());
+        xCANCoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToZero);
+        xCANCoder.configSensorDirection(xEncoderObj.inverted());
+
+        yCANCoder.configFactoryDefault();
+        yCANCoder.configMagnetOffset(yEncoderObj.getOffset());
+        yCANCoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToZero);
+        yCANCoder.configSensorDirection(yEncoderObj.inverted());
+
+        xConversionFactor = (wheelDiameter.getValue(FOOT) * Math.PI) / 360;// / 4096.0;
+        yConversionFactor = (wheelDiameter.getValue(FOOT) * Math.PI) / 360;// / 4096.0;
+    }
+
+    public void updateTracking(Rotation2d robotHeading) {
+//        Distance changeInXDistance = getCurrentXReading().minus(previousXReading);
+//        Distance changeInYDistance = getCurrentYReading().minus(previousYReading);
 //
 //        SimpleMatrix matrix = Constants.convertFrame(robotHeading.getDegrees(), Constants.createFrameMatrix(changeInXDistance, changeInYDistance, robotHeading));
-//
+
 //        xValue.mutablePlus(matrix.get(0,0));
 //        yValue.mutablePlus(matrix.get(1,0));
-//    }
 //
-//    public Distance2d getGlobalXReading() {
-//        return xValue;
-//    }
-//
-//    public Distance2d getGlobalYReading() {
-//        return yValue;
-//    }
-//
-//    private Distance2d getCurrentXReading() {
-//        return Distance2d.fromUnit(Distance2d.DistanceUnits.INCH, xCANCoder.getPosition() / xConversionFactor);
-//    }
-//
-//    private Distance2d getCurrentYReading() {
-//        return Distance2d.fromUnit(Distance2d.DistanceUnits.INCH, yCANCoder.getPosition() / yConversionFactor);
-//    }
-//}
+//        xSpeed.mutableChange(xCANCoder.getVelocity());
+//        ySpeed.mutableChange(yCANCoder.getVelocity());
+    }
+
+    public Distance getGlobalXReading() {
+        return xValue;
+    }
+
+    public Distance getGlobalYReading() {
+        return yValue;
+    }
+
+    public Velocity getXVelocity() {
+        return xSpeed;
+    }
+
+    public Velocity getYVelocity() {
+        return ySpeed;
+    }
+
+    private Distance getCurrentXReading() {
+        return new Distance(xCANCoder.getPosition() / xConversionFactor, INCH);
+    }
+
+    private Distance getCurrentYReading() {
+        return new Distance(yCANCoder.getPosition() / yConversionFactor, INCH);
+    }
+}

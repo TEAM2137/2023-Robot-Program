@@ -16,6 +16,8 @@ package frc.robot.functions.io.xmlreader.data;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.Entity;
 import frc.robot.functions.io.xmlreader.EntityGroup;
@@ -23,8 +25,8 @@ import org.w3c.dom.Element;
 
 public class PID extends Entity {
 
-    private Double P, I, D, IZ, FF = 0.0;
-    private Double S, V, A = 0.0;
+    private Double P, I, D, IZ, FF;
+    private Double S, V, A;
 
     public PID (double _P, double _I, double _D, String name) {
         super(name);
@@ -170,6 +172,44 @@ public class PID extends Entity {
         logger.writeEvent(0, tag + " P", String.valueOf(P));
         logger.writeEvent(0, tag + " I", String.valueOf(I));
         logger.writeEvent(0, tag + " D", String.valueOf(D));
+    }
+
+    @Override
+    public NetworkTable addToNetworkTable(NetworkTable dashboard) {
+        NetworkTable table = super.addToNetworkTable(dashboard);
+
+        NetworkTableEntry pValue = table.getEntry("P");
+        pValue.setDouble(getP());
+
+        NetworkTableEntry iValue = table.getEntry("I");
+        iValue.setDouble(getI());
+
+        NetworkTableEntry dValue = table.getEntry("D");
+        dValue.setDouble(getD());
+
+        return table;
+    }
+
+    @Override
+    public NetworkTable pullFromNetworkTable() {
+        NetworkTable table = super.pullFromNetworkTable();
+
+        //TODO add type
+        setP(table.getEntry("P").getDouble(getP()));
+        setI(table.getEntry("I").getDouble(getI()));
+        setD(table.getEntry("D").getDouble(getD()));
+
+        return table;
+    }
+    @Override
+    public NetworkTable removeFromNetworkTable() {
+        NetworkTable table = super.removeFromNetworkTable();
+
+        table.getEntry("P").unpublish();
+        table.getEntry("I").unpublish();
+        table.getEntry("D").unpublish();
+
+        return table;
     }
 
     @Override

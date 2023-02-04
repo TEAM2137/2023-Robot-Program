@@ -14,15 +14,25 @@
 
 package frc.robot;
 
-import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.math.Pair;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.XMLSettingReader;
 import frc.robot.functions.io.xmlreader.XMLStepReader;
-import frc.robot.library.*;
+import frc.robot.library.Constants;
+import frc.robot.library.OpMode;
+import frc.robot.library.hardware.FusedTrackingAlgorithm;
 import frc.robot.library.hardware.swerve.SwerveDrivetrain;
+import frc.robot.library.hardware.swerve.SwerveKinematics;
 import frc.robot.library.hardware.swerve.module.SwerveModuleState;
+import frc.robot.library.units.*;
+import frc.robot.library.units.Number;
+
+import static frc.robot.library.units.Units.Unit.FEET_PER_SECOND;
+import static frc.robot.library.units.Units.Unit.INCH;
 
 public class Teleop implements OpMode {
 
@@ -32,6 +42,8 @@ public class Teleop implements OpMode {
     private EntityGroup mRobotSubsystem;
     private XMLSettingReader mSettingReader;
     private SwerveDrivetrain mDrivetrain;
+    private FusedTrackingAlgorithm mTrackingAlgorithm;
+    private SwerveKinematics<Number> mKinematic;
 
     private Runnable mCurrentDrivetrainPeriodRunnable;
 
@@ -48,6 +60,7 @@ public class Teleop implements OpMode {
 
         this.mSettingReader = xmlSettingReader;
         this.mRobotSubsystem = this.mSettingReader.getRobot();
+        mTrackingAlgorithm = new FusedTrackingAlgorithm(60, (a) -> {});
 
         switch(mRobotSubsystem.getEntityGroupByType("DriveTrain").getName()) {
             case "Swerve Falcon":
@@ -56,6 +69,7 @@ public class Teleop implements OpMode {
                 logger.writeEvent(0, mRobotSubsystem.getEntityGroupByType("DriveTrain").getName());
                 mCurrentDrivetrainPeriodRunnable = this::SwerveDrivetrainPeriodic;
                 this.mDrivetrain = (SwerveDrivetrain) mRobotSubsystem.getEntityGroupByType("DriveTrain");
+                mKinematic = new SwerveKinematics<>(new Distance(1, INCH), new Distance(1, INCH));
                 break;
         }
     }
@@ -72,14 +86,17 @@ public class Teleop implements OpMode {
 
     private void SwerveDrivetrainPeriodic() {
         logger.setTag("SwerveDrivetrainPeriodic()");
-        double xMag = Constants.deadband(mDriverController.getLeftX(), 0.05); //TODO fix deadbad to be triangulated not single axis
-        double yMag = -Constants.deadband(mDriverController.getLeftY(), 0.05);
-        double rMag = Constants.deadband(mDriverController.getRightX(), 0.05); //TODO must fix TrackWidth
-        SwerveModuleState[] states = mDrivetrain.calculateSwerveMotorSpeeds(xMag, yMag, rMag, 1, 1, Constants.DriveControlType.RAW);
+        //Pair<Double, Double> xy = Constants.joyStickRadialDeadband(mDriverController.getLeftX(), -mDriverController.getLeftY(), 0.08);
+        Pair<Double, Double> xy = Pair.of(mDriverController.getLeftX(), -mDriverController.getLeftY());
 
+        //double rMag = Math.sin(Constants.deadband(mDriverController.getRightX(), 0.08)); //TODO must fix TrackWidth
+        double rMag = 0;
+
+        SwerveModuleState[] states = mKinematic.getSwerveModuleState(xy.getFirst(), xy.getSecond(), rMag);
         for(SwerveModuleState state : states) {
-            state.writeToFileLoggerReplayFormat(logger);
+            System.out.println(state.toString());
         }
+        //SwerveModuleState[] states = mDrivetrain.calculateSwerveMotorSpeedsFieldCentric(xy.getFirst(), xy.getSecond(), rMag, 1, 1, Constants.DriveControlType.RAW);
 
         mDrivetrain.setSwerveModuleStates(states);
     }

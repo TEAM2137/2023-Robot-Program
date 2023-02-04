@@ -15,7 +15,9 @@
 package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.spline.PoseWithCurvature;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.FileLogger.EventType;
@@ -26,17 +28,21 @@ import frc.robot.functions.io.xmlreader.XMLStepReader;
 import frc.robot.functions.splines.QuinticSpline;
 import frc.robot.library.*;
 import frc.robot.library.Constants.StepState;
-import frc.robot.library.Constants.RobotState;
-import frc.robot.library.PurePursuit.Waypoint;
-import frc.robot.library.hardware.DriveTrain;
+import frc.robot.library.PurePursuit.PurePursuitGenerator;
+import frc.robot.library.hardware.deadReckoning.DeadWheelActiveTracking;
 import frc.robot.library.hardware.swerve.SwerveDrivetrain;
-import frc.robot.library.units.Distance2d;
-import frc.robot.library.units.Speed2d;
-import frc.robot.library.units.Time2d;
+import frc.robot.library.units.Distance;
+import frc.robot.library.units.Time;
+import frc.robot.library.units.Velocity;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static frc.robot.library.units.Units.Unit.FEET_PER_SECOND;
+import static frc.robot.library.units.Units.Unit.SECOND;
+import static frc.robot.library.units.Units.Unit.FOOT;
+
+@SuppressWarnings(value="FieldCanBeLocal")
 public class Autonomous implements OpMode {
 
     //Filelogger values
@@ -49,13 +55,16 @@ public class Autonomous implements OpMode {
 
     private EntityGroup mRobotSubsystem;
     private SwerveDrivetrain mDrivetrain;
+    private DeadWheelActiveTracking mDeadWheelActiveTracking;
 
     private final List<Step> mCurrentActionSteps = new ArrayList<>();
+    private final List<Step> mCurrentDriveSteps = new ArrayList<>();
 
+    private StepState mDriveStepState = StepState.STATE_NOT_STARTED;
     //region Command Variables
 
     //region Drive Command Variables
-    private List<Pose2d> mDriveWaypointList;
+
     //endregion
 
     //endregion
@@ -75,11 +84,15 @@ public class Autonomous implements OpMode {
         this.mStepReader = xmlStepReader;
 
         this.mDrivetrain = (SwerveDrivetrain) mRobotSubsystem.getEntityGroupByType("DriveTrain");
+        this.mDeadWheelActiveTracking = (DeadWheelActiveTracking) mRobotSubsystem.getEntityGroupByType("DeadWheelActiveTracking");
     }
 
     @Override
     public void periodic() {
-        if (mCurrentActionSteps.size() == 0) {
+        if (mCurrentDriveSteps.size() == 0 && mCurrentActionSteps.size() == 0) {
+            //Restock the Drive Steps
+            mCurrentDriveSteps.addAll(mStepReader.prePullSplineSteps());
+
             //Restock the Action Steps
             mCurrentActionSteps.addAll(mStepReader.pullNextSteps());
         }
@@ -118,7 +131,7 @@ public class Autonomous implements OpMode {
                 setSwerveDrivetrainVelocity(step);
                 break;
             case "Drive":
-                drive(step);
+//                drive(step);
                 break;
         }
     }
@@ -151,9 +164,37 @@ public class Autonomous implements OpMode {
     }
     //endregion
 
-    //region Generic Drive Command
-    public void drive(Step step) {
+    private List<PoseWithCurvature> mDrivePoseWithCurvatureList;
+    private PurePursuitGenerator mDrivePurePursuitGenerator;
+    private Distance mPurePursuitLookaheadDistance;
 
+    //region Generic Drive Command
+    public void drive() {
+        switch(mDriveStepState) {
+            case STATE_INIT:
+                List<Pose2d> poseList = new ArrayList<>();
+
+                for(Step driveStep : mCurrentDriveSteps) {
+                    poseList.add(new Pose2d(new Translation2d(driveStep.getXDistance(), driveStep.getYDistance()), Rotation2d.fromDegrees(driveStep.getParm(1))));
+                }
+
+                QuinticSpline spline = new QuinticSpline(poseList, 0.6);
+                mDrivePoseWithCurvatureList = spline.getSplinePoints();
+
+                mPurePursuitLookaheadDistance = (Distance) XMLSettingReader.settingsEntityGroup.getEntity("PurePursuitLookahead");
+
+                mDrivePurePursuitGenerator = new PurePursuitGenerator(mPurePursuitLookaheadDistance, mDrivePoseWithCurvatureList);
+                break;
+            case STATE_RUNNING:
+                if(mDeadWheelActiveTracking != null) {
+
+                }
+
+                break;
+            case STATE_FINISH:
+
+                break;
+        }
     }
     //endregion
 
@@ -177,16 +218,16 @@ public class Autonomous implements OpMode {
             case STATE_INIT:
                 SwerveDrivetrain swerve = mDrivetrain;
 
-                Speed2d xVelocity = Speed2d.fromFeetPerSecond(step.getXDistance());
-                Speed2d yVelocity = Speed2d.fromFeetPerSecond(step.getYDistance());
-                Speed2d rotationVelocity = Speed2d.fromFeetPerSecond(step.getParm(0, 0.0));
+                Velocity xVelocity = new Velocity(step.getXDistance(), FEET_PER_SECOND);
+                Velocity yVelocity = new Velocity(step.getYDistance(), FEET_PER_SECOND);
+                Velocity rotationVelocity = new Velocity(step.getParm(0, 0.0), FEET_PER_SECOND);
 
-                SmartDashboard.putNumber(logger.getTag() + "-XVelocity", xVelocity.getValue(Distance2d.DistanceUnits.FEET, Time2d.TimeUnits.SECONDS));
-                SmartDashboard.putNumber(logger.getTag() + "-YVelocity", yVelocity.getValue(Distance2d.DistanceUnits.FEET, Time2d.TimeUnits.SECONDS));
-                SmartDashboard.putNumber(logger.getTag() + "-RVelocity", rotationVelocity.getValue(Distance2d.DistanceUnits.FEET, Time2d.TimeUnits.SECONDS));
+                SmartDashboard.putNumber(logger.getTag() + "-XVelocity", xVelocity.getValue(FEET_PER_SECOND));
+                SmartDashboard.putNumber(logger.getTag() + "-YVelocity", yVelocity.getValue(FEET_PER_SECOND));
+                SmartDashboard.putNumber(logger.getTag() + "-RVelocity", rotationVelocity.getValue(FEET_PER_SECOND));
 
                 //TODO fix the axel track
-                swerve.setSwerveModuleStates(swerve.calculateSwerveMotorSpeeds(xVelocity.getValue(), yVelocity.getValue(), rotationVelocity.getValue(), 1, 1, Constants.DriveControlType.VELOCITY));
+                swerve.setSwerveModuleStates(swerve.calculateSwerveMotorSpeeds(xVelocity.getValue(FEET_PER_SECOND), yVelocity.getValue(FEET_PER_SECOND), rotationVelocity.getValue(FEET_PER_SECOND), 1, 1, Constants.DriveControlType.VELOCITY));
 
                 step.changeStepState(StepState.STATE_RUNNING);
                 step.StartTimer();
@@ -200,7 +241,7 @@ public class Autonomous implements OpMode {
 
                 }
 
-                if(step.getParm(1, 0d) != 0 && step.hasTimeElapsed(Time2d.fromUnit(Time2d.TimeUnits.MILLISECONDS, step.getParm(1, 0d)))) {
+                if(step.getParm(1, 0d) != 0 && step.hasTimeElapsed(new Time(step.getParm(1, 0d), SECOND))) {
                     mDrivetrain.setSpeed(0);
                     step.changeStepState(StepState.STATE_FINISH);
                     this.logger.writeEvent(5, EventType.Status, "Finished Timed Set Swerve Drive Train Velocity");

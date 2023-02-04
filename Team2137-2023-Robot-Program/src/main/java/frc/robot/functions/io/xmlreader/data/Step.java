@@ -16,11 +16,14 @@ package frc.robot.functions.io.xmlreader.data;
 
 import edu.wpi.first.math.Pair;
 import frc.robot.library.Constants;
-import frc.robot.library.units.Time2d;
+import frc.robot.library.units.Time;
+import frc.robot.library.units.Units;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.util.HashMap;
+
+import static frc.robot.library.units.Units.Unit.MILLISECOND;
 
 public class Step {
     public enum StepValues {
@@ -144,12 +147,12 @@ public class Step {
         startTime = System.currentTimeMillis();
     }
 
-    public Time2d getTime() {
-        return Time2d.fromUnit(Time2d.TimeUnits.SECONDS, System.currentTimeMillis() - startTime);
+    public Time getTime() {
+        return new Time(System.currentTimeMillis() - startTime, Units.Unit.SECOND);
     }
 
-    public boolean hasTimeElapsed(Time2d time) {
-        return (System.currentTimeMillis() - startTime) >= time.getValue(Time2d.TimeUnits.MILLISECONDS);
+    public boolean hasTimeElapsed(Time time) {
+        return (System.currentTimeMillis() - startTime) >= time.getValue(MILLISECOND);
     }
 
     private void propagateBlankValues() {

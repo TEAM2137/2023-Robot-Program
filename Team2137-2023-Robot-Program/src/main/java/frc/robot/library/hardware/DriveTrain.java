@@ -17,6 +17,8 @@ package frc.robot.library.hardware;
 import edu.wpi.first.math.geometry.Rotation2d;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.library.Constants;
+import frc.robot.library.units.Angle;
+import frc.robot.library.units.CartesianValue;
 
 public interface DriveTrain {
 
@@ -29,6 +31,8 @@ public interface DriveTrain {
     void setRightSpeed(double speed);
 
     Rotation2d getAngle();
+
+    CartesianValue<Rotation2d> getGyroReading();
 
     void setAngleOffset(Rotation2d offset);
 

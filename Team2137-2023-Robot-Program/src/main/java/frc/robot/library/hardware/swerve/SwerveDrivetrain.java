@@ -19,24 +19,22 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.functions.io.FileLogger;
-import frc.robot.functions.io.xmlreader.Entity;
 import frc.robot.functions.io.xmlreader.EntityGroup;
-import frc.robot.functions.io.xmlreader.objects.Encoder;
 import frc.robot.functions.io.xmlreader.objects.Gyro;
 import frc.robot.functions.io.xmlreader.objects.Motor;
 import frc.robot.library.Constants;
 import frc.robot.library.hardware.DriveTrain;
+import frc.robot.library.hardware.deadReckoning.DeadWheelActiveTracking;
 import frc.robot.library.hardware.swerve.module.SwerveModule;
 import frc.robot.library.hardware.swerve.module.SwerveModuleState;
-import frc.robot.library.hardware.swerve.module.SwerveNEODriveModule;
-import frc.robot.library.units.Distance2d;
-import frc.robot.library.units.Speed2d;
+import frc.robot.library.units.*;
 import org.ejml.simple.SimpleMatrix;
 import org.w3c.dom.Element;
 
-import java.awt.*;
-import java.io.File;
 import java.text.DecimalFormat;
+
+import static frc.robot.library.units.Units.Unit.DEGREE;
+import static frc.robot.library.units.Units.Unit.INCH;
 
 public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
@@ -44,6 +42,8 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
     public SwerveModule leftBackModule;
     public SwerveModule rightFrontModule;
     public SwerveModule rightBackModule;
+
+    private DeadWheelActiveTracking mDeadWheelActiveTracking;
 
     public Translation2d currentRobotPosition = new Translation2d(10, 10);
 
@@ -70,9 +70,9 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         }
 
         Gyro gyro = (Gyro) getEntity("Pigeon");
-//        pigeonIMU = new PigeonIMU(encoder.getID());
-//        pigeonIMU.configFactoryDefault();
-//        pigeonIMU.setFusedHeading(encoder.getOffset());
+        pigeonIMU = new PigeonIMU(gyro.getID());
+        pigeonIMU.configFactoryDefault();
+        pigeonIMU.setFusedHeading(gyro.getOffset());
     }
 
     @Override
@@ -109,12 +109,7 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
      * @return An Array of Points with x being drive speed and y wheel angle in degree
      */
     public SwerveModuleState[] calculateSwerveMotorSpeeds(double xMag, double yMag, double rMag, double axelDistance, double wheelBase, Constants.DriveControlType controlType) {
-//        double r = Math.sqrt((axelDistance * axelDistance) + (wheelBase * wheelBase)); //Distance between adjectent wheel
-//
-//        double a = xMag - (rMag * (axelDistance / r)); // translatedSpeeds[2] * (axleDistance / r) is the ratio of wheel distance from other wheels
-//        double b = xMag + (rMag * (axelDistance / r));
-//        double c = yMag - (rMag * (wheelBase / r));
-//        double d = yMag + (rMag * (wheelBase / r));
+        //double r = Math.sqrt((axelDistance * axelDistance) + (wheelBase * wheelBase)) / 2.0; //Distance between adjacent wheel
 
         double a = xMag - (rMag * (axelDistance / 2.0)); // translatedSpeeds[2] * (axleDistance / r) is the ratio of wheel distance from other wheels
         double b = xMag + (rMag * (axelDistance / 2.0));
@@ -122,25 +117,34 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         double d = yMag + (rMag * (wheelBase / 2.0));
 
         double[][] speeds = new double[][] {
-                new double[] {Math.sqrt(b * b + d * d), -Math.atan2(b, d)}, // Left Front
-                new double[] {Math.sqrt(a * a + d * d), -Math.atan2(a, d)}, // Left Back
-                new double[] {Math.sqrt(b * b + c * c), -Math.atan2(b, c)}, // Right Front
-                new double[] {Math.sqrt(a * a + c * c), -Math.atan2(a, c)}, // Right Back
+                new double[] {Math.sqrt((b * b) + (d * d)), -Math.atan2(b, d)}, // Left Front
+                new double[] {Math.sqrt((a * a) + (d * d)), -Math.atan2(a, d)}, // Left Back
+                new double[] {Math.sqrt((b * b) + (c * c)), -Math.atan2(b, c)}, // Right Front
+                new double[] {Math.sqrt((a * a) + (c * c)), -Math.atan2(a, c)}, // Right Back
         };
+
+        double joystickRadialValue = Math.sqrt(Math.pow(xMag, 2) + Math.pow(yMag, 2));
+
+        if (joystickRadialValue < 0.07 && Math.abs(rMag) < 0.07){
+            speeds[0][1] = leftFrontModule.getModuleGoalAngle().getRadians();
+            speeds[1][1] = leftBackModule.getModuleGoalAngle().getRadians();
+            speeds[2][1] = rightFrontModule.getModuleGoalAngle().getRadians();
+            speeds[3][1] = rightBackModule.getModuleGoalAngle().getRadians();
+        }
 
         if (controlType == Constants.DriveControlType.VELOCITY) {
             return new SwerveModuleState[]{
-                    new SwerveModuleState(new Speed2d(speeds[0][0]), new Rotation2d(speeds[0][1]), SwerveModuleState.SwerveModulePositions.LEFT_FRONT),
-                    new SwerveModuleState(new Speed2d(speeds[1][0]), new Rotation2d(speeds[1][1]), SwerveModuleState.SwerveModulePositions.LEFT_BACK),
-                    new SwerveModuleState(new Speed2d(speeds[2][0]), new Rotation2d(speeds[2][1]), SwerveModuleState.SwerveModulePositions.RIGHT_FRONT),
-                    new SwerveModuleState(new Speed2d(speeds[3][0]), new Rotation2d(speeds[3][1]), SwerveModuleState.SwerveModulePositions.RIGHT_BACK),
+                    new SwerveModuleState(new Velocity(speeds[0][0], Units.Unit.FEET_PER_SECOND), new Rotation2d(speeds[0][1]), SwerveModuleState.SwerveModulePositions.LEFT_FRONT),
+                    new SwerveModuleState(new Velocity(speeds[1][0], Units.Unit.FEET_PER_SECOND), new Rotation2d(speeds[1][1]), SwerveModuleState.SwerveModulePositions.LEFT_BACK),
+                    new SwerveModuleState(new Velocity(speeds[2][0], Units.Unit.FEET_PER_SECOND), new Rotation2d(speeds[2][1]), SwerveModuleState.SwerveModulePositions.RIGHT_FRONT),
+                    new SwerveModuleState(new Velocity(speeds[3][0], Units.Unit.FEET_PER_SECOND), new Rotation2d(speeds[3][1]), SwerveModuleState.SwerveModulePositions.RIGHT_BACK),
             };
         } else if(controlType == Constants.DriveControlType.DISTANCE) {
             return new SwerveModuleState[]{
-                    new SwerveModuleState(Distance2d.fromUnit(Distance2d.DistanceUnits.INCH, speeds[0][0]), new Rotation2d(speeds[0][1]), SwerveModuleState.SwerveModulePositions.LEFT_FRONT),
-                    new SwerveModuleState(Distance2d.fromUnit(Distance2d.DistanceUnits.INCH, speeds[1][0]), new Rotation2d(speeds[1][1]), SwerveModuleState.SwerveModulePositions.LEFT_BACK),
-                    new SwerveModuleState(Distance2d.fromUnit(Distance2d.DistanceUnits.INCH, speeds[2][0]), new Rotation2d(speeds[2][1]), SwerveModuleState.SwerveModulePositions.RIGHT_FRONT),
-                    new SwerveModuleState(Distance2d.fromUnit(Distance2d.DistanceUnits.INCH, speeds[3][0]), new Rotation2d(speeds[3][1]), SwerveModuleState.SwerveModulePositions.RIGHT_BACK),
+                    new SwerveModuleState(new Distance(speeds[0][0], INCH), new Rotation2d(speeds[0][1]), SwerveModuleState.SwerveModulePositions.LEFT_FRONT),
+                    new SwerveModuleState(new Distance(speeds[1][0], INCH), new Rotation2d(speeds[1][1]), SwerveModuleState.SwerveModulePositions.LEFT_BACK),
+                    new SwerveModuleState(new Distance(speeds[2][0], INCH), new Rotation2d(speeds[2][1]), SwerveModuleState.SwerveModulePositions.RIGHT_FRONT),
+                    new SwerveModuleState(new Distance(speeds[3][0], INCH), new Rotation2d(speeds[3][1]), SwerveModuleState.SwerveModulePositions.RIGHT_BACK),
             };
         } else {
             return new SwerveModuleState[]{
@@ -161,10 +165,22 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
     }
 
     public void setSwerveModuleStates(SwerveModuleState[] swerveModuleStates) {
-        this.leftFrontModule.setSwerveModuleState(swerveModuleStates[0]);
-        this.leftBackModule.setSwerveModuleState(swerveModuleStates[1]);
-        this.rightFrontModule.setSwerveModuleState(swerveModuleStates[2]);
-        this.rightBackModule.setSwerveModuleState(swerveModuleStates[3]);
+        for(SwerveModuleState state : swerveModuleStates) {
+            switch(state.getPosition()) {
+                case LEFT_FRONT:
+                    this.leftFrontModule.setSwerveModuleState(state);
+                    break;
+                case LEFT_BACK:
+                    this.leftBackModule.setSwerveModuleState(state);
+                    break;
+                case RIGHT_FRONT:
+                    this.rightFrontModule.setSwerveModuleState(state);
+                    break;
+                case RIGHT_BACK:
+                    this.rightBackModule.setSwerveModuleState(state);
+                    break;
+            }
+        }
     }
 
     /**
@@ -177,8 +193,8 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
      */
     public static double[] toFieldRelativeChassisSpeeds(double xSpeed, double ySpeed, double radianPerSecond, Rotation2d robotAngle) {
         return new double[]{
-                xSpeed * robotAngle.getCos() + ySpeed * robotAngle.getSin(),
-                -xSpeed * robotAngle.getSin() + ySpeed * robotAngle.getCos(),
+                -(xSpeed * robotAngle.getCos() + ySpeed * robotAngle.getSin()),
+                -(-xSpeed * robotAngle.getSin() + ySpeed * robotAngle.getCos()),
                 radianPerSecond};
     }
 
@@ -196,15 +212,15 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
     @Override
     public Rotation2d getAngle() {
-//        double raw = pigeonIMU.getFusedHeading() % 360;
-//
+        double raw = pigeonIMU.getYaw() % 360;
+
 //        if(raw >= 180)
 //            raw -= 360;
 //        else if(raw < -180)
 //            raw += 360;
-//
-//        return Rotation2d.fromDegrees(raw);
-        return Rotation2d.fromDegrees(0);
+
+        return Rotation2d.fromDegrees(raw);
+//        return Rotation2d.fromDegrees(0);
     }
 
 
@@ -223,6 +239,11 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
     public Motor.MotorTypes getDrivetrainType() {
         return driveTrainType;
+    }
+
+    @Override
+    public CartesianValue<Rotation2d> getGyroReading() {
+        return new CartesianValue<>(Rotation2d.fromRadians(pigeonIMU.getPitch()), Rotation2d.fromRadians(pigeonIMU.getRoll()), Rotation2d.fromRadians(pigeonIMU.getYaw()));
     }
 
     public void logModuleStates() {

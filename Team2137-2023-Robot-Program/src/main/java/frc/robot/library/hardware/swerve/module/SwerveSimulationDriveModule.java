@@ -14,28 +14,22 @@
 
 package frc.robot.library.hardware.swerve.module;
 
-import com.ctre.phoenix.sensors.CANCoder;
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.SparkMaxPIDController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.XMLSettingReader;
-import frc.robot.functions.io.xmlreader.data.Number;
-import frc.robot.functions.io.xmlreader.data.PID;
+import frc.robot.library.units.Distance;
+import frc.robot.library.units.Number;
 import frc.robot.functions.io.xmlreader.objects.Encoder;
 import frc.robot.functions.io.xmlreader.objects.Motor;
 import frc.robot.library.Constants;
-import frc.robot.library.units.Distance2d;
-import frc.robot.library.units.Speed2d;
+import frc.robot.library.units.Units;
+import frc.robot.library.units.Velocity;
 import org.w3c.dom.Element;
 
-import java.util.ArrayList;
+import static frc.robot.library.units.Units.Unit.*;
 
 public class SwerveSimulationDriveModule extends EntityGroup implements SwerveModule {
 
@@ -45,13 +39,13 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
     private PIDController mDrivePIDController;
     private PIDController mTurnPIDController;
 
-    private Speed2d mDriveVelocityGoal = new Speed2d(0);
-    private Distance2d mDriveDistanceGoal = Distance2d.fromFeet(0);
+    private Velocity mDriveVelocityGoal = new Velocity(0, FEET_PER_SECOND);
+    private Distance mDriveDistanceGoal = new Distance(0, FOOT);
     private double mDriveRawGoal = 0;
     private Rotation2d turningSetPoint = Rotation2d.fromDegrees(0);
 
-    private final Speed2d mDriveVelocityCurrent = new Speed2d(0);
-    private final Distance2d mDriveDistanceCurrent = Distance2d.fromFeet(0);
+    private final Velocity mDriveVelocityCurrent = new Velocity(0, FEET_PER_SECOND);
+    private final Distance mDriveDistanceCurrent = new Distance(0, FOOT);
     private final double mDriveRawPercent = 0;
     private final Rotation2d turningCurrent = Rotation2d.fromDegrees(0);
     private final Number dblWheelDiameter;
@@ -73,7 +67,7 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
         logger = fileLogger;
 
         dblWheelDiameter = (Number) XMLSettingReader.settingsEntityGroup.getEntity("DriveTrain-WheelDiameter");
-        logger.writeEvent(0, FileLogger.EventType.Debug, "WheelDiameter: " + dblWheelDiameter.getValue());
+        logger.writeEvent(0, FileLogger.EventType.Debug, "WheelDiameter: " + dblWheelDiameter.getValue(INCH));
 
         configDrivetrainControlType(Constants.DriveControlType.RAW);
     }
@@ -82,7 +76,7 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
     public void periodic() {
         NetworkTableInstance table = NetworkTableInstance.getDefault();
         table.getEntry(getEntityPath() + "Speed").setDouble(getRawDrivePower());
-        table.getEntry(getEntityPath() + "Angle").setDouble(getRawDrivePower());
+        table.getEntry(getEntityPath() + "Angle").setDouble(getModuleAngle().getDegrees());
 
 //        if(lastRecordTime + periodBetweenRecords > System.currentTimeMillis()) {
 //            getSwerveModuleState().writeToFileLoggerReplayFormat(logger);
@@ -95,6 +89,11 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
     @Override
     public void setModuleAngle(Rotation2d angle) {
         turningSetPoint = angle;
+    }
+
+    @Override
+    public Rotation2d getModuleGoalAngle() {
+        return turningSetPoint;
     }
 
     @Override
@@ -114,32 +113,32 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
     }
 
     @Override
-    public void setVelocityDriveSpeed(Speed2d speed) {
+    public void setVelocityDriveSpeed(Velocity speed) {
         mDriveVelocityGoal = speed;
     }
 
     @Override
-    public Speed2d getDriveVelocity() {
+    public Velocity getDriveVelocity() {
         return mDriveVelocityCurrent;
     }
 
     @Override
-    public Speed2d getDriveVelocityGoal() {
+    public Velocity getDriveVelocityGoal() {
         return mDriveVelocityGoal;
     }
 
     @Override
-    public void setDriveDistanceTarget(Distance2d distance2d) {
+    public void setDriveDistanceTarget(Distance distance2d) {
         mDriveDistanceGoal = distance2d;
     }
 
     @Override
-    public Distance2d getDriveDistanceTarget() {
+    public Distance getDriveDistanceTarget() {
         return mDriveDistanceGoal;
     }
 
     @Override
-    public Distance2d getCurrentDrivePosition() {
+    public Distance getCurrentDrivePosition() {
         return mDriveDistanceCurrent;
     }
 

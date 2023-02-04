@@ -9,6 +9,7 @@ import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.spline.PoseWithCurvature;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -23,16 +24,15 @@ import frc.robot.library.Constants;
 import frc.robot.library.PurePursuit.PurePursuitGenerator;
 import frc.robot.library.hardware.swerve.SwerveDrivetrain;
 import frc.robot.library.hardware.swerve.module.SwerveModuleState;
-import frc.robot.library.units.Distance2d;
-import frc.robot.library.units.Speed2d;
-import frc.robot.library.units.Time2d;
-import frc.robot.library.units.Vector2d;
+import frc.robot.library.units.*;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static frc.robot.library.hardware.FusedTrackingAlgorithm.calculateTipAcceleration;
 
 /**
  * Do NOT add any static variables to this class, or any initialization at all. Unless you know what
@@ -50,15 +50,30 @@ public final class Main
     */
     public static void main(String... args)
     {
-        //testXMLFunction(settingReader, stepReader);
-//        while(true) {
-//            for(int i = 0; i < Robot.subSystemCallList.size(); i++){
-//                Robot.subSystemCallList.get(i).periodic();
-//            }
-//        }
+        //X is right to left    (+, -)
+        //Y is forward to back  (+, -)
+        //Z is up to down       (+, -)
+//        CartesianValue<Distance2d> inital = new CartesianValue<Distance2d>(new Distance2d(1, Distance2d.DistanceUnits.FEET),
+//                new Distance2d(0, Distance2d.DistanceUnits.FEET),
+//                new Distance2d(1, Distance2d.DistanceUnits.FEET));
 
-        //fileLogger.close();
-        //return;
+
+//        CartesianValue<Distance2d> cog = new CartesianValue<Distance2d>(new Distance2d(14, Distance2d.DistanceUnits.INCH),
+//                new Distance2d(14, Distance2d.DistanceUnits.INCH),
+//                new Distance2d(28, Distance2d.DistanceUnits.INCH));
+//
+//        CartesianValue<Distance2d> tipPoint = new CartesianValue<Distance2d>(new Distance2d(14, Distance2d.DistanceUnits.INCH),
+//                new Distance2d(0, Distance2d.DistanceUnits.INCH),
+//                new Distance2d(0, Distance2d.DistanceUnits.INCH));
+//
+//        Vector3d backAccel = new Vector3d(new Distance2d(0, Distance2d.DistanceUnits.METER), new Distance2d(5, Distance2d.DistanceUnits.METER), new Distance2d(0, Distance2d.DistanceUnits.METER));
+//
+//        Vector3d vect = calculateMaximumAccelTip(cog, tipPoint, backAccel);
+//        System.out.println("Acceleration Vect: ");
+//        vect.print();
+
+//        System.out.println("Value: " + calculateTipAcceleration(new Translation2d(.3556, .7112), new Translation2d(0, 0.05), Rotation2d.fromDegrees(0)));
+
         RobotBase.startRobot(Robot::new);
     }
 
@@ -81,7 +96,7 @@ public final class Main
                 wayPointList.add(new Translation2d(step.getXDistance(), step.getYDistance()));
             }
         }
-        testSpline(swerveDrivetrain, wayPointList);
+        //testSpline(swerveDrivetrain, wayPointList);
 //        for(int i = 5; i < 25; i+=3.5) {
 //            swerveDrivetrain.currentRobotPosition = new Translation2d(i, i);
 //            SwerveModuleState[] states = swerveDrivetrain.calculateSwerveMotorSpeeds(0, 0, 1, 3, 3, Constants.DriveControlType.RAW);
@@ -91,7 +106,7 @@ public final class Main
 //        }
         fileLogger.flush();
     }
-
+/*
     public static void testSpline(SwerveDrivetrain drivetrain, List<Translation2d> waypoints) {
 //        list.add(new Translation2d(10, 20));
 //        list.add(new Translation2d(5, 10));
@@ -104,7 +119,7 @@ public final class Main
         VelocityGenerator velocityGenerator = new VelocityGenerator(tmp, Speed2d.fromFeetPerSecond(1), Speed2d.fromFeetPerSecond(.25), 1);
         List<Speed2d> tmp2 = velocityGenerator.getSpeeds();
 
-        PurePursuitGenerator generator = new PurePursuitGenerator(Distance2d.fromUnit(Distance2d.DistanceUnits.FEET, 1.5), tmp);
+        //PurePursuitGenerator generator = new PurePursuitGenerator(Distance2d.fromUnit(Distance2d.DistanceUnits.FEET, 1.5), tmp);
 
         double currentX = waypoints.get(0).getX();
         double currentY = waypoints.get(0).getY();
@@ -166,6 +181,8 @@ public final class Main
             }
         }
     }
+
+ */
 
 //    public void testPurePursuit(List<PoseWithCurvature> spline) {
 //        PurePursuitGenerator generator = new PurePursuitGenerator(Distance2d.fromUnit(Distance2d.DistanceUnits.INCH, 1.5), spline);

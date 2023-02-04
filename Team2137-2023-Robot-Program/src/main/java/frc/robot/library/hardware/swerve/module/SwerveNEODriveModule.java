@@ -25,10 +25,12 @@ import frc.robot.functions.io.xmlreader.data.PID;
 import frc.robot.functions.io.xmlreader.objects.Encoder;
 import frc.robot.functions.io.xmlreader.objects.Motor;
 import frc.robot.library.Constants.DriveControlType;
-import frc.robot.library.units.Distance2d;
-import frc.robot.library.units.Speed2d;
-import frc.robot.library.units.Time2d;
+import frc.robot.library.units.Distance;
+import frc.robot.library.units.Units;
+import frc.robot.library.units.Velocity;
 import org.w3c.dom.Element;
+
+import static frc.robot.library.units.Units.Unit.*;
 
 //@SuppressWarnings("All")
 public class SwerveNEODriveModule extends EntityGroup implements SwerveModule {
@@ -42,8 +44,8 @@ public class SwerveNEODriveModule extends EntityGroup implements SwerveModule {
     private final CANCoder mTurnEncoder;
     private final SparkMaxPIDController mDrivePIDController;
     private final PIDController mTurnPIDController;
-    private Speed2d mDriveVelocityGoal = new Speed2d(0);
-    private Distance2d mDriveDistanceGoal = Distance2d.fromFeet(0);
+    private Velocity mDriveVelocityGoal = new Velocity(0, FEET_PER_SECOND);
+    private Distance mDriveDistanceGoal = new Distance(0, FOOT);
     private Rotation2d turningSetPoint;
     private final Motor mDriveMotorObj;
     private DriveControlType mDriveControlType = DriveControlType.RAW;
@@ -132,6 +134,11 @@ public class SwerveNEODriveModule extends EntityGroup implements SwerveModule {
         return Rotation2d.fromDegrees(this.mTurnEncoder.getAbsolutePosition());
     }
 
+    @Override
+    public Rotation2d getModuleGoalAngle() {
+        return turningSetPoint;
+    }
+
     /**
      * Sets the target wheel angle to feed the pid controller
      * @param angle - desired wheel angle (Degrees 0-360)
@@ -154,14 +161,14 @@ public class SwerveNEODriveModule extends EntityGroup implements SwerveModule {
     //Velocity getters and setters
 
     @Override
-    public void setVelocityDriveSpeed(Speed2d speed) {
+    public void setVelocityDriveSpeed(Velocity speed) {
         mDriveVelocityGoal = speed;
 
         if (mDriveControlType != DriveControlType.VELOCITY) {
             configDrivetrainControlType(DriveControlType.VELOCITY);
         }
 
-        this.mDrivePIDController.setReference(mDriveVelocityGoal.getValue(Distance2d.DistanceUnits.METER, Time2d.TimeUnits.SECONDS), CANSparkMax.ControlType.kVelocity);
+        this.mDrivePIDController.setReference(mDriveVelocityGoal.getValue(METER_PER_SECOND), CANSparkMax.ControlType.kVelocity);
     }
 
     @Override
@@ -170,12 +177,13 @@ public class SwerveNEODriveModule extends EntityGroup implements SwerveModule {
     }
 
     @Override
-    public Speed2d getDriveVelocity() {
-        return new Speed2d(Distance2d.DistanceUnits.INCH, Time2d.TimeUnits.MINUTES, this.mDriveMotorEncoder.getVelocity());
+    public Velocity getDriveVelocity() {
+//        return new Velocity(this.mDriveMotorEncoder.getVelocity(), );
+        return new Velocity(0, FEET_PER_SECOND);
     }
 
     @Override
-    public Speed2d getDriveVelocityGoal() {
+    public Velocity getDriveVelocityGoal() {
         return mDriveVelocityGoal;
     }
 
@@ -186,7 +194,7 @@ public class SwerveNEODriveModule extends EntityGroup implements SwerveModule {
      * @param distance2d - Target distance for the wheel.
      */
     @Override
-    public void setDriveDistanceTarget(Distance2d distance2d) {
+    public void setDriveDistanceTarget(Distance distance2d) {
         mDriveDistanceGoal = distance2d;
 
         if (mDriveControlType != DriveControlType.DISTANCE) {
@@ -194,16 +202,16 @@ public class SwerveNEODriveModule extends EntityGroup implements SwerveModule {
         }
 
         this.mDriveMotorEncoder.setPosition(0);
-        this.mDrivePIDController.setReference(mDriveDistanceGoal.getValue(Distance2d.DistanceUnits.INCH), CANSparkMax.ControlType.kPosition);
+        this.mDrivePIDController.setReference(mDriveDistanceGoal.getValue(FOOT), CANSparkMax.ControlType.kPosition);
     }
 
     @Override
-    public Distance2d getCurrentDrivePosition() {
-        return Distance2d.fromUnit(Distance2d.DistanceUnits.INCH, this.mDriveMotorEncoder.getPosition());
+    public Distance getCurrentDrivePosition() {
+        return new Distance(this.mDriveMotorEncoder.getPosition(), INCH);
     }
 
     @Override
-    public Distance2d getDriveDistanceTarget() {
+    public Distance getDriveDistanceTarget() {
         return mDriveDistanceGoal;
     }
 

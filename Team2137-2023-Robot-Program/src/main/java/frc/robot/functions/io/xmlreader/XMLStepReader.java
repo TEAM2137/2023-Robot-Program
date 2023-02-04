@@ -15,6 +15,9 @@
 package frc.robot.functions.io.xmlreader;
 
 import edu.wpi.first.math.Pair;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.data.Step;
 import org.w3c.dom.Document;
@@ -101,6 +104,25 @@ public class XMLStepReader {
 
         while(size > currentStepCounter + 1 && steps.get(currentStepCounter + 1).isParallel()) {
             returnList.add((pullNextStep()));
+        }
+
+        return returnList;
+    }
+
+    public List<Step> prePullSplineSteps() {
+        List<Step> returnList = new ArrayList<>();
+        int size = steps.size();
+
+        if(size - 1 == currentStepCounter)
+            return returnList;
+
+        for (int i = currentStepCounter; i < size; i++) {
+            if(steps.get(i).getParm(7) > 0.0) {
+                break;
+            } else {
+                Step step = steps.get(i);
+                returnList.add(step);
+            }
         }
 
         return returnList;

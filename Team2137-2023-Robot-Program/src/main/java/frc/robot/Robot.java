@@ -79,6 +79,7 @@ public class Robot extends TimedRobot {
         case "ImplementChanges":
           if (implementChanges.getBoolean(false)) {
             settingReader.getRobot().pullFromNetworkTable();
+            settingReader.getRobot().OnImplement();
 
             implementChanges.setBoolean(false);
           }

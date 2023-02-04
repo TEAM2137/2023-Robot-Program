@@ -14,46 +14,63 @@
 
 package frc.robot.library.units;
 
-import edu.wpi.first.math.geometry.Translation2d;
-import frc.robot.library.units.Distance2d.DistanceUnits;
+public class Vector2d<T extends Number> {
+    T x;
+    T y;
 
-public class Vector2d {
-    double x;
-    double y;
-
-    public Vector2d(Distance2d _x, Distance2d _y) {
-        x = _x.getValue(DistanceUnits.INCH);
-        y = _y.getValue(DistanceUnits.INCH);
+    public Vector2d(T _x, T _y) {
+        x = _x;
+        y = _y;
     }
 
     public Vector2d normalize() {
-        double length = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+        double length = Math.sqrt(Math.pow(x.getValue(), 2) + Math.pow(y.getValue(), 2));
 
-        return new Vector2d(Distance2d.fromUnit(Distance2d.DistanceUnits.INCH, x / length), Distance2d.fromUnit(Distance2d.DistanceUnits.INCH, y / length));
+        T newX = (T) x.clone();
+        newX.setValue(x.getValue() / length);
+        T newY = (T) y.clone();
+        newY.setValue(y.getValue() / length);
+
+        return new Vector2d(newX, newY);
     }
 
     public Vector2d scale(double scale) {
-        return new Vector2d(Distance2d.fromUnit(Distance2d.DistanceUnits.INCH, x * scale), Distance2d.fromUnit(Distance2d.DistanceUnits.INCH, y * scale));
+
+        T newX = (T) x.clone();
+        newX.setValue(x.getValue() * scale);
+        T newY = (T) y.clone();
+        newY.setValue(y.getValue() * scale);
+
+        return new Vector2d(newX, newY);
     }
 
-    public Distance2d getX() {
-        return Distance2d.fromUnit(Distance2d.DistanceUnits.INCH, x);
+    public Angle getAngle() {
+        return new Angle(Math.atan2(getY().getValueInPrimaryUnit(), getX().getValueInPrimaryUnit()), Units.Unit.RADIAN);
     }
 
-    public Distance2d getY() {
-        return Distance2d.fromUnit(Distance2d.DistanceUnits.INCH, y);
+    public T getX() {
+        return x;
     }
 
-    /**
-     * Will return in Inches
-     * @param translation2d
-     * @return
-     */
-    public Translation2d applyVector(Translation2d translation2d) {
-        return new Translation2d(translation2d.getX() + this.x, translation2d.getY() + this.y);
+    public T getY() {
+        return y;
     }
+
+    public T getMagnitude() {
+        double d = Math.sqrt(Math.pow(getX().getValueInPrimaryUnit(), 2) + Math.pow(getY().getValueInPrimaryUnit(), 2));
+        return (T) Number.create(d, getX().getPrimaryUnit());
+    }
+
+//    /**
+//     * Will return in Inches
+//     * @param translation2d
+//     * @return
+//     */
+//    public Translation2d applyVector(Translation2d translation2d) {
+//        return new Translation2d(translation2d.getX() + this.x, translation2d.getY() + this.y);
+//    }
 
     public double slope() {
-        return y / x;
+        return y.getValue() / x.getValue();
     }
 }

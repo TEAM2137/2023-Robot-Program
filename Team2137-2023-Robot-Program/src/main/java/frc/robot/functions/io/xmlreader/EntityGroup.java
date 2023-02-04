@@ -15,10 +15,9 @@
 package frc.robot.functions.io.xmlreader;
 
 import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
 import frc.robot.Robot;
 import frc.robot.functions.io.FileLogger;
-import frc.robot.functions.io.xmlreader.data.Number;
+import frc.robot.library.units.Number;
 import frc.robot.functions.io.xmlreader.data.Threshold;
 import frc.robot.functions.io.xmlreader.objects.Camera;
 import frc.robot.functions.io.xmlreader.objects.Encoder;
@@ -26,15 +25,13 @@ import frc.robot.functions.io.xmlreader.objects.Gyro;
 import frc.robot.functions.io.xmlreader.objects.Motor;
 import frc.robot.library.hardware.swerve.SwerveDrivetrain;
 import frc.robot.library.hardware.swerve.module.SwerveFALCONDriveModule;
-import frc.robot.library.hardware.swerve.module.SwerveModule;
 import frc.robot.library.hardware.swerve.module.SwerveNEODriveModule;
 import frc.robot.library.hardware.swerve.module.SwerveSimulationDriveModule;
+import frc.robot.library.units.*;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import javax.print.attribute.HashDocAttributeSet;
-import java.io.File;
 import java.util.*;
 import java.util.function.BiConsumer;
 
@@ -81,7 +78,15 @@ public class EntityGroup extends Entity {
         //Data Types
         THRESHOLD ("THRESHOLD", Threshold.class, false),
         NUMBER ("NUMBER", Number.class, false),
-        PID ("PID", frc.robot.functions.io.xmlreader.data.PID.class, false);
+        PID ("PID", frc.robot.functions.io.xmlreader.data.PID.class, false),
+
+        //Unit Types
+        DISTANCE ("DISTANCE", Distance.class, false),
+        VELOCITY ("VELOCITY", Velocity.class, false),
+        ACCELERATION ("ACCELERATION", Acceleration.class, false),
+        ANGLE ("ANGLE", Angle.class, false),
+        TIME ("TIME", Time.class, false)
+        ;
 
         String name = "";
         Class<? extends Entity> enclosingClass = Entity.class;
@@ -418,6 +423,14 @@ public class EntityGroup extends Entity {
         childSubsystem.forEach((a, b) -> b.updateElement());
 
         return getSavedElement();
+    }
+
+    @Override
+    public void OnImplement() {
+        super.OnImplement();
+
+        childEntities.forEach((a, b) -> b.OnImplement());
+        childSubsystem.forEach((a, b) -> b.OnImplement());
     }
 
 //    @Override

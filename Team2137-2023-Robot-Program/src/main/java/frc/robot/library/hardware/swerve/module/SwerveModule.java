@@ -15,14 +15,9 @@
 package frc.robot.library.hardware.swerve.module;
 
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import frc.robot.functions.io.FileLogger;
-import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.library.Constants;
-import frc.robot.library.units.Distance2d;
-import frc.robot.library.units.Speed2d;
-import frc.robot.library.units.Time2d;
+import frc.robot.library.units.Distance;
+import frc.robot.library.units.Velocity;
 
 public interface SwerveModule {
 
@@ -42,6 +37,7 @@ public interface SwerveModule {
     }
 
     default void setSwerveModuleState(SwerveModuleState swerveModuleState) {
+        optimizeSwerveModuleAngle(swerveModuleState, getModuleAngle());
         setModuleAngle(swerveModuleState.getRotation2d());
         switch(swerveModuleState.getControlType()) {
             case VELOCITY:
@@ -56,19 +52,28 @@ public interface SwerveModule {
         }
     }
 
+    default void optimizeSwerveModuleAngle(SwerveModuleState state, Rotation2d current) {
+        var delta = state.getRotation2d().minus(current);
+
+        if (Math.abs(delta.getDegrees()) > 90.0) {
+             state.invertDirection();
+        }
+    }
+
     void setModuleAngle(Rotation2d angle);
     Rotation2d getModuleAngle();
+    Rotation2d getModuleGoalAngle();
 
     void setRawDriveSpeed(double speed);
-    void setVelocityDriveSpeed(Speed2d speed);
+    void setVelocityDriveSpeed(Velocity speed);
 
     double getRawDrivePower();
-    Speed2d getDriveVelocity();
-    Speed2d getDriveVelocityGoal();
+    Velocity getDriveVelocity();
+    Velocity getDriveVelocityGoal();
 
-    void setDriveDistanceTarget(Distance2d distance2d);
-    Distance2d getDriveDistanceTarget();
-    Distance2d getCurrentDrivePosition();
+    void setDriveDistanceTarget(Distance distance2d);
+    Distance getDriveDistanceTarget();
+    Distance getCurrentDrivePosition();
 
     void setDriveCoastMode(boolean brake);
 

@@ -41,6 +41,7 @@ public class Entity {
     private boolean boolIsHardwareDevice = true;
     private NetworkTable currentInstance;
     private Callable<Boolean> onDestroyCallback;
+    private Runnable onImplementCallback;
 
     /**
      * Constructs a new Entity with only a name value (Not linked to XML Element)
@@ -207,6 +208,16 @@ public class Entity {
     
     public boolean onDestroy() throws Exception {
         return this.onDestroyCallback.call(); //Flag for function that can not destroy themselves
+    }
+
+
+    public void setOnImplementCallback(Runnable run) {
+        this.onImplementCallback = run;
+    }
+
+    public void OnImplement() {
+        if(onImplementCallback != null)
+            this.onImplementCallback.run();
     }
 
     /**

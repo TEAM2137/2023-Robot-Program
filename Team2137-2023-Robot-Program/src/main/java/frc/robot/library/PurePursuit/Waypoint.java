@@ -15,16 +15,16 @@
 package frc.robot.library.PurePursuit;
 
 import edu.wpi.first.math.geometry.Rotation2d;
-import frc.robot.library.units.Distance2d;
+import frc.robot.library.units.Distance;
 
 public class Waypoint {
-    private Distance2d x;
-    private Distance2d y;
+    private Distance x;
+    private Distance y;
     private Rotation2d heading;
     private double curvature;
-    private Distance2d distanceFromStart;
+    private Distance distanceFromStart;
 
-    public Waypoint(Distance2d _x, Distance2d _y, Rotation2d _w, double _curvature, Distance2d _distanceFromStart) {
+    public Waypoint(Distance _x, Distance _y, Rotation2d _w, double _curvature, Distance _distanceFromStart) {
         x = _x;
         y = _y;
         heading = _w;
@@ -32,19 +32,19 @@ public class Waypoint {
         distanceFromStart = _distanceFromStart;
     }
 
-    public Distance2d getX() {
+    public Distance getX() {
         return x;
     }
 
-    public void setX(Distance2d x) {
+    public void setX(Distance x) {
         this.x = x;
     }
 
-    public Distance2d getY() {
+    public Distance getY() {
         return y;
     }
 
-    public void setY(Distance2d y) {
+    public void setY(Distance y) {
         this.y = y;
     }
 
@@ -64,11 +64,11 @@ public class Waypoint {
         this.curvature = curvature;
     }
 
-    public Distance2d getDistanceFromStart() {
+    public Distance getDistanceFromStart() {
         return distanceFromStart;
     }
 
-    public void setDistanceFromStart(Distance2d distanceFromStart) {
+    public void setDistanceFromStart(Distance distanceFromStart) {
         this.distanceFromStart = distanceFromStart;
     }
 }

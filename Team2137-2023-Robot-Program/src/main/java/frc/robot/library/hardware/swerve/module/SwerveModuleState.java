@@ -16,9 +16,8 @@ package frc.robot.library.hardware.swerve.module;
 import edu.wpi.first.math.geometry.Rotation2d;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.library.Constants;
-import frc.robot.library.units.Distance2d;
-import frc.robot.library.units.Speed2d;
-import frc.robot.library.units.Time2d;
+import frc.robot.library.units.*;
+import frc.robot.library.units.Number;
 
 public class SwerveModuleState {
     public enum SwerveModulePositions {
@@ -52,23 +51,23 @@ public class SwerveModuleState {
         }
     }
 
-    private final Rotation2d rotation2d;
+    private Rotation2d rotation2d;
 
-    private Speed2d speed2d;
-    private Distance2d distance2d;
+    private Velocity speed2d;
+    private Distance distance2d;
     private Double rawPowerValue;
 
     private final Constants.DriveControlType controlType;
     private final SwerveModulePositions position;
 
-    public SwerveModuleState(Speed2d _speed, Rotation2d _rotation2d, SwerveModulePositions pos) {
+    public SwerveModuleState(Velocity _speed, Rotation2d _rotation2d, SwerveModulePositions pos) {
         rotation2d = _rotation2d;
         speed2d = _speed;
         controlType = Constants.DriveControlType.VELOCITY;
         position = pos;
     }
 
-    public SwerveModuleState(Distance2d _distance, Rotation2d _rotation2d, SwerveModulePositions pos) {
+    public SwerveModuleState(Distance _distance, Rotation2d _rotation2d, SwerveModulePositions pos) {
         rotation2d = _rotation2d;
         distance2d = _distance;
         controlType = Constants.DriveControlType.DISTANCE;
@@ -82,18 +81,38 @@ public class SwerveModuleState {
         position = pos;
     }
 
+    public SwerveModuleState(Number _number, Angle _angle, SwerveModulePositions pos) {
+        if(_number instanceof Velocity) {
+            speed2d = (Velocity) _number;
+            controlType = Constants.DriveControlType.VELOCITY;
+        } else if(_number instanceof Distance) {
+            distance2d = (Distance) _number;
+            controlType = Constants.DriveControlType.DISTANCE;
+        } else {
+            rawPowerValue = _number.getValueInDefaultUnit();
+            controlType = Constants.DriveControlType.RAW;
+        }
+
+        rotation2d = Rotation2d.fromDegrees(_angle.getValue(Units.Unit.DEGREE));
+        position = pos;
+    }
+
+    public SwerveModuleState(Vector2d<Number> vect, SwerveModulePositions pos) {
+        this(vect.getMagnitude(), vect.getAngle(), pos);
+    }
+
     public Rotation2d getRotation2d() {
         return rotation2d;
     }
 
-    public Speed2d getSpeed2d() {
+    public Velocity getSpeed2d() {
         if(speed2d != null)
             return speed2d;
         else
             throw new NullPointerException("Can not give Raw Power when State is a different Control Type");
     }
 
-    public Distance2d getDistance2d() {
+    public Distance getDistance2d() {
         if (distance2d != null)
             return distance2d;
         else
@@ -107,6 +126,22 @@ public class SwerveModuleState {
             throw new NullPointerException("Can not give Raw Power when State is a different Control Type");
     }
 
+    public void invertDirection() {
+        rotation2d = rotation2d.rotateBy(Rotation2d.fromDegrees(180.0));
+
+        switch(getControlType()) {
+            case RAW:
+                rawPowerValue = -rawPowerValue;
+                break;
+            case DISTANCE:
+                distance2d = distance2d.times(-1.0);
+                break;
+            case VELOCITY:
+                speed2d = speed2d.times(-1.0);
+                break;
+        }
+    }
+
     public Constants.DriveControlType getControlType() {
         return controlType;
     }
@@ -117,11 +152,11 @@ public class SwerveModuleState {
     public String toString() {
         switch (getControlType()) {
             case DISTANCE:
-                return "Distance: " + getDistance2d().getValue(Distance2d.DistanceUnits.FEET) + "ft Angle: " + getRotation2d().getRadians();
+                return getPosition().toString() + " Distance: " + getDistance2d().getValue(Units.Unit.FOOT) + "ft Angle: " + getRotation2d().getRadians();
             case RAW:
-                return "RAW: " + getRawPowerValue() + " Angle: " + getRotation2d().getRadians();
+                return getPosition().toString() + " RAW: " + getRawPowerValue() + " Angle: " + getRotation2d().getDegrees();
             case VELOCITY:
-                return "Velocity: " + getSpeed2d().getValue(Distance2d.DistanceUnits.FEET, Time2d.TimeUnits.SECONDS) + "ft/s Angle: " + getRotation2d().getRadians();
+                return getPosition().toString() + " Velocity: " + getSpeed2d().getValue(Units.Unit.FEET_PER_SECOND) + "ft/s Angle: " + getRotation2d().getRadians();
         }
         return "";
     }
@@ -151,10 +186,10 @@ public class SwerveModuleState {
 
         switch(getControlType()) {
             case DISTANCE:
-                builder.append(getDistance2d().getValue(Distance2d.DistanceUnits.FEET));
+                builder.append(getDistance2d().getValue(Units.Unit.FOOT));
                 break;
             case VELOCITY:
-                builder.append(getSpeed2d().getValue(Distance2d.DistanceUnits.FEET, Time2d.TimeUnits.SECONDS));
+                builder.append(getSpeed2d().getValue(Units.Unit.FEET_PER_SECOND));
                 break;
             case RAW:
                 builder.append(getRawPowerValue());

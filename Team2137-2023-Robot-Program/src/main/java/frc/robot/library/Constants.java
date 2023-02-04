@@ -14,12 +14,18 @@
 
 package frc.robot.library;
 
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Rotation2d;
+import frc.robot.library.units.Distance;
 import frc.robot.functions.io.xmlreader.objects.Motor;
-import frc.robot.library.units.Distance2d;
+import frc.robot.library.units.CartesianValue;
+import frc.robot.library.units.Units;
 import org.ejml.simple.SimpleMatrix;
 
 import java.io.File;
+
+import static frc.robot.library.units.Units.Unit.FOOT;
+import static frc.robot.library.units.Units.Unit.INCH;
 
 public final class Constants {
 
@@ -177,6 +183,41 @@ public final class Constants {
 
     //////Utility Functions//////
 
+    public static CartesianValue<Distance> rotate3DInertialFrame(CartesianValue<Distance> distances, CartesianValue<Rotation2d> rotations) {
+        SimpleMatrix distanceMatrix = new SimpleMatrix(new double[][] {
+                new double[] {distances.getX().getValue(FOOT)},
+                new double[] {distances.getY().getValue(FOOT)},
+                new double[] {distances.getZ().getValue(FOOT)}
+        });
+
+        SimpleMatrix values = rotate3DInertialFrame(distanceMatrix, rotations);
+
+        return new CartesianValue<Distance>(new Distance(values.get(0, 0), FOOT),
+                new Distance(values.get(1, 0), FOOT),
+                new Distance(values.get(2, 0), FOOT));
+    }
+
+    /**
+     * Uses Euler 3-2-1 Rotational Matrix
+     * @param distance
+     * @param rotation
+     * @return
+     */
+    public static SimpleMatrix rotate3DInertialFrame(SimpleMatrix distance, CartesianValue<Rotation2d> rotation) {
+        Rotation2d theta = rotation.getY();
+        Rotation2d phi = rotation.getX();
+        Rotation2d psi = rotation.getZ();
+
+        SimpleMatrix rotationalMatrix = new SimpleMatrix(new double[][] {
+                new double[] { theta.getCos() * psi.getCos(),   phi.getSin() * theta.getSin() * psi.getCos() - phi.getCos() * phi.getSin(), phi.getCos() * theta.getSin() * psi.getCos() + phi.getSin() * psi.getSin()},
+                new double[] { theta.getCos() * psi.getSin(),   phi.getSin() * theta.getSin() * psi.getSin() + phi.getCos() * psi.getCos(), phi.getCos() * theta.getSin() * psi.getSin() - phi.getSin() * psi.getCos()},
+                new double[] { -theta.getSin(),                 phi.getSin() * theta.getCos(),                                              phi.getCos() * theta.getCos()}
+        });
+
+
+        return rotationalMatrix.mult(distance);
+    }
+
     /**
      * input matrix ->
      * [X1][X2]
@@ -218,15 +259,23 @@ public final class Constants {
         });
     }
 
-    public static SimpleMatrix createFrameMatrix(Distance2d x, Distance2d y, Rotation2d r) {
-        return createFrameMatrix(x.getValue(Distance2d.DistanceUnits.INCH), y.getValue(Distance2d.DistanceUnits.INCH), r.getRadians());
+    public static SimpleMatrix createFrameMatrix(Distance x, Distance y, Rotation2d r) {
+        return createFrameMatrix(x.getValue(INCH), y.getValue(INCH), r.getRadians());
     }
 
     public static double deadband(double value, double deadband) {
         if(Math.abs(value) < deadband) {
             return 0;
         } else {
-            return value;
+            return (value - deadband) / (1 - deadband);
+        }
+    }
+    public static Pair<Double, Double> joyStickRadialDeadband(double x1, double y1, double deadband) {
+        double distance = Math.sqrt(Math.pow(x1, 2) + Math.pow(y1, 2));
+        if(distance < deadband) {
+            return new Pair<Double, Double>(0.0, 0.0);
+        } else {
+            return new Pair<Double, Double>((x1 - deadband) / (1 - deadband), (y1 - deadband) / (1 - deadband));
         }
     }
 

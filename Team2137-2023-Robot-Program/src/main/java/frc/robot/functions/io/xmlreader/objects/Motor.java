@@ -169,12 +169,19 @@ public class Motor extends Entity {
         getSavedElement().getElementsByTagName("CurrentLimit").item(0).setTextContent(String.valueOf(currentLimit));
         getSavedElement().getElementsByTagName("RampRate").item(0).setTextContent(String.valueOf(rampRate));
 
-        //TODO readdPID
-//        for (PID pid : pidValues) {
-//            if(pid != null) pid.updateElement();
-//        }
+        for (PID pid : pidValues) {
+            if(pid != null) pid.updateElement();
+        }
 
         return getSavedElement();
+    }
+
+    @Override
+    public void OnImplement() {
+        super.OnImplement();
+        for (PID pid : pidValues) {
+            if(pid != null) pid.OnImplement();
+        }
     }
 
 
@@ -182,10 +189,10 @@ public class Motor extends Entity {
     public NetworkTable addToNetworkTable(NetworkTable dashboard) {
         NetworkTable table = super.addToNetworkTable(dashboard);
 
-        //TODO readdPID
-//        for (PID pid : pidValues) {
-//            if(pid != null) pid.addToNetworkTable(dashboard);
-//        }
+        //TODO read PID
+        for (PID pid : pidValues) {
+            if(pid != null) pid.addToNetworkTable(getCurrentNetworkInstance());
+        }
 
         NetworkTableEntry entryGearRatio = table.getEntry("GearRatio");
         entryGearRatio.setDouble(gearRatio);
@@ -219,6 +226,10 @@ public class Motor extends Entity {
         setCurrentLimit((int) table.getEntry("CurrentLimit").getDouble(getCurrentLimit())); //TODO convert current limit to double
         setRampRate(table.getEntry("RampRate").getDouble(getRampRate()));
         setGearRatio(table.getEntry("GearRatio").getDouble(getGearRatio()));
+
+        for(PID pid : pidValues) {
+            if(pid != null) pid.pullFromNetworkTable();
+        }
 
         return table;
     }
