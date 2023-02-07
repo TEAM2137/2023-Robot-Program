@@ -14,14 +14,15 @@
 
 package frc.robot.functions.splines;
 
-import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.spline.PoseWithCurvature;
-import frc.robot.library.units.Acceleration;
-import frc.robot.library.units.Units;
-import frc.robot.library.units.Velocity;
+import frc.robot.library.units.TranslationalUnits.Acceleration;
+import frc.robot.library.units.TranslationalUnits.Velocity;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static frc.robot.library.units.TranslationalUnits.Acceleration.AccelerationUnits.FEET_PER_SECOND2;
+import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.FEET_PER_SECOND;
 
 public class VelocityGenerator {
 
@@ -30,45 +31,45 @@ public class VelocityGenerator {
     //Corner percent is the amount to stretch the original slow down determined by the percent of curve (degree change / 180)
     public VelocityGenerator(List<PoseWithCurvature> poses, Velocity maxDrivetrainVelocity, Acceleration maxDrivetrainAcceleration, double cornerPercent) {//, Velocity startSpeed, Velocity endSpeed) {
         //Max RadPerMeter is 2Pi
-        speeds.add(new Velocity(0, Units.Unit.FEET_PER_SECOND));
+        speeds.add(new Velocity(0, FEET_PER_SECOND));
 
         for(int i = 1; i < poses.size(); i++) {
-            double previousSpeed = speeds.get(i - 1).getValue(Units.Unit.FEET_PER_SECOND);
-            double maxAccel = maxDrivetrainAcceleration.getValue(Units.Unit.FEET_PER_SECOND2);
+            double previousSpeed = speeds.get(i - 1).getValue(FEET_PER_SECOND);
+            double maxAccel = maxDrivetrainAcceleration.getValue(FEET_PER_SECOND2);
             double distanceBetweenWaypoint = Math.sqrt(
                     Math.pow(poses.get(i).poseMeters.getX() - poses.get(i - 1).poseMeters.getX(), 2) +
                     Math.pow(poses.get(i).poseMeters.getY() - poses.get(i - 1).poseMeters.getY(), 2));
 
             double maxAccelSpeed = Math.sqrt(Math.pow(previousSpeed, 2) + (2 * maxAccel * distanceBetweenWaypoint));
-            double curveSpeed = (1 - Math.abs(poses.get(i).curvatureRadPerMeter / Math.PI)) * maxDrivetrainVelocity.getValue(Units.Unit.FEET_PER_SECOND);
-            double stretchedValue = ((curveSpeed - maxDrivetrainVelocity.getValue(Units.Unit.FEET_PER_SECOND)) * cornerPercent) + maxDrivetrainVelocity.getValue(Units.Unit.FEET_PER_SECOND);
+            double curveSpeed = (1 - Math.abs(poses.get(i).curvatureRadPerMeter / Math.PI)) * maxDrivetrainVelocity.getValue(FEET_PER_SECOND);
+            double stretchedValue = ((curveSpeed - maxDrivetrainVelocity.getValue(FEET_PER_SECOND)) * cornerPercent) + maxDrivetrainVelocity.getValue(FEET_PER_SECOND);
 
             if(stretchedValue < maxAccelSpeed)
-                speeds.add(new Velocity(stretchedValue, Units.Unit.FEET_PER_SECOND));
+                speeds.add(new Velocity(stretchedValue, FEET_PER_SECOND));
             else
-                speeds.add(new Velocity(maxAccelSpeed, Units.Unit.FEET_PER_SECOND));
+                speeds.add(new Velocity(maxAccelSpeed, FEET_PER_SECOND));
         }
 
-        speeds.set(speeds.size() - 1, new Velocity(0, Units.Unit.FEET_PER_SECOND));
+        speeds.set(speeds.size() - 1, new Velocity(0, FEET_PER_SECOND));
 
         for(int i = poses.size() - 2; i >= 0; i--) {
-            double previousSpeed = speeds.get(i + 1).getValue(Units.Unit.FEET_PER_SECOND);
-            double maxAccel = maxDrivetrainAcceleration.getValue(Units.Unit.FEET_PER_SECOND2);
+            double previousSpeed = speeds.get(i + 1).getValue(FEET_PER_SECOND);
+            double maxAccel = maxDrivetrainAcceleration.getValue(FEET_PER_SECOND2);
             double distanceBetweenWaypoint = Math.sqrt(
                     Math.pow(poses.get(i).poseMeters.getX() - poses.get(i + 1).poseMeters.getX(), 2) +
                             Math.pow(poses.get(i).poseMeters.getY() - poses.get(i + 1).poseMeters.getY(), 2));
 
             double maxAccelSpeed = Math.sqrt(Math.pow(previousSpeed, 2) + (2 * maxAccel * distanceBetweenWaypoint));
-            double curveSpeed = (1 - Math.abs(poses.get(i).curvatureRadPerMeter / Math.PI)) * maxDrivetrainVelocity.getValue(Units.Unit.FEET_PER_SECOND);
-            double stretchedValue = ((curveSpeed - maxDrivetrainVelocity.getValue(Units.Unit.FEET_PER_SECOND)) * cornerPercent) + maxDrivetrainVelocity.getValue(Units.Unit.FEET_PER_SECOND);
+            double curveSpeed = (1 - Math.abs(poses.get(i).curvatureRadPerMeter / Math.PI)) * maxDrivetrainVelocity.getValue(FEET_PER_SECOND);
+            double stretchedValue = ((curveSpeed - maxDrivetrainVelocity.getValue(FEET_PER_SECOND)) * cornerPercent) + maxDrivetrainVelocity.getValue(FEET_PER_SECOND);
             Velocity speed;
 
             if(stretchedValue < maxAccelSpeed)
-                speed = new Velocity(stretchedValue, Units.Unit.FEET_PER_SECOND);
+                speed = new Velocity(stretchedValue, FEET_PER_SECOND);
             else
-                speed = new Velocity(maxAccelSpeed, Units.Unit.FEET_PER_SECOND);
+                speed = new Velocity(maxAccelSpeed, FEET_PER_SECOND);
 
-            if(speed.getValue(Units.Unit.FEET_PER_SECOND) < speeds.get(i).getValue(Units.Unit.FEET_PER_SECOND))
+            if(speed.getValue(FEET_PER_SECOND) < speeds.get(i).getValue(FEET_PER_SECOND))
                 speeds.set(i, speed);
         }
     }

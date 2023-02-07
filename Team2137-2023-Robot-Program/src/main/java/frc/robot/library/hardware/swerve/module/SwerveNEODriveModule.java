@@ -25,12 +25,14 @@ import frc.robot.functions.io.xmlreader.data.PID;
 import frc.robot.functions.io.xmlreader.objects.Encoder;
 import frc.robot.functions.io.xmlreader.objects.Motor;
 import frc.robot.library.Constants.DriveControlType;
-import frc.robot.library.units.Distance;
-import frc.robot.library.units.Units;
-import frc.robot.library.units.Velocity;
+import frc.robot.library.units.TranslationalUnits.Distance;
+import frc.robot.library.units.TranslationalUnits.Velocity;
 import org.w3c.dom.Element;
 
-import static frc.robot.library.units.Units.Unit.*;
+import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
+import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.INCH;
+import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.FEET_PER_SECOND;
+import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.METER_PER_SECOND;
 
 //@SuppressWarnings("All")
 public class SwerveNEODriveModule extends EntityGroup implements SwerveModule {
@@ -177,6 +179,11 @@ public class SwerveNEODriveModule extends EntityGroup implements SwerveModule {
     }
 
     @Override
+    public double getCurrentDriveRPM() {
+        return 0;
+    }
+
+    @Override
     public Velocity getDriveVelocity() {
 //        return new Velocity(this.mDriveMotorEncoder.getVelocity(), );
         return new Velocity(0, FEET_PER_SECOND);
@@ -262,6 +269,11 @@ public class SwerveNEODriveModule extends EntityGroup implements SwerveModule {
             default:
                 return new SwerveModuleState(mDriveMotor.get(), getModuleAngle(), mSwerveDrivePosition);
         }
+    }
+
+    @Override
+    public SwerveModuleState getSwerveModuleAccelerationState(double voltage) {
+        return null;
     }
 
     @Override

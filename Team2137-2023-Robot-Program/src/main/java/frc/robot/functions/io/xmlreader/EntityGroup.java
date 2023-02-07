@@ -79,13 +79,6 @@ public class EntityGroup extends Entity {
         THRESHOLD ("THRESHOLD", Threshold.class, false),
         NUMBER ("NUMBER", Number.class, false),
         PID ("PID", frc.robot.functions.io.xmlreader.data.PID.class, false),
-
-        //Unit Types
-        DISTANCE ("DISTANCE", Distance.class, false),
-        VELOCITY ("VELOCITY", Velocity.class, false),
-        ACCELERATION ("ACCELERATION", Acceleration.class, false),
-        ANGLE ("ANGLE", Angle.class, false),
-        TIME ("TIME", Time.class, false)
         ;
 
         String name = "";

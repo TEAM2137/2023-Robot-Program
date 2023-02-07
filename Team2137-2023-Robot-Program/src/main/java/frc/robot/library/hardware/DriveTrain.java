@@ -15,10 +15,8 @@
 package frc.robot.library.hardware;
 
 import edu.wpi.first.math.geometry.Rotation2d;
-import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.library.Constants;
-import frc.robot.library.units.Angle;
-import frc.robot.library.units.CartesianValue;
+import frc.robot.library.units.UnitContainers.CartesianValue;
 
 public interface DriveTrain {
 

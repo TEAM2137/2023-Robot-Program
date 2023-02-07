@@ -18,23 +18,35 @@ import com.ctre.phoenix.sensors.PigeonIMU;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.objects.Gyro;
 import frc.robot.functions.io.xmlreader.objects.Motor;
 import frc.robot.library.Constants;
+import frc.robot.library.hardware.FalconCharacteristics;
+import frc.robot.library.units.AngleUnits.AngularVelocity;
+import frc.robot.library.units.Number;
 import frc.robot.library.hardware.DriveTrain;
 import frc.robot.library.hardware.deadReckoning.DeadWheelActiveTracking;
 import frc.robot.library.hardware.swerve.module.SwerveModule;
 import frc.robot.library.hardware.swerve.module.SwerveModuleState;
-import frc.robot.library.units.*;
+import frc.robot.library.units.TranslationalUnits.Acceleration;
+import frc.robot.library.units.TranslationalUnits.Distance;
+import frc.robot.library.units.TranslationalUnits.Velocity;
+import frc.robot.library.units.UnitContainers.CartesianValue;
+import frc.robot.library.units.UnitContainers.Vector2d;
 import org.ejml.simple.SimpleMatrix;
 import org.w3c.dom.Element;
 
 import java.text.DecimalFormat;
 
-import static frc.robot.library.units.Units.Unit.DEGREE;
-import static frc.robot.library.units.Units.Unit.INCH;
+import static frc.robot.library.units.AngleUnits.AngularVelocity.AngularVelocityUnits.RADIAN_PER_SECOND;
+import static frc.robot.library.units.TranslationalUnits.Acceleration.AccelerationUnits.METER_PER_SECOND2;
+import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.*;
+import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.FEET_PER_SECOND;
+import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.METER_PER_SECOND;
+
 
 public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
@@ -42,6 +54,10 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
     public SwerveModule leftBackModule;
     public SwerveModule rightFrontModule;
     public SwerveModule rightBackModule;
+
+    Distance dia = new Distance(4, INCH);
+
+    public SwerveKinematics<Number> swerveKinematics;
 
     private DeadWheelActiveTracking mDeadWheelActiveTracking;
 
@@ -57,6 +73,7 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         super(element, parent, fileLogger);
 
         logger = fileLogger;
+        swerveKinematics = new SwerveKinematics<>(new Distance(28, INCH), new Distance(28, INCH));
 
         try {
             leftFrontModule = (SwerveModule) getChildEntityGroup("LeftFront");
@@ -77,6 +94,35 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
     @Override
     public void periodic() {
+//        SwerveModuleState lfAccelState = leftFrontModule.getSwerveModuleAccelerationState(12.0);
+//        SwerveModuleState lbAccelState = leftBackModule.getSwerveModuleAccelerationState(12.0);
+//        SwerveModuleState rfAccelState = rightFrontModule.getSwerveModuleAccelerationState(12.0);
+//        SwerveModuleState rbAccelState = rightBackModule.getSwerveModuleAccelerationState(12.0);
+
+        SwerveModuleState lfVelState = leftFrontModule.getSwerveModuleState();
+        SwerveModuleState lbVelState = leftBackModule.getSwerveModuleState();
+        SwerveModuleState rfVelState = rightFrontModule.getSwerveModuleState();
+        SwerveModuleState rbVelState = rightBackModule.getSwerveModuleState();
+
+//        Vector2d<Distance> dist = swerveKinematics.updateSwerveKinematics(new SwerveModuleState[] { lfVelState, lbVelState, rfVelState, rbVelState }, new SwerveModuleState[] { lfAccelState, lbAccelState, rfAccelState, rbAccelState });
+        Vector2d<Distance> dist = swerveKinematics.updateSwerveKinematics(new SwerveModuleState[] { lfVelState, lbVelState, rfVelState, rbVelState });
+//        Vector2d<Velocity> vel = swerveKinematics.getCurrentRobotVelocity();
+
+//        SmartDashboard.putNumber("Vel X", vel.getX().getValue(FEET_PER_SECOND));
+//        SmartDashboard.putNumber("Vel Y", vel.getY().getValue(FEET_PER_SECOND));
+
+        SmartDashboard.putNumber("Dist X", dist.getX().getValue(FOOT));
+        SmartDashboard.putNumber("Dist Y", dist.getX().getValue(FOOT));
+    }
+
+    public SwerveModuleState[] calculateSwerveMotorSpeedsFieldCentric(Velocity xMag, Velocity yMag, AngularVelocity rMag, double trackWidth, double wheelBase) {
+        SimpleMatrix fieldCentric = Constants.convertFrame(getAngle().getRadians(), Constants.createFrameMatrix(xMag.getValue(METER_PER_SECOND), yMag.getValue(METER_PER_SECOND), rMag.getValue(RADIAN_PER_SECOND)));
+
+        Velocity x = new Velocity(fieldCentric.get(0, 0), METER_PER_SECOND);
+        Velocity y = new Velocity(fieldCentric.get(1, 0), METER_PER_SECOND);
+        AngularVelocity w = new AngularVelocity(fieldCentric.get(2, 0), RADIAN_PER_SECOND);
+
+        return swerveKinematics.getSwerveModuleState(x, y, w);
     }
 
     public SwerveModuleState[] calculateSwerveMotorSpeedsFieldCentric(double xMag, double yMag, double rMag, double trackWidth, double wheelBase, Constants.DriveControlType controlType) {
@@ -134,10 +180,10 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
         if (controlType == Constants.DriveControlType.VELOCITY) {
             return new SwerveModuleState[]{
-                    new SwerveModuleState(new Velocity(speeds[0][0], Units.Unit.FEET_PER_SECOND), new Rotation2d(speeds[0][1]), SwerveModuleState.SwerveModulePositions.LEFT_FRONT),
-                    new SwerveModuleState(new Velocity(speeds[1][0], Units.Unit.FEET_PER_SECOND), new Rotation2d(speeds[1][1]), SwerveModuleState.SwerveModulePositions.LEFT_BACK),
-                    new SwerveModuleState(new Velocity(speeds[2][0], Units.Unit.FEET_PER_SECOND), new Rotation2d(speeds[2][1]), SwerveModuleState.SwerveModulePositions.RIGHT_FRONT),
-                    new SwerveModuleState(new Velocity(speeds[3][0], Units.Unit.FEET_PER_SECOND), new Rotation2d(speeds[3][1]), SwerveModuleState.SwerveModulePositions.RIGHT_BACK),
+                    new SwerveModuleState(new Velocity(speeds[0][0], FEET_PER_SECOND), new Rotation2d(speeds[0][1]), SwerveModuleState.SwerveModulePositions.LEFT_FRONT),
+                    new SwerveModuleState(new Velocity(speeds[1][0], FEET_PER_SECOND), new Rotation2d(speeds[1][1]), SwerveModuleState.SwerveModulePositions.LEFT_BACK),
+                    new SwerveModuleState(new Velocity(speeds[2][0], FEET_PER_SECOND), new Rotation2d(speeds[2][1]), SwerveModuleState.SwerveModulePositions.RIGHT_FRONT),
+                    new SwerveModuleState(new Velocity(speeds[3][0], FEET_PER_SECOND), new Rotation2d(speeds[3][1]), SwerveModuleState.SwerveModulePositions.RIGHT_BACK),
             };
         } else if(controlType == Constants.DriveControlType.DISTANCE) {
             return new SwerveModuleState[]{

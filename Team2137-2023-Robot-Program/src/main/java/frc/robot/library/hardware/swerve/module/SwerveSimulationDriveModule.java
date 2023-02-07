@@ -20,16 +20,16 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.XMLSettingReader;
-import frc.robot.library.units.Distance;
+import frc.robot.library.units.TranslationalUnits.Distance;
 import frc.robot.library.units.Number;
 import frc.robot.functions.io.xmlreader.objects.Encoder;
 import frc.robot.functions.io.xmlreader.objects.Motor;
 import frc.robot.library.Constants;
-import frc.robot.library.units.Units;
-import frc.robot.library.units.Velocity;
+import frc.robot.library.units.TranslationalUnits.Velocity;
 import org.w3c.dom.Element;
 
-import static frc.robot.library.units.Units.Unit.*;
+import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
+import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.FEET_PER_SECOND;
 
 public class SwerveSimulationDriveModule extends EntityGroup implements SwerveModule {
 
@@ -67,7 +67,7 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
         logger = fileLogger;
 
         dblWheelDiameter = (Number) XMLSettingReader.settingsEntityGroup.getEntity("DriveTrain-WheelDiameter");
-        logger.writeEvent(0, FileLogger.EventType.Debug, "WheelDiameter: " + dblWheelDiameter.getValue(INCH));
+        logger.writeEvent(0, FileLogger.EventType.Debug, "WheelDiameter: " + dblWheelDiameter.getValue());
 
         configDrivetrainControlType(Constants.DriveControlType.RAW);
     }
@@ -110,6 +110,11 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
     @Override
     public double getRawDrivePower() {
         return mDriveRawGoal;
+    }
+
+    @Override
+    public double getCurrentDriveRPM() {
+        return 0;
     }
 
     @Override
@@ -166,6 +171,11 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
             default:
                 return new SwerveModuleState(mDriveRawPercent, turningCurrent, mSwerveDrivePosition);
         }
+    }
+
+    @Override
+    public SwerveModuleState getSwerveModuleAccelerationState(double voltage) {
+        return null;
     }
 
     @Override

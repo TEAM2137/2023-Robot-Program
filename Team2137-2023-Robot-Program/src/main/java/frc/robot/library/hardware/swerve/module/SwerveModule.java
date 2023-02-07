@@ -16,8 +16,8 @@ package frc.robot.library.hardware.swerve.module;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import frc.robot.library.Constants;
-import frc.robot.library.units.Distance;
-import frc.robot.library.units.Velocity;
+import frc.robot.library.units.TranslationalUnits.Distance;
+import frc.robot.library.units.TranslationalUnits.Velocity;
 
 public interface SwerveModule {
 
@@ -68,6 +68,7 @@ public interface SwerveModule {
     void setVelocityDriveSpeed(Velocity speed);
 
     double getRawDrivePower();
+    double getCurrentDriveRPM();
     Velocity getDriveVelocity();
     Velocity getDriveVelocityGoal();
 
@@ -81,6 +82,8 @@ public interface SwerveModule {
     Constants.DriveControlType getDriveControlType();
 
     SwerveModuleState getSwerveModuleState();
+
+    SwerveModuleState getSwerveModuleAccelerationState(double voltage);
 
     SwerveModuleState.SwerveModulePositions getSwerveModuleLocation();
 }

@@ -31,16 +31,18 @@ import frc.robot.library.Constants.StepState;
 import frc.robot.library.PurePursuit.PurePursuitGenerator;
 import frc.robot.library.hardware.deadReckoning.DeadWheelActiveTracking;
 import frc.robot.library.hardware.swerve.SwerveDrivetrain;
-import frc.robot.library.units.Distance;
+import frc.robot.library.units.TranslationalUnits.Distance;
 import frc.robot.library.units.Time;
-import frc.robot.library.units.Velocity;
+import frc.robot.library.units.TranslationalUnits.Velocity;
+import frc.robot.library.units.Number;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static frc.robot.library.units.Units.Unit.FEET_PER_SECOND;
-import static frc.robot.library.units.Units.Unit.SECOND;
-import static frc.robot.library.units.Units.Unit.FOOT;
+import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
+import static frc.robot.library.units.Time.TimeUnits.SECONDS;
+import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.FEET_PER_SECOND;
+
 
 @SuppressWarnings(value="FieldCanBeLocal")
 public class Autonomous implements OpMode {
@@ -181,7 +183,7 @@ public class Autonomous implements OpMode {
                 QuinticSpline spline = new QuinticSpline(poseList, 0.6);
                 mDrivePoseWithCurvatureList = spline.getSplinePoints();
 
-                mPurePursuitLookaheadDistance = (Distance) XMLSettingReader.settingsEntityGroup.getEntity("PurePursuitLookahead");
+                mPurePursuitLookaheadDistance = new Distance(((Number) XMLSettingReader.settingsEntityGroup.getEntity("PurePursuitLookahead")).getValue(), FOOT);
 
                 mDrivePurePursuitGenerator = new PurePursuitGenerator(mPurePursuitLookaheadDistance, mDrivePoseWithCurvatureList);
                 break;
@@ -241,7 +243,7 @@ public class Autonomous implements OpMode {
 
                 }
 
-                if(step.getParm(1, 0d) != 0 && step.hasTimeElapsed(new Time(step.getParm(1, 0d), SECOND))) {
+                if(step.getParm(1, 0d) != 0 && step.hasTimeElapsed(new Time(step.getParm(1, 0d), SECONDS))) {
                     mDrivetrain.setSpeed(0);
                     step.changeStepState(StepState.STATE_FINISH);
                     this.logger.writeEvent(5, EventType.Status, "Finished Timed Set Swerve Drive Train Velocity");

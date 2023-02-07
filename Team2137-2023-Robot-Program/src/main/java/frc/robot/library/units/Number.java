@@ -17,19 +17,63 @@ package frc.robot.library.units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import frc.robot.functions.io.xmlreader.Entity;
+import frc.robot.library.units.AngleUnits.AngleUnit;
+import frc.robot.library.units.TranslationalUnits.TranslationUnit;
 import org.w3c.dom.Element;
 
-import java.lang.reflect.InvocationTargetException;
+import static frc.robot.library.units.Number.NumberUnit.SCALAR;
+import static frc.robot.library.units.UnitUtil.System.Generic;
+import static frc.robot.library.units.UnitUtil.UnitType.Scalar;
 
 /**
  * This class represents a double value that is mutable and
  * has the ability to be published to the Smartdashboard
  * and to the XML file
  */
-public class Number extends Entity implements MathFunctions<Number> {
+public class Number extends Entity implements AngleUnit<Number, Number.NumberUnit>, TranslationUnit<Number, Number.NumberUnit> {
+
+    public enum NumberUnit implements UnitEnum {
+        SCALAR          (Scalar, Generic, 1.0,"Scalar");
+
+        UnitUtil.UnitType unitType;
+        double unitsPerPrimary;
+        String[] names;
+
+        NumberUnit(UnitUtil.UnitType _unitType, UnitUtil.System unitSystem, double _UnitsPerPrimary, String... _names) {
+            names = _names;
+            unitType = _unitType;
+            unitsPerPrimary = _UnitsPerPrimary;
+        }
+
+        @Override
+        public UnitEnum getPrimaryUnit() {
+            return SCALAR;
+        }
+
+        @Override
+        public double getUnitPerPrimaryUnit() {
+            return unitsPerPrimary;
+        }
+
+        @Override
+        public UnitEnum getFromName(String name) {
+            for(NumberUnit a : NumberUnit.values()) {
+                for(String val : a.names) {
+                    if(val.equals(name))
+                        return a;
+                }
+            }
+
+            return null;
+        }
+
+        @Override
+        public UnitUtil.UnitType getUnitType() {
+            return unitType;
+        }
+    }
 
     private double value;
-    private Units.Unit ogUnit;
 
     /**
      * Constructs Number with simple Name and Value but DOES NOT have reference to XML Element
@@ -37,18 +81,12 @@ public class Number extends Entity implements MathFunctions<Number> {
      * @param _value - Value of the Number
      */
     protected Number(String name, double _value) {
-        this(name, _value, Units.Unit.SCALAR);
-    }
-
-    protected Number(double _value, Units.Unit _unit) {
-        this(null, _value, _unit);
-    }
-
-    protected Number(String name, double _value, Units.Unit _unit) {
         super(name);
-
-        ogUnit = _unit;
         value = _value;
+    }
+
+    public Number(double _value) {
+        this(null, _value);
     }
 
     /**
@@ -59,108 +97,22 @@ public class Number extends Entity implements MathFunctions<Number> {
         super(element);
 
         value = Double.parseDouble(element.getTextContent());
-
-        if (element.hasAttribute("unit")) {
-            ogUnit = Units.Unit.getFromName(element.getAttribute("unit"));
-        } else {
-            ogUnit = Units.Unit.SCALAR;
-        }
-    }
-
-    public static Class<? extends Number> getUnitClass(Units.Unit unit) {
-        switch(unit.getUnitType()) {
-            case Angle:
-                return Angle.class;
-            case AngularVelocity:
-                return AngularVelocity.class;
-            case Acceleration:
-                return Acceleration.class;
-            case Velocity:
-                return Velocity.class;
-            case Distance:
-                return Distance.class;
-            case Time:
-                return Time.class;
-            default:
-                return Number.class;
-        }
-    }
-
-    public static Number create(double val, Units.Unit unit) {
-        switch(unit.getUnitType()) {
-            case Angle:
-                return new Angle(val, unit);
-            case AngularVelocity:
-                return new AngularVelocity(val, unit);
-            case Acceleration:
-                return new Acceleration(val, unit);
-            case Velocity:
-                return new Velocity(val, unit);
-            case Distance:
-                return new Distance(val, unit);
-            case Time:
-                return new Time(val, unit);
-            default:
-                return new Number(val, unit);
-        }
-    }
-
-    public Number clone() {
-        try {
-            return this.getClass().getDeclaredConstructor(String.class, double.class, Units.Unit.class).newInstance(getName(), value, ogUnit);
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
-    public Units.Unit getPrimaryUnit() {
-        return Units.Unit.SCALAR;
-    }
-
-    public Units.Unit getOriginalUnit() {
-        return ogUnit;
-    }
-
-    public synchronized double getValueInDefaultUnit() {
-        return getValue(ogUnit);
-    }
-
-    public synchronized double getValueInPrimaryUnit() {
-        return getValue(getPrimaryUnit());
     }
 
     /**
      * Gets the current stored local value
      * @return - Value of current number
      */
-    protected synchronized double getValue() {
+    public synchronized double getValue() {
         return value;
-    }
-
-    public synchronized double getValue(Units.Unit unit) {
-        try {
-            return unit.valueOf(value, ogUnit);
-        } catch (Units.MissMatchedUnitTypeException e) {
-            return Double.NaN;
-        }
     }
 
     /**
      * Sets the value of the local values but does NOT change network table value or element value
      * @param value - Value to set current number to
      */
-    protected synchronized void setValue(double value) {
+    public synchronized void setValue(double value) {
         this.value = value;
-    }
-
-    public synchronized void setValue(double value, Units.Unit unit) {
-        try {
-            this.value = ogUnit.valueOf(value, unit);
-        } catch (Units.MissMatchedUnitTypeException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
@@ -208,26 +160,61 @@ public class Number extends Entity implements MathFunctions<Number> {
 
     @Override
     public Number times(double scalar) {
-        return Number.create(value * scalar, ogUnit);
+        return new Number(getValue() - scalar);
+    }
+
+    @Override
+    public Number times(Number other) {
+        return new Number(getValue() - other.getValue());
     }
 
     @Override
     public Number divide(double scalar) {
-        return Number.create(value / scalar, ogUnit);
+        return new Number(getValue() - scalar);
+    }
+
+    @Override
+    public Number divide(Number other) {
+        return new Number(getValue() - other.getValue());
     }
 
     @Override
     public Number add(double scalar) {
-        return Number.create(value + scalar, ogUnit);
+        return new Number(getValue() + scalar);
     }
 
     @Override
-    public Number add(Number num) {
-        return Number.create(value + num.getValue(ogUnit), ogUnit);
+    public Number add(Number other) {
+        return new Number(getValue() + other.getValue());
     }
 
     @Override
     public Number minus(double scalar) {
-        return Number.create(value - scalar, ogUnit);
+        return new Number(getValue() - scalar);
+    }
+
+    @Override
+    public Number minus(Number other) {
+        return new Number(getValue() - other.getValue());
+    }
+
+    @Override
+    public void setValue(double val, NumberUnit unit) {
+        setValue(val);
+    }
+
+    @Override
+    public double getValue(NumberUnit unit) {
+        return getValue();
+    }
+
+    @Override
+    public double getValueInPrimaryUnit() {
+        return getValue();
+    }
+
+    @Override
+    public NumberUnit getPrimaryUnit() {
+        return SCALAR;
     }
 }

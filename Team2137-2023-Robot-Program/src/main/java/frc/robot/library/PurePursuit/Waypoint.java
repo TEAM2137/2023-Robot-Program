@@ -15,7 +15,7 @@
 package frc.robot.library.PurePursuit;
 
 import edu.wpi.first.math.geometry.Rotation2d;
-import frc.robot.library.units.Distance;
+import frc.robot.library.units.TranslationalUnits.Distance;
 
 public class Waypoint {
     private Distance x;

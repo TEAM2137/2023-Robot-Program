@@ -7,13 +7,17 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.library.Constants;
 import frc.robot.library.hardware.deadReckoning.DeadWheelActiveTracking;
 import frc.robot.library.hardware.swerve.module.SwerveModuleState;
-import frc.robot.library.units.*;
+import frc.robot.library.units.TranslationalUnits.Acceleration;
+import frc.robot.library.units.TranslationalUnits.Distance;
+import frc.robot.library.units.TranslationalUnits.Velocity;
+import frc.robot.library.units.UnitContainers.CartesianValue;
 
-import java.lang.reflect.Member;
 import java.util.LinkedList;
 import java.util.function.Consumer;
 
-import static frc.robot.library.units.Units.Unit.*;
+import static frc.robot.library.units.TranslationalUnits.Acceleration.AccelerationUnits.METER_PER_SECOND2;
+import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.METER;
+import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.METER_PER_SECOND;
 
 public class FusedTrackingAlgorithm {
 

@@ -16,16 +16,15 @@ package frc.robot.library;
 
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Rotation2d;
-import frc.robot.library.units.Distance;
+import frc.robot.library.units.TranslationalUnits.Distance;
 import frc.robot.functions.io.xmlreader.objects.Motor;
-import frc.robot.library.units.CartesianValue;
-import frc.robot.library.units.Units;
+import frc.robot.library.units.UnitContainers.CartesianValue;
 import org.ejml.simple.SimpleMatrix;
 
 import java.io.File;
 
-import static frc.robot.library.units.Units.Unit.FOOT;
-import static frc.robot.library.units.Units.Unit.INCH;
+import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
+import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.INCH;
 
 public final class Constants {
 

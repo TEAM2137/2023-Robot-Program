@@ -20,13 +20,14 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.objects.Encoder;
-import frc.robot.library.Constants;
-import frc.robot.library.units.Distance;
-import frc.robot.library.units.Velocity;
-import org.ejml.simple.SimpleMatrix;
+import frc.robot.library.units.Number;
+import frc.robot.library.units.TranslationalUnits.Distance;
+import frc.robot.library.units.TranslationalUnits.Velocity;
 import org.w3c.dom.Element;
 
-import static frc.robot.library.units.Units.Unit.*;
+import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
+import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.INCH;
+import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.FEET_PER_SECOND;
 
 
 public class DeadWheelActiveTracking extends EntityGroup {
@@ -60,7 +61,7 @@ public class DeadWheelActiveTracking extends EntityGroup {
         xCANCoder = new CANCoder(xEncoderObj.getID());
         yCANCoder = new CANCoder(yEncoderObj.getID());
 
-        wheelDiameter = (Distance) parent.getEntity("WheelDiameter");
+        wheelDiameter = new Distance(((Number) parent.getEntity("WheelDiameter")).getValue(), INCH);
 
         initialize();
         this.setOnImplementCallback(this::initialize);

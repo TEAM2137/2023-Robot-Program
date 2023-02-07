@@ -18,14 +18,14 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.spline.PoseWithCurvature;
-import frc.robot.library.units.Distance;
-import frc.robot.library.units.Units;
+import frc.robot.library.units.TranslationalUnits.Distance;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
 
 
 public class PurePursuitGenerator {
@@ -47,7 +47,7 @@ public class PurePursuitGenerator {
     }
 
     public Map.Entry<Transform2d, Map.Entry<Translation2d, Translation2d>> calculateGoalPose(Translation2d currentPosition) {
-        Map.Entry<Translation2d, Map.Entry<Translation2d, Translation2d>> lookAheadInfo = getLookaheadPoint(currentPosition.getX(), currentPosition.getY(), lookAheadDistance.getValue(Units.Unit.FOOT));
+        Map.Entry<Translation2d, Map.Entry<Translation2d, Translation2d>> lookAheadInfo = getLookaheadPoint(currentPosition.getX(), currentPosition.getY(), lookAheadDistance.getValue(FOOT));
 
 //        if (lookAhead == null) {
 //            for(int i = 1; i < pointList.size(); i++) {

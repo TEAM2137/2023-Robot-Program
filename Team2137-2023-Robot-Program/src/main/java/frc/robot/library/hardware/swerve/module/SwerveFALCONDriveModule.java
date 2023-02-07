@@ -25,17 +25,23 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.XMLSettingReader;
-import frc.robot.library.units.Distance;
+import frc.robot.library.hardware.FalconCharacteristics;
+import frc.robot.library.units.AngleUnits.Angle;
+import frc.robot.library.units.AngleUnits.AngularAcceleration;
+import frc.robot.library.units.TranslationalUnits.Distance;
 import frc.robot.library.units.Number;
 import frc.robot.functions.io.xmlreader.data.PID;
 import frc.robot.functions.io.xmlreader.objects.Encoder;
 import frc.robot.functions.io.xmlreader.objects.Motor;
 import frc.robot.library.Constants;
-import frc.robot.library.units.Units;
-import frc.robot.library.units.Velocity;
+import frc.robot.library.units.TranslationalUnits.Velocity;
 import org.w3c.dom.Element;
 
-import static frc.robot.library.units.Units.Unit.*;
+import static frc.robot.library.units.AngleUnits.Angle.AngleUnits.RADIAN;
+import static frc.robot.library.units.AngleUnits.AngularAcceleration.AngularAccelerationUnits.RADIAN_PER_SECOND2;
+import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.*;
+import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.CTRE_VELOCITY;
+import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.FEET_PER_SECOND;
 
 public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule {
 
@@ -50,17 +56,18 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
     private Rotation2d goalModuleAngle = Rotation2d.fromDegrees(0);
 
     private Distance dblDriveWheelRotationPerFoot;//Rotations per Unit
-    private Number dblWheelDiameter;
+    private Distance dblWheelDiameter;
+    private Number dblRobotMass;
     private Number dblScaleSpeedOptimization;
 
-    private Velocity mDriveVelocityGoal = new Velocity(0, Units.Unit.FEET_PER_SECOND);
+    private Velocity mDriveVelocityGoal = new Velocity(0, FEET_PER_SECOND);
     private Distance mDriveDistanceGoal = new Distance(0, FOOT);
     private double mDriveRawGoal = 0;
     private final Motor mDriveMotorObj;
     private final Motor mTurnMotorObj;
     private final Encoder mTurnCANEncoderObj;
     private final FileLogger logger;
-    private Constants.DriveControlType mDriveControlType = Constants.DriveControlType.UNDEFINED;
+    private Constants.DriveControlType mDriveControlType = Constants.DriveControlType.VELOCITY;
     private SwerveModuleState.SwerveModulePositions mSwerveDrivePosition;
 
     public SwerveFALCONDriveModule(Element element, EntityGroup parent, FileLogger fileLogger) {
@@ -80,7 +87,9 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
         this.mTurnCANEncoderObj = (Encoder) getEntity("Turn Encoder");
         this.mTurnCANEncoder = new CANCoder(mTurnCANEncoderObj.getID());
 
-        dblWheelDiameter = (Number) XMLSettingReader.settingsEntityGroup.getEntity("DriveTrain-WheelDiameter");
+        Number dia = (Number) XMLSettingReader.settingsEntityGroup.getEntity("DriveTrain-WheelDiameter");
+        dblWheelDiameter = new Distance(dia.getValue(), INCH);
+        dblRobotMass = new Number(60);
         dblScaleSpeedOptimization = (Number) XMLSettingReader.settingsEntityGroup.getEntity("DriveTrain-ScaleSpeedOptimization");
 
         initialize();
@@ -143,9 +152,9 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
         table.getEntry(getEntityPath() + "Angle").setDouble(getModuleAngle().getDegrees());
         table.getEntry(getEntityPath() + "RawAngleCounts").setDouble(this.mTurnMotor.getSelectedSensorPosition());
 
-        if(dblScaleSpeedOptimization != null && dblScaleSpeedOptimization.getValue(SCALAR) > 0) {
+        if(dblScaleSpeedOptimization != null && dblScaleSpeedOptimization.getValue() > 0) {
             Rotation2d deltaAngle = goalModuleAngle.minus(getModuleAngle());
-            setRawDriveSpeed(mDriveRawGoal * Math.abs(Math.pow(Math.cos(deltaAngle.getRadians()), (int) dblScaleSpeedOptimization.getValue(SCALAR))));
+            setRawDriveSpeed(mDriveRawGoal * Math.abs(Math.pow(Math.cos(deltaAngle.getRadians()), (int) dblScaleSpeedOptimization.getValue())));
         }
     }
 
@@ -218,6 +227,16 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
     @Override
     public double getRawDrivePower() {
         return mDriveMotor.getMotorOutputPercent();
+    }
+
+    @Override
+    public double getCurrentDriveRPM() {
+        return (mDriveMotor.getSensorCollection().getIntegratedSensorVelocity() * 10 / 2048);
+    }
+
+    @Override
+    public SwerveModuleState getSwerveModuleAccelerationState(double voltage) {
+        return new SwerveModuleState(FalconCharacteristics.getAcceleration(getCurrentDriveRPM(), voltage, dblWheelDiameter.getValue(METER) / 2, dblRobotMass.getValue()), new AngularAcceleration(0, RADIAN_PER_SECOND2), mSwerveDrivePosition);
     }
 
     /**
