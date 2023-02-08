@@ -11,6 +11,31 @@ import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import org.w3c.dom.Element;
 
+/**
+ * Comments by Wyatt 2.7.2023 (Sorry it is a lot)
+ * At line 36 maybe use the PID class inorder to store the values instead of the double so that we can tune them easier.
+ * By using the class we can enable and disable when we want to tune the pid values look at @see SwerveFALCONDriveModule.class
+ *
+ * Possible rename getClose() to isJawClosed() or something a little more descriptive.
+ *
+ * To create the motor try to name them and use the EntityGroup static function inorder to get a Motor.class object which
+ * contains all the information.
+ *
+ * The closed loop error needs to be changed to allow for more otherwise the wrist will be unpredictable
+ *
+ * Pitch Encoder needs to be a Absolute Encoder not relative so we can track the position of the wrist no matter starting
+ * position. (Maybe use Encoder.class to hold values also)
+ *
+ * You do not need to set position in the periodic loop. That will take up the CAN utilization. The value that you set is
+ * saved on the motor controller. It only need to be set in a setPosition function.
+ *
+ * Not sure the getRPM math is correct but overall might not be needed.
+ *
+ * The main branch has a class called Angle.class which might be useful for storing the angles or you could use the FIRST
+ * version of this Rotation2d.class
+ *
+ * Probably add FileLogging in the intialization block of code.
+ */
 public class EndEffector extends EntityGroup {
 
     private final FileLogger logger;
