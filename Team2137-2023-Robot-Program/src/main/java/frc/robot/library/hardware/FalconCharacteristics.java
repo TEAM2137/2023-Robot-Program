@@ -24,7 +24,7 @@ public class FalconCharacteristics {
     }
 
     public static double getForce(double rpm, double voltage, double r) {
-        return getTorque(rpm, voltage) * r;
+        return getTorque(rpm, voltage) / r;
     }
 
     public static Acceleration getAcceleration(double rpm, double voltage, double r, double mass) {

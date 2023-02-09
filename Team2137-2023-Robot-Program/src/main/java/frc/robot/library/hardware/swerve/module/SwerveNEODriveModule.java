@@ -280,4 +280,9 @@ public class SwerveNEODriveModule extends EntityGroup implements SwerveModule {
     public SwerveModuleState.SwerveModulePositions getSwerveModuleLocation() {
         return mSwerveDrivePosition;
     }
+
+    @Override
+    public double getDriveMotorVoltage() {
+        return 0;
+    }
 }

@@ -26,8 +26,8 @@ import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.XMLSettingReader;
 import frc.robot.library.hardware.FalconCharacteristics;
-import frc.robot.library.units.AngleUnits.Angle;
 import frc.robot.library.units.AngleUnits.AngularAcceleration;
+import frc.robot.library.units.TranslationalUnits.Acceleration;
 import frc.robot.library.units.TranslationalUnits.Distance;
 import frc.robot.library.units.Number;
 import frc.robot.functions.io.xmlreader.data.PID;
@@ -37,7 +37,6 @@ import frc.robot.library.Constants;
 import frc.robot.library.units.TranslationalUnits.Velocity;
 import org.w3c.dom.Element;
 
-import static frc.robot.library.units.AngleUnits.Angle.AngleUnits.RADIAN;
 import static frc.robot.library.units.AngleUnits.AngularAcceleration.AngularAccelerationUnits.RADIAN_PER_SECOND2;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.*;
 import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.CTRE_VELOCITY;
@@ -236,7 +235,9 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
 
     @Override
     public SwerveModuleState getSwerveModuleAccelerationState(double voltage) {
-        return new SwerveModuleState(FalconCharacteristics.getAcceleration(getCurrentDriveRPM(), voltage, dblWheelDiameter.getValue(METER) / 2, dblRobotMass.getValue()), new AngularAcceleration(0, RADIAN_PER_SECOND2), mSwerveDrivePosition);
+        Acceleration accel = FalconCharacteristics.getAcceleration(getCurrentDriveRPM(), voltage, dblWheelDiameter.getValue(METER) / 2, dblRobotMass.getValue());
+
+        return new SwerveModuleState(accel, new AngularAcceleration(0, RADIAN_PER_SECOND2), mSwerveDrivePosition);
     }
 
     /**
@@ -314,12 +315,12 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
     public void configDrivetrainControlType(Constants.DriveControlType control) {
         switch (control) {
             case VELOCITY:
-                PID tmpPIDVelocity = this.mDriveMotorObj.getPID(intDriveVelocityPIDSlotID);
-                this.mDriveMotor.config_kP(0, tmpPIDVelocity.getP());
-                this.mDriveMotor.config_kI(0, tmpPIDVelocity.getI());
-                this.mDriveMotor.config_kD(0, tmpPIDVelocity.getD());
+//                PID tmpPIDVelocity = this.mDriveMotorObj.getPID(intDriveVelocityPIDSlotID);
+//                this.mDriveMotor.config_kP(0, tmpPIDVelocity.getP());
+//                this.mDriveMotor.config_kI(0, tmpPIDVelocity.getI());
+//                this.mDriveMotor.config_kD(0, tmpPIDVelocity.getD());
                 //TODO fix
-                this.mDriveMotorObjFeedForward = this.mDriveMotorObj.getPID(intDriveVelocityPIDSlotID).getWPIFeedForwardController();
+//                this.mDriveMotorObjFeedForward = this.mDriveMotorObj.getPID(intDriveVelocityPIDSlotID).getWPIFeedForwardController();
                 mDriveControlType = Constants.DriveControlType.VELOCITY;
                 break;
             case DISTANCE:
@@ -356,6 +357,11 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
     @Override
     public SwerveModuleState.SwerveModulePositions getSwerveModuleLocation() {
         return mSwerveDrivePosition;
+    }
+
+    @Override
+    public double getDriveMotorVoltage() {
+        return mDriveMotor.getMotorOutputVoltage();
     }
 
 }

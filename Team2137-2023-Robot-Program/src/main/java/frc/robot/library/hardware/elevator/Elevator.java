@@ -1,19 +1,18 @@
 package frc.robot.library.hardware.elevator;
 
+import com.ctre.phoenix.CANifier;
 import org.w3c.dom.Element;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 
-public class Elevator extends EntityGroup {
+public class Elevator extends EntityGroup implements ElevatorSensors {
 
     private FileLogger logger;
-    private double distance;
-    private double rotation;
 
-    public Elevator(Element element, int depth, EntityGroup parent, FileLogger fileLogger) {
-        super(element, depth, parent, fileLogger);
+    public Elevator(Element element, EntityGroup parent, FileLogger fileLogger) {
+        super(element, parent, fileLogger);
         logger = fileLogger;
     }
 
@@ -71,5 +70,9 @@ public class Elevator extends EntityGroup {
 
         logger.writeLine(builder.toString());
     }
-    
+
+    @Override
+    public CANifier getCANifier() {
+        return null;
+    }
 }

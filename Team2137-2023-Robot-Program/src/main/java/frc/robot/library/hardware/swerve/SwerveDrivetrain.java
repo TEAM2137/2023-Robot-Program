@@ -16,7 +16,6 @@ package frc.robot.library.hardware.swerve;
 
 import com.ctre.phoenix.sensors.PigeonIMU;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
@@ -24,28 +23,27 @@ import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.objects.Gyro;
 import frc.robot.functions.io.xmlreader.objects.Motor;
 import frc.robot.library.Constants;
-import frc.robot.library.hardware.FalconCharacteristics;
-import frc.robot.library.units.AngleUnits.AngularVelocity;
+import frc.robot.library.units.AngleUnits.Angle;
+import frc.robot.library.units.AngleUnits.AngleUnit;
 import frc.robot.library.units.Number;
 import frc.robot.library.hardware.DriveTrain;
 import frc.robot.library.hardware.deadReckoning.DeadWheelActiveTracking;
 import frc.robot.library.hardware.swerve.module.SwerveModule;
 import frc.robot.library.hardware.swerve.module.SwerveModuleState;
-import frc.robot.library.units.TranslationalUnits.Acceleration;
 import frc.robot.library.units.TranslationalUnits.Distance;
 import frc.robot.library.units.TranslationalUnits.Velocity;
+import frc.robot.library.units.Unit;
 import frc.robot.library.units.UnitContainers.CartesianValue;
+import frc.robot.library.units.UnitContainers.Pose2d;
 import frc.robot.library.units.UnitContainers.Vector2d;
+import frc.robot.library.units.UnitEnum;
+import frc.robot.library.units.UnitUtil;
 import org.ejml.simple.SimpleMatrix;
 import org.w3c.dom.Element;
 
-import java.text.DecimalFormat;
-
-import static frc.robot.library.units.AngleUnits.AngularVelocity.AngularVelocityUnits.RADIAN_PER_SECOND;
-import static frc.robot.library.units.TranslationalUnits.Acceleration.AccelerationUnits.METER_PER_SECOND2;
+import static frc.robot.library.units.AngleUnits.Angle.AngleUnits.DEGREE;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.*;
 import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.FEET_PER_SECOND;
-import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.METER_PER_SECOND;
 
 
 public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
@@ -60,8 +58,6 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
     public SwerveKinematics<Number> swerveKinematics;
 
     private DeadWheelActiveTracking mDeadWheelActiveTracking;
-
-    public Translation2d currentRobotPosition = new Translation2d(10, 10);
 
     public Motor.MotorTypes driveTrainType;
 
@@ -94,39 +90,46 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
     @Override
     public void periodic() {
-//        SwerveModuleState lfAccelState = leftFrontModule.getSwerveModuleAccelerationState(12.0);
-//        SwerveModuleState lbAccelState = leftBackModule.getSwerveModuleAccelerationState(12.0);
-//        SwerveModuleState rfAccelState = rightFrontModule.getSwerveModuleAccelerationState(12.0);
-//        SwerveModuleState rbAccelState = rightBackModule.getSwerveModuleAccelerationState(12.0);
+        SwerveModuleState lfAccelState = leftFrontModule.getSwerveModuleAccelerationState(leftFrontModule.getDriveMotorVoltage());
+        SwerveModuleState lbAccelState = leftBackModule.getSwerveModuleAccelerationState(leftBackModule.getDriveMotorVoltage());
+        SwerveModuleState rfAccelState = rightFrontModule.getSwerveModuleAccelerationState(rightFrontModule.getDriveMotorVoltage());
+        SwerveModuleState rbAccelState = rightBackModule.getSwerveModuleAccelerationState(rightBackModule.getDriveMotorVoltage());
 
         SwerveModuleState lfVelState = leftFrontModule.getSwerveModuleState();
         SwerveModuleState lbVelState = leftBackModule.getSwerveModuleState();
         SwerveModuleState rfVelState = rightFrontModule.getSwerveModuleState();
         SwerveModuleState rbVelState = rightBackModule.getSwerveModuleState();
 
-//        Vector2d<Distance> dist = swerveKinematics.updateSwerveKinematics(new SwerveModuleState[] { lfVelState, lbVelState, rfVelState, rbVelState }, new SwerveModuleState[] { lfAccelState, lbAccelState, rfAccelState, rbAccelState });
-        Vector2d<Distance> dist = swerveKinematics.updateSwerveKinematics(new SwerveModuleState[] { lfVelState, lbVelState, rfVelState, rbVelState });
-//        Vector2d<Velocity> vel = swerveKinematics.getCurrentRobotVelocity();
+        Vector2d<Distance> dist = swerveKinematics.updateSwerveKinematics(new SwerveModuleState[] { lfVelState, lbVelState, rfVelState, rbVelState }, new SwerveModuleState[] { lfAccelState, lbAccelState, rfAccelState, rbAccelState });
+//        Vector2d<Distance> dist = swerveKinematics.updateSwerveKinematics(new SwerveModuleState[] { lfVelState, lbVelState, rfVelState, rbVelState });
+        Vector2d<Velocity> vel = swerveKinematics.getCurrentRobotVelocity();
 
-//        SmartDashboard.putNumber("Vel X", vel.getX().getValue(FEET_PER_SECOND));
-//        SmartDashboard.putNumber("Vel Y", vel.getY().getValue(FEET_PER_SECOND));
+        SmartDashboard.putNumber("Vel X", vel.getX().getValue(FEET_PER_SECOND));
+        SmartDashboard.putNumber("Vel Y", vel.getY().getValue(FEET_PER_SECOND));
 
         SmartDashboard.putNumber("Dist X", dist.getX().getValue(FOOT));
         SmartDashboard.putNumber("Dist Y", dist.getX().getValue(FOOT));
     }
 
-    public SwerveModuleState[] calculateSwerveMotorSpeedsFieldCentric(Velocity xMag, Velocity yMag, AngularVelocity rMag, double trackWidth, double wheelBase) {
-        SimpleMatrix fieldCentric = Constants.convertFrame(getAngle().getRadians(), Constants.createFrameMatrix(xMag.getValue(METER_PER_SECOND), yMag.getValue(METER_PER_SECOND), rMag.getValue(RADIAN_PER_SECOND)));
+    @Override
+    public Pose2d<Distance> getCurrentOdometryPosition() {
+        Vector2d<Distance> pos = swerveKinematics.getCurrentRobotPosition();
 
-        Velocity x = new Velocity(fieldCentric.get(0, 0), METER_PER_SECOND);
-        Velocity y = new Velocity(fieldCentric.get(1, 0), METER_PER_SECOND);
-        AngularVelocity w = new AngularVelocity(fieldCentric.get(2, 0), RADIAN_PER_SECOND);
+        return new Pose2d<>(pos.getX(), pos.getY(), getAngle());
+    }
+
+    public SwerveModuleState[] calculateSwerveMotorSpeedsFieldCentric(Unit<?, ? extends UnitEnum> xMag, Unit<?, ? extends UnitEnum> yMag, AngleUnit<?, ? extends UnitEnum> rMag) {
+        SimpleMatrix fieldCentric = Constants.convertFrame(getAngle(), Constants.createFrameMatrix(xMag.getValueInPrimaryUnit(), yMag.getValueInPrimaryUnit(), rMag.getValueInPrimaryUnit()));
+
+        Unit<?, ? extends UnitEnum> x = UnitUtil.create(fieldCentric.get(0, 0), xMag.getPrimaryUnit());
+        Unit<?, ? extends UnitEnum> y = UnitUtil.create(fieldCentric.get(1, 0), yMag.getPrimaryUnit());
+        Unit<?, ? extends UnitEnum> w = UnitUtil.create(fieldCentric.get(2, 0), rMag.getPrimaryUnit());
 
         return swerveKinematics.getSwerveModuleState(x, y, w);
     }
 
     public SwerveModuleState[] calculateSwerveMotorSpeedsFieldCentric(double xMag, double yMag, double rMag, double trackWidth, double wheelBase, Constants.DriveControlType controlType) {
-        return calculateSwerveMotorSpeeds(Constants.convertFrame(getAngle().getRadians(), Constants.createFrameMatrix(xMag, yMag, rMag)), trackWidth, wheelBase, controlType);
+        return calculateSwerveMotorSpeeds(Constants.convertFrame(getAngle(), Constants.createFrameMatrix(xMag, yMag, rMag)), trackWidth, wheelBase, controlType);
     }
 
     /**
@@ -257,7 +260,7 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
     }
 
     @Override
-    public Rotation2d getAngle() {
+    public Angle getAngle() {
         double raw = pigeonIMU.getYaw() % 360;
 
 //        if(raw >= 180)
@@ -265,7 +268,7 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 //        else if(raw < -180)
 //            raw += 360;
 
-        return Rotation2d.fromDegrees(raw);
+        return new Angle(raw, DEGREE);
 //        return Rotation2d.fromDegrees(0);
     }
 
@@ -292,32 +295,32 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         return new CartesianValue<>(Rotation2d.fromRadians(pigeonIMU.getPitch()), Rotation2d.fromRadians(pigeonIMU.getRoll()), Rotation2d.fromRadians(pigeonIMU.getYaw()));
     }
 
-    public void logModuleStates() {
-        logModuleStates(new SwerveModuleState[] {leftFrontModule.getSwerveModuleState(), leftBackModule.getSwerveModuleState(), rightFrontModule.getSwerveModuleState(), rightBackModule.getSwerveModuleState()});
-    }
-
-    public void logModuleStates(SwerveModuleState[] states) {
-        logModuleStates(states, new Transform2d(currentRobotPosition, getAngle()));
-    }
-
-    public void logModuleStates(SwerveModuleState[] states, Transform2d robot) {
-        StringBuilder builder = new StringBuilder();
-        DecimalFormat formater = new DecimalFormat();
-        formater.setMaximumFractionDigits(4);
-
-        builder.append("Q~SWDSE~ ");
-        builder.append(formater.format(leftFrontModule.getModuleAngle().getRadians())).append(" ");
-        builder.append(formater.format(leftFrontModule.getRawDrivePower())).append(" ");
-        builder.append(formater.format(leftBackModule.getModuleAngle().getRadians())).append(" ");
-        builder.append(formater.format(leftBackModule.getRawDrivePower())).append(" ");
-        builder.append(formater.format(rightFrontModule.getModuleAngle().getRadians())).append(" ");
-        builder.append(formater.format(rightFrontModule.getRawDrivePower())).append(" ");
-        builder.append(formater.format(rightBackModule.getModuleAngle().getRadians())).append(" ");
-        builder.append(formater.format(rightBackModule.getRawDrivePower())).append(" ");
-        builder.append(formater.format(robot.getX())).append(" ");
-        builder.append(formater.format(robot.getY())).append(" ");
-        builder.append(formater.format(robot.getRotation().getRadians())).append(" ");
-
-        logger.writeLine(builder.toString());
-    }
+//    public void logModuleStates() {
+//        logModuleStates(new SwerveModuleState[] {leftFrontModule.getSwerveModuleState(), leftBackModule.getSwerveModuleState(), rightFrontModule.getSwerveModuleState(), rightBackModule.getSwerveModuleState()});
+//    }
+//
+//    public void logModuleStates(SwerveModuleState[] states) {
+//        logModuleStates(states, new Transform2d(currentRobotPosition, getAngle()));
+//    }
+//
+//    public void logModuleStates(SwerveModuleState[] states, Transform2d robot) {
+//        StringBuilder builder = new StringBuilder();
+//        DecimalFormat formater = new DecimalFormat();
+//        formater.setMaximumFractionDigits(4);
+//
+//        builder.append("Q~SWDSE~ ");
+//        builder.append(formater.format(leftFrontModule.getModuleAngle().getRadians())).append(" ");
+//        builder.append(formater.format(leftFrontModule.getRawDrivePower())).append(" ");
+//        builder.append(formater.format(leftBackModule.getModuleAngle().getRadians())).append(" ");
+//        builder.append(formater.format(leftBackModule.getRawDrivePower())).append(" ");
+//        builder.append(formater.format(rightFrontModule.getModuleAngle().getRadians())).append(" ");
+//        builder.append(formater.format(rightFrontModule.getRawDrivePower())).append(" ");
+//        builder.append(formater.format(rightBackModule.getModuleAngle().getRadians())).append(" ");
+//        builder.append(formater.format(rightBackModule.getRawDrivePower())).append(" ");
+//        builder.append(formater.format(robot.getX())).append(" ");
+//        builder.append(formater.format(robot.getY())).append(" ");
+//        builder.append(formater.format(robot.getRotation().getRadians())).append(" ");
+//
+//        logger.writeLine(builder.toString());
+//    }
 }

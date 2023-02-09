@@ -16,6 +16,7 @@ package frc.robot.library;
 
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Rotation2d;
+import frc.robot.library.units.AngleUnits.Angle;
 import frc.robot.library.units.TranslationalUnits.Distance;
 import frc.robot.functions.io.xmlreader.objects.Motor;
 import frc.robot.library.units.UnitContainers.CartesianValue;
@@ -224,15 +225,15 @@ public final class Constants {
      * [Y1][Y2]
      * [R1][R2]
      *
-     * @param angleRadians - Frame angle offset
+     * @param angle - Frame angle offset
      * @param locationMatrix - Matrix with components to be transformed
      * @return - resultant matrix
      */
-    public static SimpleMatrix convertFrame(double angleRadians, SimpleMatrix locationMatrix) {
+    public static SimpleMatrix convertFrame(Angle angle, SimpleMatrix locationMatrix) {
         SimpleMatrix rotationalMatrix = new SimpleMatrix(
                 new double[][] {
-                        new double[] {Math.cos(angleRadians), Math.sin(angleRadians), 0.0},
-                        new double[] {Math.sin(angleRadians), -Math.cos(angleRadians), 0.0},
+                        new double[] {Math.cos(angle.getValue(Angle.AngleUnits.RADIAN)), Math.sin(angle.getValue(Angle.AngleUnits.RADIAN)), 0.0},
+                        new double[] {Math.sin(angle.getValue(Angle.AngleUnits.RADIAN)), -Math.cos(angle.getValue(Angle.AngleUnits.RADIAN)), 0.0},
                         new double[] {0.0, 0.0, 1.0}
                 }
         );

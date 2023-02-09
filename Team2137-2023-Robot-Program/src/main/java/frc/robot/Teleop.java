@@ -15,34 +15,23 @@
 package frc.robot;
 
 import edu.wpi.first.math.Pair;
-import edu.wpi.first.math.Vector;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.XMLSettingReader;
 import frc.robot.functions.io.xmlreader.XMLStepReader;
 import frc.robot.library.Constants;
 import frc.robot.library.OpMode;
-import frc.robot.library.hardware.FalconCharacteristics;
 import frc.robot.library.hardware.FusedTrackingAlgorithm;
 import frc.robot.library.hardware.swerve.SwerveDrivetrain;
 import frc.robot.library.hardware.swerve.SwerveKinematics;
 import frc.robot.library.hardware.swerve.module.SwerveModuleState;
-import frc.robot.library.units.AngleUnits.AngularAcceleration;
 import frc.robot.library.units.AngleUnits.AngularVelocity;
-import frc.robot.library.units.TranslationalUnits.Acceleration;
 import frc.robot.library.units.TranslationalUnits.Distance;
-import frc.robot.library.units.TranslationalUnits.Velocity;
 import frc.robot.library.units.Number;
-import frc.robot.library.units.AngleUnits.Angle.AngleUnits;
-import frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits;
-import frc.robot.library.units.UnitContainers.Pose2d;
-import frc.robot.library.units.UnitContainers.Vector2d;
+import frc.robot.library.units.TranslationalUnits.Velocity;
 
-import static frc.robot.library.units.AngleUnits.AngularAcceleration.AngularAccelerationUnits.RADIAN_PER_SECOND2;
 import static frc.robot.library.units.AngleUnits.AngularVelocity.AngularVelocityUnits.RADIAN_PER_SECOND;
-import static frc.robot.library.units.TranslationalUnits.Acceleration.AccelerationUnits.METER_PER_SECOND2;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.INCH;
 import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.FEET_PER_SECOND;
 
@@ -81,6 +70,7 @@ public class Teleop implements OpMode {
                 logger.writeEvent(0, mRobotSubsystem.getEntityGroupByType("DriveTrain").getName());
                 mCurrentDrivetrainPeriodRunnable = this::SwerveDrivetrainPeriodic;
                 this.mDrivetrain = (SwerveDrivetrain) mRobotSubsystem.getEntityGroupByType("DriveTrain");
+                this.mDrivetrain.configDrivetrainControlType(Constants.DriveControlType.VELOCITY);
                 mKinematic = new SwerveKinematics<>(new Distance(1, INCH), new Distance(1, INCH));
                 break;
         }
@@ -100,9 +90,14 @@ public class Teleop implements OpMode {
         logger.setTag("SwerveDrivetrainPeriodic()");
         Pair<Double, Double> xy = Constants.joyStickSlopedDeadband(mDriverController.getLeftX(), -mDriverController.getLeftY(), 0.08);
         //double rMag = Constants.deadband(mDriverController.getRightX(), 0.08) * 35; //TODO must fix TrackWidth
-        double rMag = Constants.deadband(mDriverController.getRightX(), 0.08) * 10; //TODO must fix TrackWidth
+        double rMag = Constants.deadband(mDriverController.getRightX(), 0.08); //TODO must fix TrackWidth
 
-        SwerveModuleState[] states = mDrivetrain.calculateSwerveMotorSpeedsFieldCentric(xy.getFirst() * 16.5, xy.getSecond() * 16.5, rMag * 10, 1, 1, Constants.DriveControlType.VELOCITY);
+        Velocity x = new Velocity(xy.getFirst() * 16.5, FEET_PER_SECOND);
+        Velocity y = new Velocity(xy.getSecond() * 16.5, FEET_PER_SECOND);
+        AngularVelocity r = new AngularVelocity(rMag * 10.0, RADIAN_PER_SECOND);
+
+        SwerveModuleState[] states = mDrivetrain.calculateSwerveMotorSpeedsFieldCentric(x, y, r);
+//        SwerveModuleState[] states = mDrivetrain.calculateSwerveMotorSpeedsFieldCentric(xy.getFirst(), xy.getSecond(), rMag * 2, 1, 1, Constants.DriveControlType.RAW);
 
         mDrivetrain.setSwerveModuleStates(states);
     }

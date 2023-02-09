@@ -14,22 +14,31 @@
 
 package frc.robot.library.hardware.swerve.module;
 
+import com.revrobotics.AbsoluteEncoder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
-import frc.robot.functions.io.xmlreader.XMLSettingReader;
+import frc.robot.library.hardware.FalconCharacteristics;
+import frc.robot.library.units.AngleUnits.AngularAcceleration;
+import frc.robot.library.units.Time;
+import frc.robot.library.units.TranslationalUnits.Acceleration;
 import frc.robot.library.units.TranslationalUnits.Distance;
-import frc.robot.library.units.Number;
 import frc.robot.functions.io.xmlreader.objects.Encoder;
 import frc.robot.functions.io.xmlreader.objects.Motor;
 import frc.robot.library.Constants;
 import frc.robot.library.units.TranslationalUnits.Velocity;
 import org.w3c.dom.Element;
 
-import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
+import static frc.robot.library.units.AngleUnits.AngularAcceleration.AngularAccelerationUnits.RADIAN_PER_SECOND2;
+import static frc.robot.library.units.Time.TimeUnits.MILLISECONDS;
+import static frc.robot.library.units.TranslationalUnits.Acceleration.AccelerationUnits.FEET_PER_SECOND2;
+import static frc.robot.library.units.TranslationalUnits.Acceleration.AccelerationUnits.METER_PER_SECOND2;
+import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.*;
 import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.FEET_PER_SECOND;
+import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.METER_PER_SECOND;
 
 public class SwerveSimulationDriveModule extends EntityGroup implements SwerveModule {
 
@@ -46,9 +55,10 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
 
     private final Velocity mDriveVelocityCurrent = new Velocity(0, FEET_PER_SECOND);
     private final Distance mDriveDistanceCurrent = new Distance(0, FOOT);
-    private final double mDriveRawPercent = 0;
+    private double mDriveRawPercent = 0;
+    private double mCurrentDriveRPM = 0;
     private final Rotation2d turningCurrent = Rotation2d.fromDegrees(0);
-    private final Number dblWheelDiameter;
+    private Distance dblWheelDiameter = new Distance(4, INCH);
 
     private Constants.DriveControlType mDriveControlType = Constants.DriveControlType.RAW;
     //private SwerveModuleState.SwerveModulePositions swerveModulePosition;
@@ -66,24 +76,38 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
 
         logger = fileLogger;
 
-        dblWheelDiameter = (Number) XMLSettingReader.settingsEntityGroup.getEntity("DriveTrain-WheelDiameter");
-        logger.writeEvent(0, FileLogger.EventType.Debug, "WheelDiameter: " + dblWheelDiameter.getValue());
+//        dblWheelDiameter = (Number) XMLSettingReader.settingsEntityGroup.getEntity("DriveTrain-WheelDiameter");
+//        logger.writeEvent(0, FileLogger.EventType.Debug, "WheelDiameter: " + dblWheelDiameter.getValue());
 
         configDrivetrainControlType(Constants.DriveControlType.RAW);
+
+        lastLoopTime = System.currentTimeMillis();
     }
+
+    private long lastLoopTime;
 
     @Override
     public void periodic() {
+        Acceleration accel;
+        if(Math.abs(mDriveRawGoal) > 0.1 && mCurrentDriveRPM < 6500.0) {
+            accel = FalconCharacteristics.getAcceleration(mCurrentDriveRPM, Math.abs(getDriveMotorVoltage()), 0.0508, 60.0/4);
+        } else if(mCurrentDriveRPM > 0){
+            accel = new Acceleration(-3, METER_PER_SECOND2);
+        } else {
+            accel = new Acceleration(0, METER_PER_SECOND2);
+        }
+
+        Velocity deltaV = accel.times(new Time(System.currentTimeMillis() - lastLoopTime, MILLISECONDS)).times(8.75);
+
+        double deltaRPM = (deltaV.getValue(METER_PER_SECOND) / (Math.PI * 2 * 0.0508)) * 60;
+        mCurrentDriveRPM += deltaRPM;
+        mCurrentDriveRPM = Math.max(mCurrentDriveRPM, 0.0);
+
+        lastLoopTime = System.currentTimeMillis();
+
         NetworkTableInstance table = NetworkTableInstance.getDefault();
-        table.getEntry(getEntityPath() + "Speed").setDouble(getRawDrivePower());
+        table.getEntry(getEntityPath() + "Speed").setDouble(mCurrentDriveRPM * (Math.PI * 2 * 0.0508));
         table.getEntry(getEntityPath() + "Angle").setDouble(getModuleAngle().getDegrees());
-
-//        if(lastRecordTime + periodBetweenRecords > System.currentTimeMillis()) {
-//            getSwerveModuleState().writeToFileLoggerReplayFormat(logger);
-
-//            lastRecordTime = System.currentTimeMillis();
-            //System.out.println(state.toString());
-//        }
     }
 
     @Override
@@ -114,12 +138,13 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
 
     @Override
     public double getCurrentDriveRPM() {
-        return 0;
+        return mCurrentDriveRPM;
     }
 
     @Override
     public void setVelocityDriveSpeed(Velocity speed) {
         mDriveVelocityGoal = speed;
+        mDriveRawGoal = speed.getValue(FEET_PER_SECOND) / 16.5;
     }
 
     @Override
@@ -163,23 +188,30 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
     }
 
     public SwerveModuleState getSwerveModuleState() {
-        switch(mDriveControlType) {
-            case DISTANCE:
-                return new SwerveModuleState(mDriveDistanceCurrent, turningCurrent, mSwerveDrivePosition);
-            case VELOCITY:
+//        switch(mDriveControlType) {
+//            case DISTANCE:
+//                return new SwerveModuleState(mDriveDistanceCurrent, turningCurrent, mSwerveDrivePosition);
+//            case VELOCITY:
                 return new SwerveModuleState(mDriveVelocityCurrent, turningCurrent, mSwerveDrivePosition);
-            default:
-                return new SwerveModuleState(mDriveRawPercent, turningCurrent, mSwerveDrivePosition);
-        }
+//            default:
+//                return new SwerveModuleState(mDriveRawPercent, turningCurrent, mSwerveDrivePosition);
+//        }
     }
 
     @Override
     public SwerveModuleState getSwerveModuleAccelerationState(double voltage) {
-        return null;
+        Acceleration accel = FalconCharacteristics.getAcceleration(getCurrentDriveRPM(), voltage, dblWheelDiameter.getValue(METER) / 2, 60).times(8.75);
+
+        return new SwerveModuleState(accel, new AngularAcceleration(0, RADIAN_PER_SECOND2), mSwerveDrivePosition);
     }
 
     @Override
     public SwerveModuleState.SwerveModulePositions getSwerveModuleLocation() {
         return mSwerveDrivePosition;
+    }
+
+    @Override
+    public double getDriveMotorVoltage() {
+        return mDriveRawGoal * 12;
     }
 }
