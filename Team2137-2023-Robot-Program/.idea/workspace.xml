@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4095833a-96d7-4e10-a094-e1896eae9338" name="Changes" comment="" />
+    <list default="true" id="4095833a-96d7-4e10-a094-e1896eae9338" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/frc/robot/library/hardware/endeffector/EndEffector.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/frc/robot/library/hardware/endeffector/EndEffector.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

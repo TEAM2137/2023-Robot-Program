@@ -1,67 +1,62 @@
 package frc.robot.library.hardware.endeffector;
 
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMaxLowLevel;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.SparkMaxPIDController;
+import com.revrobotics.*;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
+import frc.robot.functions.io.xmlreader.data.PID;
 import org.w3c.dom.Element;
 
 /**
  * Comments by Wyatt 2.7.2023 (Sorry it is a lot)
- * At line 36 maybe use the PID class inorder to store the values instead of the double so that we can tune them easier.
+ * [DONE] At line 36 maybe use the PID class inorder to store the values instead of the double so that we can tune them easier.
  * By using the class we can enable and disable when we want to tune the pid values look at @see SwerveFALCONDriveModule.class
  *
- * Possible rename getClose() to isJawClosed() or something a little more descriptive.
+ * [DONE] Possible rename getClose() to isJawClosed() or something a little more descriptive.
  *
  * To create the motor try to name them and use the EntityGroup static function inorder to get a Motor.class object which
  * contains all the information.
+ * Gage: ^^ The above function doesn't exist
  *
- * The closed loop error needs to be changed to allow for more otherwise the wrist will be unpredictable
+ * [DONE] The closed loop error needs to be changed to allow for more otherwise the wrist will be unpredictable
  *
- * Pitch Encoder needs to be a Absolute Encoder not relative so we can track the position of the wrist no matter starting
- * position. (Maybe use Encoder.class to hold values also)
+ * [DONE] Pitch Encoder needs to be a Absolute Encoder not relative so we can track the position of the wrist no matter starting
+ * position. (Maybe use Encoder.class to hold values also) << Gage: I don't see much point to this. Why use two objects when I can get all the info from just one?
  *
- * You do not need to set position in the periodic loop. That will take up the CAN utilization. The value that you set is
+ * [DONE] You do not need to set position in the periodic loop. That will take up the CAN utilization. The value that you set is
  * saved on the motor controller. It only need to be set in a setPosition function.
  *
  * Not sure the getRPM math is correct but overall might not be needed.
+ * Gage: ^^ RPM math was taken from last year's code, relevant values have been modified accordingly.
  *
- * The main branch has a class called Angle.class which might be useful for storing the angles or you could use the FIRST
+ * [DONE] The main branch has a class called Angle.class which might be useful for storing the angles or you could use the FIRST
  * version of this Rotation2d.class
  *
- * Probably add FileLogging in the intialization block of code.
+ * [DONE] Probably add FileLogging in the intialization block of code.
  */
 public class EndEffector extends EntityGroup {
 
     private final FileLogger logger;
 
-    private double pitchTarget = 0;
+    private Rotation2d pitchTarget = new Rotation2d();
     private double pitchSpeed = 0;
-    private boolean targetMode = false;
 
     private final Solenoid jaw;
 
     private final CANSparkMax pitchMotor;
-
-    private final RelativeEncoder pitchEncoder;
+    private final AbsoluteEncoder pitchEncoder;
+    private final double pitchAllowedErr = 0.5;
 
     private final SparkMaxPIDController pitchPIDController;
-    private final double kP, kI, kD, kFF; // PID constants
+    private PID pid = new PID(0.5, 0.5, 0.5, 0.00015, 0d, "Jaw Pitch PID"); // PID values
 
     private final double maxVel, maxAccel;
 
     public EndEffector(Element element, int depth, boolean printProcess, FileLogger fileLogger){
         super(element, depth, printProcess, fileLogger);
-
-        kP = 0.5;
-        kI = 0.5;
-        kD = 0.5;
-        kFF = 0.00015;
 
         maxVel = 60;
         maxAccel = 45;
@@ -70,50 +65,51 @@ public class EndEffector extends EntityGroup {
 
         jaw = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
 
+        logger.writeLine("ENDEFFECTOR: Jaw Solenoid Initialized");
+
         pitchMotor = new CANSparkMax(3, CANSparkMaxLowLevel.MotorType.kBrushless);
-        pitchEncoder = pitchMotor.getEncoder();
+        pitchEncoder = pitchMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.fromId(3));
         pitchPIDController = pitchMotor.getPIDController();
 
+        logger.writeLine("ENDEFFECTOR: Pitch Motor Initialized");
+
         // PID for pitchMotor
-        pitchPIDController.setP(kP);
-        pitchPIDController.setI(kI);
-        pitchPIDController.setD(kD);
-        pitchPIDController.setFF(kFF);
+        pitchPIDController.setP(pid.getP());
+        pitchPIDController.setI(pid.getI());
+        pitchPIDController.setD(pid.getD());
+        pitchPIDController.setFF(pid.getFF());
         pitchPIDController.setOutputRange(-1.0, 1.0);
 
         int smartMotionSlot = 0;
         pitchPIDController.setSmartMotionMaxAccel(maxAccel, smartMotionSlot);
         pitchPIDController.setSmartMotionMinOutputVelocity(0, smartMotionSlot);
         pitchPIDController.setSmartMotionMaxVelocity(maxVel, smartMotionSlot);
-        pitchPIDController.setSmartMotionAllowedClosedLoopError(0, smartMotionSlot);
+        pitchPIDController.setSmartMotionAllowedClosedLoopError(pitchAllowedErr, smartMotionSlot);
+
+        logger.writeLine("ENDEFFECTOR: PID Initialized");
     }
 
     @Override
     public void periodic(){
-        // Move to pitch logic
-        if(targetMode) {
-            pitchPIDController.setReference(pitchTarget, CANSparkMax.ControlType.kSmartMotion);
-        }else{
-            pitchPIDController.setReference(pitchSpeed, CANSparkMax.ControlType.kVelocity);
-        }
         // Update dashboard stats
-        SmartDashboard.putBoolean("End Effector Closed", getClosed());
+        SmartDashboard.putBoolean("End Effector Closed", isJawClosed());
         SmartDashboard.putNumber("Pitch (Degrees)", getPitchDegrees());
         SmartDashboard.putNumber("Pitch (Ticks)", getPitch());
-        SmartDashboard.putNumber("Target Pitch (Ticks)", pitchTarget);
+        SmartDashboard.putNumber("Target Pitch (Degrees)", pitchTarget.getDegrees());
+        SmartDashboard.putNumber("Pitch Allowed Error", pitchAllowedErr);
 
         // PID stats
-        SmartDashboard.putNumber("P Gain", kP);
-        SmartDashboard.putNumber("I Gain", kI);
-        SmartDashboard.putNumber("D Gain", kD);
-        SmartDashboard.putNumber("Feed Forward", kFF);
+        SmartDashboard.putNumber("P Gain", pid.getP());
+        SmartDashboard.putNumber("I Gain", pid.getI());
+        SmartDashboard.putNumber("D Gain", pid.getD());
+        SmartDashboard.putNumber("Feed Forward", pid.getFF());
     }
 
     /**
      * Gets the close state of the end effector.
      * @return Returns true if closed, and false if open.
      */
-    public boolean getClosed() {
+    public boolean isJawClosed() {
         return jaw.get();
     }
 
@@ -121,7 +117,7 @@ public class EndEffector extends EntityGroup {
      * Toggles the end effector state. Useful for mapping button presses to the end effector.
      */
     public void toggleEffectorState() {
-        setEffectorState(!getClosed());
+        setEffectorState(!isJawClosed());
     }
 
     /**
@@ -138,7 +134,7 @@ public class EndEffector extends EntityGroup {
      */
     public void setPitchMotorSpeed(double speed) {
         pitchSpeed = speed;
-        targetMode = false;
+        pitchPIDController.setReference(pitchSpeed, CANSparkMax.ControlType.kVelocity);
     }
 
     /**
@@ -154,8 +150,8 @@ public class EndEffector extends EntityGroup {
      * @param degrees Position in degrees to set the pitch
      */
     public void setTargetPitch(double degrees){
-        pitchTarget = degrees / 360 * 4096;
-        targetMode = true;
+        pitchTarget = new Rotation2d(Math.toRadians(degrees));
+        pitchPIDController.setReference(pitchTarget.getDegrees() * 360 / 4096, CANSparkMax.ControlType.kSmartMotion);
     }
 
     /**
@@ -181,7 +177,7 @@ public class EndEffector extends EntityGroup {
         StringBuilder builder = new StringBuilder();
 
         builder.append("Q~EES~"); // Starting string mirroring Q~SWDSE
-        builder.append(getClosed()).append(" ");
+        builder.append(isJawClosed()).append(" ");
 
         logger.writeLine(builder.toString());
     }
