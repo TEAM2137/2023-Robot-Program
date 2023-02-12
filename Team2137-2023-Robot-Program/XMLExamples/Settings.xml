@@ -193,7 +193,99 @@
                     <Offset>-21.6156</Offset>
                 </Encoder>
             </SwerveModule>
+
+            <Binding>
+                <Map controller="0" id="LeftYAxis" value="YValue"/>
+                <Map controller="0" id="LeftXAxis" value="XValue"/>
+                <Map controller="0" id="RightXAxis" value="RValue"/>
+
+                <Step>
+                    <command>rawDrive</command>
+                    <timeout>1000</timeout>
+                    <speed>1.0</speed>
+                    <xdistance><XValue/></xdistance>
+                    <ydistance><YValue/></ydistance>
+                    <parallel>False</parallel>
+                    <parm1><RValue/></parm1>
+                    <parm2>0</parm2>
+                    <parm3>0</parm3>
+                    <parm4>0</parm4>
+                    <parm5>0</parm5>
+                    <parm6>0</parm6>
+                    <parm7>0</parm7>
+                </Step>
+            </Binding>
         </DriveTrain>
+
+        <Elevator type="String" name="VerticalElevator">
+            <Motor>
+                <Name>Lift Motor 1</Name>
+                <ID>40</ID>
+                <Type>NEO</Type>
+                <Inverted>false</Inverted>
+                <GearRatio>9</GearRatio>
+                <CurrentLimit>1000</CurrentLimit>
+                <RampRate>0</RampRate>
+            </Motor>
+
+            <Motor>
+                <Name>Lift Motor 2</Name>
+                <ID>41</ID>
+                <Type>NEO</Type>
+                <Inverted>false</Inverted>
+                <GearRatio>9</GearRatio>
+                <CurrentLimit>1000</CurrentLimit>
+                <RampRate>0</RampRate>
+            </Motor>
+        </Elevator>
+
+        <Elevator type="String" name="HorizontalElevator">
+            <Motor>
+                <Name>Lift Motor 1</Name>
+                <ID>42</ID>
+                <Type>FALCON</Type>
+                <Inverted>false</Inverted>
+                <GearRatio>9</GearRatio>
+                <CurrentLimit>1000</CurrentLimit>
+                <RampRate>0</RampRate>
+            </Motor>
+        </Elevator>
+
+        <Binding>
+            <Map controller="1" id="YButton" value="YButton"/>
+
+            <Step>
+                <command>VerticalElevator-SetPosition</command>
+                <timeout>10</timeout>
+                <speed>1.0</speed>
+                <xdistance>0</xdistance>
+                <ydistance>0</ydistance>
+                <parallel>False</parallel>
+                <parm1>12</parm1> <Note>Value in Inches</Note>
+                <parm2>0</parm2>
+                <parm3>0</parm3>
+                <parm4>0</parm4>
+                <parm5>0</parm5>
+                <parm6>0</parm6>
+                <parm7>0</parm7>
+            </Step>
+
+            <Step>
+                <command>HorizontalElevator-SetPosition</command>
+                <timeout>10</timeout>
+                <speed>1.0</speed>
+                <xdistance>0</xdistance>
+                <ydistance>0</ydistance>
+                <parallel>False</parallel>
+                <parm1>24</parm1> <Note>Value in Inches</Note>
+                <parm2>0</parm2>
+                <parm3>0</parm3>
+                <parm4>0</parm4>
+                <parm5>0</parm5>
+                <parm6>0</parm6>
+                <parm7>0</parm7>
+            </Step>
+        </Binding>
 
         <Intake name="2021 Intake">
             <Motor>

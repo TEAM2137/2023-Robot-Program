@@ -20,8 +20,8 @@
       <list>
         <option value="Enum" />
         <option value="AnnotationType" />
-        <option value="Class" />
         <option value="Interface" />
+        <option value="Class" />
       </list>
     </option>
   </component>
@@ -93,6 +93,6 @@
     </option>
   </component>
   <component name="WpiLibVersionService">
-    <option name="lastChecked" value="20230207184036" />
+    <option name="lastChecked" value="20230211202405" />
   </component>
 </project>

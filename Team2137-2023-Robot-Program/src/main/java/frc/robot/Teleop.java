@@ -20,6 +20,7 @@ import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.XMLSettingReader;
 import frc.robot.functions.io.xmlreader.XMLStepReader;
+import frc.robot.functions.io.xmlreader.data.Step;
 import frc.robot.library.Constants;
 import frc.robot.library.OpMode;
 import frc.robot.library.hardware.FusedTrackingAlgorithm;
@@ -48,16 +49,11 @@ public class Teleop implements OpMode {
 
     private Runnable mCurrentDrivetrainPeriodRunnable;
 
-    private XboxController mDriverController;
-    //private final Gamepad mOperatorController = new Gamepad(1);
-
     @Override
     public void init(XMLSettingReader xmlSettingReader, XMLStepReader xmlStepReader, FileLogger fileLogger) {
         this.logger = fileLogger;
 
-        mDriverController = new XboxController(0);
-
-        logger.writeEvent(0, "Controller Connect: " + mDriverController.isConnected());
+        logger.writeEvent(0, "Controller Connect: " + Robot.primaryController.isConnected());
 
         this.mSettingReader = xmlSettingReader;
         this.mRobotSubsystem = this.mSettingReader.getRobot();
@@ -78,7 +74,23 @@ public class Teleop implements OpMode {
 
     @Override
     public void periodic() {
-        mCurrentDrivetrainPeriodRunnable.run();
+//        mCurrentDrivetrainPeriodRunnable.run();
+
+//        logger.writeEvent(0, "Current Action Step Count: " + Robot.currentActiveSteps.size());
+
+        for(int i = 0; i < Robot.currentActiveSteps.size(); i++) {
+            Step tmpStep = Robot.currentActiveSteps.get(i);
+//            logger.writeEvent(0, "Running Command With Name: " + tmpStep.getCommand());
+
+            if (tmpStep.getStepState() == Constants.StepState.STATE_FINISH) {
+                this.logger.writeEvent(3, FileLogger.EventType.Debug, tmpStep.getCommand() + " finished, now removing from operational stack");
+                Robot.currentActiveSteps.remove(tmpStep);
+            } else {
+                if(Robot.subSystemCommandList.containsKey(tmpStep.getCommand())) {
+                    Robot.subSystemCommandList.get(tmpStep.getCommand()).accept(tmpStep);
+                }
+            }
+        }
     }
 
     @Override
@@ -88,9 +100,9 @@ public class Teleop implements OpMode {
 
     private void SwerveDrivetrainPeriodic() {
         logger.setTag("SwerveDrivetrainPeriodic()");
-        Pair<Double, Double> xy = Constants.joyStickSlopedDeadband(mDriverController.getLeftX(), -mDriverController.getLeftY(), 0.08);
+        Pair<Double, Double> xy = Constants.joyStickSlopedDeadband(Robot.primaryController.getLeftX(), -Robot.primaryController.getLeftY(), 0.08);
         //double rMag = Constants.deadband(mDriverController.getRightX(), 0.08) * 35; //TODO must fix TrackWidth
-        double rMag = Constants.deadband(mDriverController.getRightX(), 0.08); //TODO must fix TrackWidth
+        double rMag = Constants.deadband(Robot.primaryController.getRightX(), 0.08); //TODO must fix TrackWidth
 
         Velocity x = new Velocity(xy.getFirst() * 16.5, FEET_PER_SECOND);
         Velocity y = new Velocity(xy.getSecond() * 16.5, FEET_PER_SECOND);

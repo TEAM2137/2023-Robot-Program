@@ -16,10 +16,10 @@ package frc.robot.library.hardware.swerve;
 
 import com.ctre.phoenix.sensors.PigeonIMU;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
+import frc.robot.functions.io.xmlreader.data.Step;
 import frc.robot.functions.io.xmlreader.objects.Gyro;
 import frc.robot.functions.io.xmlreader.objects.Motor;
 import frc.robot.library.Constants;
@@ -53,8 +53,6 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
     public SwerveModule rightFrontModule;
     public SwerveModule rightBackModule;
 
-    Distance dia = new Distance(4, INCH);
-
     public SwerveKinematics<Number> swerveKinematics;
 
     private DeadWheelActiveTracking mDeadWheelActiveTracking;
@@ -86,6 +84,18 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         pigeonIMU = new PigeonIMU(gyro.getID());
         pigeonIMU.configFactoryDefault();
         pigeonIMU.setFusedHeading(gyro.getOffset());
+
+        this.addSubsystemCommand("rawDrive", this::rawDrive);
+    }
+
+    public void rawDrive(Step step) {
+        if(step.getStepState() == Constants.StepState.STATE_INIT) {
+            SwerveModuleState[] states = calculateSwerveMotorSpeedsFieldCentric(step.getXDistance(), -step.getYDistance(), step.getParm(1));
+
+            this.setSwerveModuleStates(states);
+
+            //step.changeStepState(Constants.StepState.STATE_FINISH);
+        }
     }
 
     @Override
@@ -126,6 +136,10 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         Unit<?, ? extends UnitEnum> w = UnitUtil.create(fieldCentric.get(2, 0), rMag.getPrimaryUnit());
 
         return swerveKinematics.getSwerveModuleState(x, y, w);
+    }
+
+    public SwerveModuleState[] calculateSwerveMotorSpeedsFieldCentric(double xMag, double yMag, double rMag) {
+        return calculateSwerveMotorSpeeds(Constants.convertFrame(getAngle(), Constants.createFrameMatrix(xMag, yMag, rMag)), 1, 1, Constants.DriveControlType.RAW);
     }
 
     public SwerveModuleState[] calculateSwerveMotorSpeedsFieldCentric(double xMag, double yMag, double rMag, double trackWidth, double wheelBase, Constants.DriveControlType controlType) {

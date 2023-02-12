@@ -48,11 +48,25 @@
       "XMLConfiguration": {
         "Hardware": {
           "Swerve Falcon": {
-            "LeftFront": {
-              "Turn Encoder": {
+            "Binding": {
+              "Map": {
+                "open": true
+              },
+              "RValue": {
+                "open": true
+              },
+              "XValue": {
+                "open": true
+              },
+              "YValue": {
                 "open": true
               },
               "open": true
+            },
+            "LeftFront": {
+              "Turn Encoder": {
+                "open": true
+              }
             },
             "open": true
           },
@@ -81,6 +95,15 @@
               },
               "open": true
             },
+            "open": true
+          },
+          "open": true
+        },
+        "open": true
+      },
+      "root": {
+        "Swerve Falcon": {
+          "LeftBack": {
             "open": true
           },
           "open": true

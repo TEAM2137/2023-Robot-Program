@@ -60,6 +60,12 @@ public class Vector2d<T extends Unit<T, ? extends UnitEnum>> {
         return new Vector2d(x.divide(length), y.divide(length));
     }
 
+    public Vector2d normalize(double val) {
+        double length = Math.sqrt(Math.pow(x.getValueInPrimaryUnit(), 2) + Math.pow(y.getValueInPrimaryUnit(), 2));
+
+        return new Vector2d(x.divide(length).times(val), y.divide(length).times(val));
+    }
+
     public Vector2d scale(double scale) {
 
         T newX = x.times(scale);

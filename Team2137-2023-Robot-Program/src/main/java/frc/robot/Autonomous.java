@@ -70,7 +70,6 @@ public class Autonomous implements OpMode {
     private SwerveDrivetrain mDrivetrain;
     private DeadWheelActiveTracking mDeadWheelActiveTracking;
 
-    private final List<Step> mCurrentActionSteps = new ArrayList<>();
     private final List<Step> mCurrentDriveSteps = new ArrayList<>();
 
     private StepState mDriveStepState = StepState.STATE_NOT_STARTED;
@@ -102,23 +101,23 @@ public class Autonomous implements OpMode {
 
     @Override
     public void periodic() {
-        if (mCurrentDriveSteps.size() == 0 && mCurrentActionSteps.size() == 0) {
+        if (mCurrentDriveSteps.size() == 0 && Robot.currentActiveSteps.size() == 0) {
             //Restock the Drive Steps
             mCurrentDriveSteps.addAll(mStepReader.prePullSplineSteps());
 
             //Restock the Action Steps
-            mCurrentActionSteps.addAll(mStepReader.pullNextSteps());
+            Robot.currentActiveSteps.addAll(mStepReader.pullNextSteps());
         }
 
-        logger.writeEvent(0, "Current Action Step Count: " + mCurrentActionSteps.size());
+        logger.writeEvent(0, "Current Action Step Count: " + Robot.currentActiveSteps.size());
 
-        for(int i = 0; i < mCurrentActionSteps.size(); i++) {
-            Step tmpStep = mCurrentActionSteps.get(i);
+        for(int i = 0; i < Robot.currentActiveSteps.size(); i++) {
+            Step tmpStep = Robot.currentActiveSteps.get(i);
             logger.writeEvent(0, "Running Command With Name: " + tmpStep.getCommand());
 
             if (tmpStep.getStepState() == StepState.STATE_FINISH) {
                 this.logger.writeEvent(3, EventType.Debug, tmpStep.getCommand() + " finished, now removing from operational stack");
-                mCurrentActionSteps.remove(tmpStep);
+                Robot.currentActiveSteps.remove(tmpStep);
             } else {
                 runCommand(tmpStep.getCommand(), tmpStep);
             }
@@ -136,6 +135,11 @@ public class Autonomous implements OpMode {
      * Util Functions
      */
     public void runCommand(String commandName, Step step) {
+
+        if(Robot.subSystemCommandList.containsKey(commandName)) {
+            Robot.subSystemCommandList.get(commandName).accept(step);
+        }
+
         switch (commandName) {
             case "TestPrint":
                 print(step);
@@ -211,8 +215,9 @@ public class Autonomous implements OpMode {
                 Map.Entry<Transform2d, Map.Entry<Translation2d, Translation2d>> results = mDrivePurePursuitGenerator.calculateGoalPose(new Translation2d(currentPosition.getX().getValue(FOOT), currentPosition.getY().getValue(FOOT)));
 
                 Vector2d<Distance> goalVector = new Vector2d<Distance>(new Distance(results.getKey().getX(), FOOT), new Distance(results.getKey().getY(), FOOT));
+                Vector2d<Distance> normalizedVector = goalVector.normalize();
 
-                SwerveModuleState[] states = drivetrain.calculateSwerveMotorSpeedsFieldCentric(goalVector.getX(), goalVector.getY(), new Angle(0, RADIAN));
+                SwerveModuleState[] states = drivetrain.calculateSwerveMotorSpeedsFieldCentric(normalizedVector.getX(), normalizedVector.getY(), new Angle(0, RADIAN));
 
                 drivetrain.setSwerveModuleStates(states);
                 break;

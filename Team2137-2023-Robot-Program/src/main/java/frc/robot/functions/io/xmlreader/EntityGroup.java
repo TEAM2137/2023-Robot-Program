@@ -17,6 +17,10 @@ package frc.robot.functions.io.xmlreader;
 import edu.wpi.first.networktables.NetworkTable;
 import frc.robot.Robot;
 import frc.robot.functions.io.FileLogger;
+import frc.robot.functions.io.xmlreader.data.Binding;
+import frc.robot.functions.io.xmlreader.data.ControllerMapping;
+import frc.robot.functions.io.xmlreader.data.Step;
+import frc.robot.library.hardware.elevators.StringElevator;
 import frc.robot.library.units.Number;
 import frc.robot.functions.io.xmlreader.data.Threshold;
 import frc.robot.functions.io.xmlreader.objects.Camera;
@@ -34,6 +38,7 @@ import org.w3c.dom.NodeList;
 
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * EntityGroup is a class implemented by the XMLSettings reader and acts like a container for all of the
@@ -44,7 +49,7 @@ import java.util.function.BiConsumer;
 public class EntityGroup extends Entity {
 
     private final String type; //Type of EntityGroup (Intake, Climber, etc.)
-    private final HashMap<String, Entity> childEntities = new HashMap<>(); //Child devices
+    private final ArrayList<Entity> childEntities = new ArrayList<>(); //Child devices
     private final HashMap<String, EntityGroup> childSubsystem = new HashMap<>(); //Child device groups
 
     private String entityPath = "root";
@@ -62,6 +67,13 @@ public class EntityGroup extends Entity {
         swerveModuleImplements.put("SIMULATION", SwerveSimulationDriveModule.class);
         entityGroupClassMappings.put("SWERVEMODULE", swerveModuleImplements);
 
+        HashMap<String, Class<? extends EntityGroup>> elevatorImplements = new HashMap<>();
+        elevatorImplements.put("STRING", StringElevator.class);
+        entityGroupClassMappings.put("ELEVATOR", elevatorImplements);
+
+        HashMap<String, Class<? extends EntityGroup>> bindingGroup = new HashMap<>();
+        bindingGroup.put("DEFAULT", Binding.class);
+        entityGroupClassMappings.put("BINDING", bindingGroup);
 
         HashMap<String, Class<? extends EntityGroup>> driveTrainImplements = new HashMap<>();
         driveTrainImplements.put("SWERVE", SwerveDrivetrain.class);
@@ -79,6 +91,8 @@ public class EntityGroup extends Entity {
         THRESHOLD ("THRESHOLD", Threshold.class, false),
         NUMBER ("NUMBER", Number.class, false),
         PID ("PID", frc.robot.functions.io.xmlreader.data.PID.class, false),
+        MAP ("MAP", ControllerMapping.class, false),
+        STEP ("STEP", Step.class, false)
         ;
 
         String name = "";
@@ -180,7 +194,8 @@ public class EntityGroup extends Entity {
 //                        e.constructTreeItemPrintout(outputBuilder, depth + 1);
 //                        fileLogger.rawWrite(outputBuilder.toString() + "\n");
 
-                        childEntities.put(e.getName().toUpperCase(), e);
+
+                        childEntities.add(e);
 
                     } else {
                         //fileLogger.rawWrite("\n" + "\t".repeat(depth + 1) + tmp.getTagName() + " - " + getNodeOrAttribute(tmp, "name", null) + "\n");
@@ -220,7 +235,7 @@ public class EntityGroup extends Entity {
     public void constructTreeItemPrintout(StringBuilder builder, int depth) {
         super.constructTreeItemPrintout(builder, depth);
 
-        childEntities.forEach((a, b) -> b.constructTreeItemPrintout(builder, depth + 1));
+        childEntities.forEach((b) -> b.constructTreeItemPrintout(builder, depth + 1));
         childSubsystem.forEach((a, b) -> b.constructTreeItemPrintout(builder, depth + 1));
     }
 
@@ -229,7 +244,7 @@ public class EntityGroup extends Entity {
      * @param _device - An child class of Entity type
      */
     public void addEntity(Entity _device) {
-        childEntities.put(_device.getName().toUpperCase(), _device);
+        childEntities.add(_device);
     }
 
     /**
@@ -288,15 +303,16 @@ public class EntityGroup extends Entity {
     public Entity getEntity(String name) {
         name = name.toUpperCase();
 
-        return childEntities.getOrDefault(name, null);
+        for (Entity entity : childEntities) {
+            if(entity.getName().equalsIgnoreCase(name))
+                return entity;
+        }
+
+        return null;
     }
 
-    public Entity getHardwareEntity(String name) {
-        return childEntities.getOrDefault(name.toUpperCase(), null);
-    }
-
-    public List<Entity> getHardwareEntities() {
-        return new ArrayList<>(childEntities.values());
+    public ArrayList<Entity> getEntities() {
+        return childEntities;
     }
 
     /**
@@ -356,7 +372,7 @@ public class EntityGroup extends Entity {
         else
             subInstance = super.addToNetworkTable(instance);
 
-        childEntities.forEach((a, b) -> b.addToNetworkTable(subInstance));
+        childEntities.forEach((b) -> b.addToNetworkTable(subInstance));
         childSubsystem.forEach((a, b) -> b.addToNetworkTable(subInstance));
 
         return subInstance;
@@ -366,7 +382,7 @@ public class EntityGroup extends Entity {
     public NetworkTable removeFromNetworkTable() {
         NetworkTable subInstance = super.removeFromNetworkTable();
 
-        childEntities.forEach((a, b) -> b.removeFromNetworkTable());
+        childEntities.forEach(Entity::removeFromNetworkTable);
         childSubsystem.forEach((a, b) -> b.removeFromNetworkTable());
 
         return subInstance;
@@ -376,7 +392,7 @@ public class EntityGroup extends Entity {
     public NetworkTable pullFromNetworkTable() {
         NetworkTable subInstance = super.removeFromNetworkTable();
 
-        childEntities.forEach((a, b) -> b.pullFromNetworkTable());
+        childEntities.forEach(Entity::pullFromNetworkTable);
         childSubsystem.forEach((a, b) -> b.pullFromNetworkTable());
 
         return subInstance;
@@ -388,7 +404,7 @@ public class EntityGroup extends Entity {
             boolean flag = true;
         };
 
-        childEntities.forEach((a, b) ->  {
+        childEntities.forEach((b) ->  {
             try {
                 ref.flag = ref.flag && b.onDestroy();
             } catch (Exception e) {
@@ -412,7 +428,7 @@ public class EntityGroup extends Entity {
     public Element updateElement() {
         super.updateElement();
 
-        childEntities.forEach((a, b) -> b.updateElement());
+        childEntities.forEach((b) -> b.updateElement());
         childSubsystem.forEach((a, b) -> b.updateElement());
 
         return getSavedElement();
@@ -422,7 +438,7 @@ public class EntityGroup extends Entity {
     public void OnImplement() {
         super.OnImplement();
 
-        childEntities.forEach((a, b) -> b.OnImplement());
+        childEntities.forEach((b) -> b.OnImplement());
         childSubsystem.forEach((a, b) -> b.OnImplement());
     }
 
@@ -438,7 +454,11 @@ public class EntityGroup extends Entity {
         return entityPath + "/";
     }
 
+    public void addSubsystemCommand(String name, Consumer<Step> command) {
+        Robot.subSystemCommandList.put(name, command);
+    }
+
     public void periodic() {
-        //Robot.subSystemCallList.remove(this);
+//        Robot.subSystemCallList.remove(this);
     }
 }
