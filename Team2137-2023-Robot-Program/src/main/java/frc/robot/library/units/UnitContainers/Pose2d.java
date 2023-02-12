@@ -1,5 +1,6 @@
 package frc.robot.library.units.UnitContainers;
 
+import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.library.units.AngleUnits.Angle;
 import frc.robot.library.units.TranslationalUnits.TranslationUnit;
 import frc.robot.library.units.Unit;

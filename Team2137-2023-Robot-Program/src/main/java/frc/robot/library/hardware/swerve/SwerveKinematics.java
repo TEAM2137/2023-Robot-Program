@@ -225,4 +225,8 @@ public class SwerveKinematics<T extends Unit<?, ? extends UnitEnum>> {
     public Vector2d<Velocity> getCurrentRobotVelocity() {
         return latestRobotVelocity;
     }
+
+    public Vector2d<Distance> getCurrentRobotPosition() {
+        return latestRobotPosition;
+    }
 }

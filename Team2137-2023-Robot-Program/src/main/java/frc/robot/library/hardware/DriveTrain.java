@@ -16,7 +16,10 @@ package frc.robot.library.hardware;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import frc.robot.library.Constants;
+import frc.robot.library.units.AngleUnits.Angle;
+import frc.robot.library.units.TranslationalUnits.Distance;
 import frc.robot.library.units.UnitContainers.CartesianValue;
+import frc.robot.library.units.UnitContainers.Pose2d;
 
 public interface DriveTrain {
 
@@ -28,11 +31,13 @@ public interface DriveTrain {
     void setLeftSpeed(double speed);
     void setRightSpeed(double speed);
 
-    Rotation2d getAngle();
+    Angle getAngle();
 
     CartesianValue<Rotation2d> getGyroReading();
 
     void setAngleOffset(Rotation2d offset);
 
     void configDrivetrainControlType(Constants.DriveControlType control);
+
+    Pose2d<Distance> getCurrentOdometryPosition();
 }

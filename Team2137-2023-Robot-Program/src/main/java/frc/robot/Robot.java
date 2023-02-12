@@ -9,12 +9,14 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableEvent;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.XMLSettingReader;
 import frc.robot.functions.io.xmlreader.XMLStepReader;
+import frc.robot.functions.io.xmlreader.data.Step;
 import frc.robot.library.Constants;
 import frc.robot.library.OpMode;
 
@@ -23,6 +25,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class Robot extends TimedRobot {
 
@@ -32,13 +35,19 @@ public class Robot extends TimedRobot {
   private static OpMode disabledClass;
 
   private static Constants.RobotState lastRobotState;
+
   public static List<EntityGroup> subSystemCallList = new ArrayList<>();
+  public static HashMap<String, Consumer<Step>> subSystemCommandList = new HashMap<>();
+  public static ArrayList<Step> currentActiveSteps = new ArrayList<>();
 
   public static XMLSettingReader settingReader;
   public static XMLStepReader stepReader;
   public static FileLogger fileLogger;
 
   public static NetworkTable configurationNetworkTable;
+
+  public static XboxController primaryController = new XboxController(0);
+  public static XboxController secondaryController = new XboxController(1);
 
   /**
    * This function is run when the robot is first started up and should be used for any

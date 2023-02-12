@@ -86,4 +86,6 @@ public interface SwerveModule {
     SwerveModuleState getSwerveModuleAccelerationState(double voltage);
 
     SwerveModuleState.SwerveModulePositions getSwerveModuleLocation();
+
+    double getDriveMotorVoltage();
 }
