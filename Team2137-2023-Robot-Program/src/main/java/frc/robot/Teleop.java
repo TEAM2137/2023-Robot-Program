@@ -75,7 +75,7 @@ public class Teleop implements OpMode {
     @Override
     public void periodic() {
         mCurrentDrivetrainPeriodRunnable.run();
-        objectTracker.process();
+        objectTracker.update();
         AprilTags.updateValues();
     }
 
