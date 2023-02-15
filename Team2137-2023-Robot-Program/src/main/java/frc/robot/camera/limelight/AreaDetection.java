@@ -1,23 +1,42 @@
-package frc.robot.limelight;
+package frc.robot.camera.limelight;
 
 import java.util.ArrayList;
 import org.opencv.core.Point;
-import frc.robot.limelight.field.RectArea;
+
+import frc.robot.camera.limelight.field.RectArea;
 
 public class AreaDetection {
 
     // A list of rectangular areas around the left side of the field
     ArrayList<RectArea> leftSideAreas = new ArrayList<>(3);
+    ArrayList<RectArea> rightSideAreas = new ArrayList<>(3);
 
     // A list of the positions of the aprilTags on the left side of the field
     ArrayList<Point> leftSideTags = new ArrayList<>(3);
+    ArrayList<Point> rightSideTags = new ArrayList<>(3);
 
     public void init() {
-        leftSideTags.add(new Point(40.45, 174.19));
-        leftSideTags.add(new Point(40.45, 108.19));
+        // Adds the coordinates of the apriltags
         leftSideTags.add(new Point(40.45, 42.19));
+        leftSideTags.add(new Point(40.45, 108.19));
+        leftSideTags.add(new Point(40.45, 174.19));
 
+        rightSideTags.add(new Point(610.7, 174.19));
+        rightSideTags.add(new Point(610.7, 108.19));
+        rightSideTags.add(new Point(610.7, 42.19));
+
+        addRightSideAreas();
         addLeftSideAreas();
+    }
+
+    public Point getNearestTagCoordinates() {
+        int id = getAreaId();
+        if (id >= 0) {
+            Point tagPos = leftSideTags.get(id);
+            return tagPos;
+        } else {
+            return null;
+        }
     }
 
     public double xDstToNearestTag() {
@@ -55,7 +74,15 @@ public class AreaDetection {
         }
     }
 
+    private void addRightSideAreas() {
+        for (int i = 0; i < rightSideTags.size(); i++) {
+            Point position = new Point(rightSideTags.get(i).x - 60, rightSideTags.get(i).y - 30);
+            rightSideAreas.add(new RectArea(i, position.x, position.y, 60, 60));        
+        }
+    }
+
     public int getAreaId() {
+        
         if (getArea() == null) {
             return -1;
         } else {

@@ -19,6 +19,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.camera.limelight.AprilTags;
+import frc.robot.camera.objects.ObjectTracker;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.XMLSettingReader;
@@ -28,7 +30,6 @@ import frc.robot.library.hardware.DriveTrain;
 import frc.robot.library.hardware.Gamepad;
 import frc.robot.library.hardware.swerve.SwerveDrivetrain;
 import frc.robot.library.hardware.swerve.module.SwerveModuleState;
-import frc.robot.limelight.AprilTags;
 
 public class Teleop implements OpMode {
 
@@ -43,6 +44,8 @@ public class Teleop implements OpMode {
 
     private XboxController mDriverController;
     //private final Gamepad mOperatorController = new Gamepad(1);
+
+    private ObjectTracker objectTracker;
 
     @Override
     public void init(XMLSettingReader xmlSettingReader, XMLStepReader xmlStepReader, FileLogger fileLogger) {
@@ -65,12 +68,14 @@ public class Teleop implements OpMode {
                 break;
         }
 
+        objectTracker = new ObjectTracker();
         AprilTags.init();
     }
 
     @Override
     public void periodic() {
         mCurrentDrivetrainPeriodRunnable.run();
+        objectTracker.process();
         AprilTags.updateValues();
     }
 
