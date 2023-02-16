@@ -8,7 +8,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 
 /**
- * Uses GRIP to get the positions of objects (cones/cubes) on a camera's vision.
+ * Gets the data of objects in the camera's vision from the raspberry pi networktables. Call the update method to refresh the data.
  */
 public class ObjectTracker {
 
@@ -43,6 +43,30 @@ public class ObjectTracker {
         return positions;
     }
 
+    /**
+     * @return the total number of objects in the camera's vision (cones or cubes).
+     */
+    public int getTotalObjectCount() {
+        return cubeXPositions.length + coneXPositions.length;
+    }
+
+    /**
+     * @return the total number of cubes in the camera's vision
+     */
+    public int getCubeCount() {
+        return cubeXPositions.length;
+    }
+
+    /**
+     * @return the total number of cubes in the camera's vision
+     */
+    public int getConeCount() {
+        return coneXPositions.length;
+    }
+
+    /**
+     * Gets the data from the networktables. Should be run every time camera data is needed.
+     */
     public void update() {
         NetworkTable table = NetworkTableInstance.getDefault().getTable("SmartDashboard");
         coneXPositions = table.getEntry("conePositionsX").getDoubleArray(new double[10]);
