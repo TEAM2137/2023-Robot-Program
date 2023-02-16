@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package frc.robot.functions.io.xmlreader.objects;
+package frc.robot.functions.io.xmlreader.objects.motor;
 
 import com.revrobotics.CANSparkMaxLowLevel;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.functions.io.xmlreader.Entity;
-import frc.robot.functions.io.xmlreader.EntityGroup;
+import frc.robot.functions.io.xmlreader.EntityImpl;
 import frc.robot.functions.io.xmlreader.data.PID;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-public class Motor extends Entity {
+public class Motor extends EntityImpl implements SimpleMotorData {
 
     public static final int NUMBEROFPIDSLOTS = 2;
 
@@ -63,12 +63,12 @@ public class Motor extends Entity {
 
     public Motor(Element element) {
         super(element);
-        this.type = MotorTypes.valueOf(getOrDefault(element, "Type", "NEO").toUpperCase());
-        this.inverted = Boolean.parseBoolean(getOrDefault(element, "Inverted", "false").toLowerCase());
-        this.currentLimit = Integer.parseInt(getOrDefault(element, "CurrentLimit", "-1"));
-        this.gearRatio = Double.parseDouble(getOrDefault(element, "GearRatio", "1"));
-        this.rampRate = Double.parseDouble(getOrDefault(element, "RampRate", "0"));
-        this.id = Integer.parseInt(getOrDefault(element, "ID", "0"));
+        this.type = MotorTypes.valueOf(Entity.getOrDefault(element, "Type", "NEO").toUpperCase());
+        this.inverted = Boolean.parseBoolean(Entity.getOrDefault(element, "Inverted", "false").toLowerCase());
+        this.currentLimit = Integer.parseInt(Entity.getOrDefault(element, "CurrentLimit", "-1"));
+        this.gearRatio = Double.parseDouble(Entity.getOrDefault(element, "GearRatio", "1"));
+        this.rampRate = Double.parseDouble(Entity.getOrDefault(element, "RampRate", "0"));
+        this.id = Integer.parseInt(Entity.getOrDefault(element, "ID", "0"));
 
         NodeList tmpList = element.getElementsByTagName("PID");
 
@@ -97,11 +97,13 @@ public class Motor extends Entity {
 
     public void setGearRatio(double ratio) { this.gearRatio = ratio; }
 
-    public MotorTypes getMotorType() {
+    public MotorTypes getType() {
         return this.type;
     }
 
-    public void setMotorType(MotorTypes _type) { this.type = _type; }
+    public void setMotorType(MotorTypes _type) {
+        this.type = _type;
+    }
 
     public boolean inverted() {
         return this.inverted;
@@ -145,12 +147,12 @@ public class Motor extends Entity {
     public void constructTreeItemPrintout(StringBuilder builder, int depth) {
         super.constructTreeItemPrintout(builder, depth);
 
-        buildStringTabbedData(builder, depth, "ID", String.valueOf(id));
-        buildStringTabbedData(builder, depth, "Type", type.toString());
-        buildStringTabbedData(builder, depth, "Inverted", String.valueOf(inverted));
-        buildStringTabbedData(builder, depth, "Current Limit", String.valueOf(currentLimit));
-        buildStringTabbedData(builder, depth, "Gear Ratio", String.valueOf(gearRatio));
-        buildStringTabbedData(builder, depth, "Ramp Rate", String.valueOf(rampRate));
+        Entity.buildStringTabbedData(builder, depth, "ID", String.valueOf(id));
+        Entity.buildStringTabbedData(builder, depth, "Type", type.toString());
+        Entity.buildStringTabbedData(builder, depth, "Inverted", String.valueOf(inverted));
+        Entity.buildStringTabbedData(builder, depth, "Current Limit", String.valueOf(currentLimit));
+        Entity.buildStringTabbedData(builder, depth, "Gear Ratio", String.valueOf(gearRatio));
+        Entity.buildStringTabbedData(builder, depth, "Ramp Rate", String.valueOf(rampRate));
 
         for(int i = 0; i < NUMBEROFPIDSLOTS; i++) {
             if(pidValues[i] != null)
@@ -179,6 +181,7 @@ public class Motor extends Entity {
     @Override
     public void OnImplement() {
         super.OnImplement();
+
         for (PID pid : pidValues) {
             if(pid != null) pid.OnImplement();
         }

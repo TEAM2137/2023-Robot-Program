@@ -14,6 +14,7 @@
 
 package frc.robot.functions.io.xmlreader;
 
+import frc.robot.Robot;
 import frc.robot.functions.io.FileLogger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -31,6 +32,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -40,9 +42,6 @@ public class XMLSettingReader {
     private final File settingFile;
     private final FileLogger log;
     private final int maxSettingsFileHistory = 15;
-
-    public static EntityGroup robotEntityGroup;
-    public static EntityGroup settingsEntityGroup;
 
     public XMLSettingReader(String dir, FileLogger logger) {
         log = logger;
@@ -82,19 +81,19 @@ public class XMLSettingReader {
         Element settingsEntities =  (Element) rootElement.getElementsByTagName("Settings").item(0);
 
         log.writeEvent(6, FileLogger.EventType.Status, "Starting recursive search in XML File...");
-        settingsEntityGroup = new EntityGroup(settingsEntities, null, log);
-        robotEntityGroup = new EntityGroup(robotEntities, null, log);
+        Robot.settingsEntityGroup = new EntityGroup(settingsEntities, null, log);
+        Robot.robotEntityGroup = new EntityGroup(robotEntities, null, log);
 
         StringBuilder builder = new StringBuilder();
-        robotEntityGroup.constructTreeItemPrintout(builder, 1);
-        settingsEntityGroup.constructTreeItemPrintout(builder, 1);
+        Robot.robotEntityGroup.constructTreeItemPrintout(builder, 1);
+        Robot.settingsEntityGroup.constructTreeItemPrintout(builder, 1);
         log.writeLine(builder.toString());
     }
 
     public void write() {
         log.writeEvent(0, FileLogger.EventType.Status, "Writing Settings from Element (Recursive)");
 
-        robotEntityGroup.updateElement();
+        Robot.robotEntityGroup.updateElement();
         try {
             String dateString = DateTimeFormatter.ofPattern("MMdd_HHmmss_SSS").format(LocalDateTime.now());
 
@@ -139,6 +138,6 @@ public class XMLSettingReader {
     }
 
     public EntityGroup getRobot() {
-        return robotEntityGroup;
+        return Robot.robotEntityGroup;
     }
 }

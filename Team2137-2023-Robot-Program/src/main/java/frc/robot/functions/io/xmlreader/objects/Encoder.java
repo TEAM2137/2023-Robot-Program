@@ -19,9 +19,10 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import frc.robot.Robot;
 import frc.robot.functions.io.xmlreader.Entity;
 import frc.robot.functions.io.xmlreader.EntityGroup;
+import frc.robot.functions.io.xmlreader.EntityImpl;
 import org.w3c.dom.Element;
 
-public class Encoder extends Entity {
+public class Encoder extends EntityImpl {
 
     public enum EncoderTypes {
         CTRE_CAN_ABS ("CTRE_CAN_ABS");
@@ -54,10 +55,10 @@ public class Encoder extends Entity {
     public Encoder(Element element) {
         super(element);
 
-        this.id = Integer.parseInt(getOrDefault(element, "ID", "0"));
-        this.type = EncoderTypes.valueOf(getOrDefault(element, "Type", "CTRE_CAN_ABS").toUpperCase());
-        this.inverted = Boolean.parseBoolean(getOrDefault(element, "Inverted", "false").toLowerCase());
-        this.offset = Double.parseDouble(getOrDefault(element, "Offset", "0"));
+        this.id = Integer.parseInt(Entity.getOrDefault(element, "ID", "0"));
+        this.type = EncoderTypes.valueOf(Entity.getOrDefault(element, "Type", "CTRE_CAN_ABS").toUpperCase());
+        this.inverted = Boolean.parseBoolean(Entity.getOrDefault(element, "Inverted", "false").toLowerCase());
+        this.offset = Double.parseDouble(Entity.getOrDefault(element, "Offset", "0"));
     }
 
     public EncoderTypes getEncoderType() {
@@ -142,9 +143,9 @@ public class Encoder extends Entity {
     @Override
     public void constructTreeItemPrintout(StringBuilder builder, int depth) {
         super.constructTreeItemPrintout(builder, depth);
-        buildStringTabbedData(builder, depth, "ID", String.valueOf(id));
-        buildStringTabbedData(builder, depth, "Type", type.toString());
-        buildStringTabbedData(builder, depth, "Inverted", String.valueOf(inverted));
-        buildStringTabbedData(builder, depth, "Offset", String.valueOf(offset));
+        Entity.buildStringTabbedData(builder, depth, "ID", String.valueOf(id));
+        Entity.buildStringTabbedData(builder, depth, "Type", type.toString());
+        Entity.buildStringTabbedData(builder, depth, "Inverted", String.valueOf(inverted));
+        Entity.buildStringTabbedData(builder, depth, "Offset", String.valueOf(offset));
     }
 }

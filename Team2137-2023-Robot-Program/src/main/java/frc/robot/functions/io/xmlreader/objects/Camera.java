@@ -17,21 +17,22 @@ package frc.robot.functions.io.xmlreader.objects;
 import edu.wpi.first.networktables.NetworkTable;
 import frc.robot.functions.io.xmlreader.Entity;
 import frc.robot.functions.io.xmlreader.EntityGroup;
+import frc.robot.functions.io.xmlreader.EntityImpl;
 import org.w3c.dom.Element;
 
-public class Camera extends Entity {
+public class Camera extends EntityImpl {
     private int deviceID;
 
     public Camera(Element element) {
         super(element);
 
-        deviceID = Integer.parseInt(getOrDefault(element, "ID", "0"));
+        deviceID = Integer.parseInt(Entity.getOrDefault(element, "ID", "0"));
     }
 
     @Override
     public void constructTreeItemPrintout(StringBuilder builder, int depth) {
         super.constructTreeItemPrintout(builder, depth);
-        buildStringTabbedData(builder, depth, "ID", String.valueOf(deviceID));
+        Entity.buildStringTabbedData(builder, depth, "ID", String.valueOf(deviceID));
     }
 
     public int getDeviceID() {

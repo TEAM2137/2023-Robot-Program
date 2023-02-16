@@ -23,12 +23,16 @@ import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.*;
 import frc.robot.functions.io.xmlreader.data.PID;
 import frc.robot.functions.io.xmlreader.objects.Encoder;
-import frc.robot.functions.io.xmlreader.objects.Motor;
+import frc.robot.functions.io.xmlreader.objects.motor.Motor;
+import frc.robot.functions.io.xmlreader.objects.motor.NeoMotor;
+import frc.robot.functions.io.xmlreader.objects.motor.SimpleMotorControl;
 import frc.robot.library.Constants.DriveControlType;
+import frc.robot.library.units.AngleUnits.Angle;
 import frc.robot.library.units.TranslationalUnits.Distance;
 import frc.robot.library.units.TranslationalUnits.Velocity;
 import org.w3c.dom.Element;
 
+import static frc.robot.library.units.AngleUnits.Angle.AngleUnits.DEGREE;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.INCH;
 import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.FEET_PER_SECOND;
@@ -37,86 +41,32 @@ import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.
 //@SuppressWarnings("All")
 public class SwerveNEODriveModule extends EntityGroup implements SwerveModule {
 
+    private NeoMotor mDriveMotor;
+    private NeoMotor mTurnMotor;
+
     private static final int intDriveVelocityPIDSlotID = 0;
     private static final int intDriveDistancePIDSlotID = 1;
-    public CANSparkMax mDriveMotor;
-    public CANSparkMax mTurnMotor;
-    private final RelativeEncoder mTurnMotorEncoder;
-    private final RelativeEncoder mDriveMotorEncoder;
     private final CANCoder mTurnEncoder;
-    private final SparkMaxPIDController mDrivePIDController;
-    private final PIDController mTurnPIDController;
     private Velocity mDriveVelocityGoal = new Velocity(0, FEET_PER_SECOND);
     private Distance mDriveDistanceGoal = new Distance(0, FOOT);
     private Rotation2d turningSetPoint;
-    private final Motor mDriveMotorObj;
     private DriveControlType mDriveControlType = DriveControlType.RAW;
     private final SwerveModuleState.SwerveModulePositions mSwerveDrivePosition;
 
     public SwerveNEODriveModule(Element element, EntityGroup parent, FileLogger fileLogger) {
         super(element, parent, fileLogger);
 
-        Motor drive = (Motor) getEntity("Drive Motor");
-        Motor turn = (Motor) getEntity("True Motor");
+        mDriveMotor = (NeoMotor) getEntity("Drive Motor");
+        mTurnMotor = (NeoMotor) getEntity("True Motor");
         Encoder encoder = (Encoder) getEntity("Turn Encoder");
 
         mSwerveDrivePosition = SwerveModuleState.SwerveModulePositions.getPositionFromString(this.getName());
 
-        this.mDriveMotorObj = drive;
-
-        this.mDriveMotor = new CANSparkMax(drive.getID(), drive.getMotorType().getREVType());
-        this.mDriveMotor.restoreFactoryDefaults();
-        this.mDriveMotor.setInverted(drive.inverted());
-        this.mDriveMotor.setSmartCurrentLimit(drive.getCurrentLimit());
-        this.mDriveMotor.setIdleMode(CANSparkMax.IdleMode.kBrake);
-
-        this.mDriveMotorEncoder = this.mDriveMotor.getEncoder();
-
-        //Inches per Rotation.
-        //For MK3 Swerve (3.1415 * 4")/8.16
-        this.mDriveMotorEncoder.setPositionConversionFactor(drive.getGearRatio());
-
-        this.mDrivePIDController = this.mDriveMotor.getPIDController();
-
-        this.mDrivePIDController.setSmartMotionAllowedClosedLoopError(1, 0);
-        this.mDrivePIDController.setSmartMotionMaxVelocity(2000, 0);
-        this.mDrivePIDController.setSmartMotionMaxAccel(1500, 0);
-
-        this.mTurnMotor = new CANSparkMax(turn.getID(), turn.getMotorType().getREVType());
-        this.mTurnMotor.restoreFactoryDefaults();
-        this.mTurnMotor.setInverted(turn.inverted());
-        this.mTurnMotor.setSmartCurrentLimit(turn.getCurrentLimit());
-        this.mTurnMotor.setIdleMode(CANSparkMax.IdleMode.kBrake);
-
         this.mTurnEncoder = new CANCoder(encoder.getID());
-        this.mTurnMotorEncoder = this.mTurnMotor.getEncoder();
+//        this.mTurnMotorEncoder = this.mTurnMotor.getEncoder();
 
         this.mTurnEncoder.configAbsoluteSensorRange(AbsoluteSensorRange.Signed_PlusMinus180); // -180 to 180
         this.mTurnEncoder.configMagnetOffset(encoder.getOffset());
-
-        this.mTurnPIDController = new PIDController(
-                turn.getPID().getP(),
-                turn.getPID().getI(),
-                turn.getPID().getD());
-
-        this.mTurnPIDController.enableContinuousInput(-180, 180); // allows module to wrap properly
-
-//        this.mTurnMotorEncoder.setPosition(this.mTurnEncoder.getAbsolutePosition() / 360);
-//        this.mTurnMotorEncoder.setPositionConversionFactor((1 / turn.getGearRatio()) / 360);
-
-//        this.mTurnPIDController.setSmartMotionAllowedClosedLoopError(1, 0);
-//        this.mTurnPIDController.setSmartMotionMaxVelocity(2000, 0);
-//        this.mTurnPIDController.setSmartMotionMaxAccel(1500, 0);
-
-    }
-
-    @Override
-    public boolean onDestroy() throws Exception {
-        this.mDriveMotor.close();
-        this.mTurnMotor.close();
-        this.mTurnEncoder.DestroyObject();
-
-        return true;
     }
 
     /**
@@ -124,7 +74,6 @@ public class SwerveNEODriveModule extends EntityGroup implements SwerveModule {
      */
     @Override
     public void periodic() {
-        this.mTurnMotor.set(this.mTurnPIDController.calculate(getModuleAngle().getDegrees()));
     }
 
     /**
@@ -148,7 +97,7 @@ public class SwerveNEODriveModule extends EntityGroup implements SwerveModule {
     @Override
     public void setModuleAngle(Rotation2d angle) {
         turningSetPoint = angle;
-        this.mTurnPIDController.setSetpoint(turningSetPoint.getDegrees());
+        mTurnMotor.setPosition(new Angle(angle.getDegrees(), DEGREE));
     }
 
     /**
@@ -170,7 +119,8 @@ public class SwerveNEODriveModule extends EntityGroup implements SwerveModule {
             configDrivetrainControlType(DriveControlType.VELOCITY);
         }
 
-        this.mDrivePIDController.setReference(mDriveVelocityGoal.getValue(METER_PER_SECOND), CANSparkMax.ControlType.kVelocity);
+        mDriveMotor.setVelocity(speed);
+//        this.mDrivePIDController.setReference(mDriveVelocityGoal.getValue(METER_PER_SECOND), CANSparkMax.ControlType.kVelocity);
     }
 
     @Override
@@ -208,13 +158,14 @@ public class SwerveNEODriveModule extends EntityGroup implements SwerveModule {
             configDrivetrainControlType(DriveControlType.DISTANCE);
         }
 
-        this.mDriveMotorEncoder.setPosition(0);
-        this.mDrivePIDController.setReference(mDriveDistanceGoal.getValue(FOOT), CANSparkMax.ControlType.kPosition);
+        this.mDriveMotor.setIntegratedSensorPosition(0);
+//        this.mDrivePIDController.setReference(mDriveDistanceGoal.getValue(FOOT), CANSparkMax.ControlType.kPosition);
     }
 
     @Override
     public Distance getCurrentDrivePosition() {
-        return new Distance(this.mDriveMotorEncoder.getPosition(), INCH);
+//        return new Distance(this.mDriveMotor.getPosition(), INCH);
+        return new Distance(0, INCH);
     }
 
     @Override
@@ -237,11 +188,11 @@ public class SwerveNEODriveModule extends EntityGroup implements SwerveModule {
         PID pid;
         switch (control) {
             case VELOCITY:
-                pid = this.mDriveMotorObj.getPID(intDriveVelocityPIDSlotID);
+//                pid = this.mDriveMotorObj.getPID(intDriveVelocityPIDSlotID);
                 mDriveControlType = DriveControlType.VELOCITY;
                 break;
             case DISTANCE:
-                pid = this.mDriveMotorObj.getPID(intDriveDistancePIDSlotID);
+//                pid = this.mDriveMotorObj.getPID(intDriveDistancePIDSlotID);
                 mDriveControlType = DriveControlType.DISTANCE;
                 break;
             default:
@@ -250,9 +201,9 @@ public class SwerveNEODriveModule extends EntityGroup implements SwerveModule {
                 break;
         }
 
-        this.mDrivePIDController.setP(pid.getP());
-        this.mDrivePIDController.setI(pid.getI());
-        this.mDrivePIDController.setD(pid.getD());
+//        this.mDrivePIDController.setP(pid.getP());
+//        this.mDrivePIDController.setI(pid.getI());
+//        this.mDrivePIDController.setD(pid.getD());
     }
 
     @Override

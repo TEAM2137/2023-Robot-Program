@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.functions.io.FileLogger;
+import frc.robot.functions.io.xmlreader.Entity;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.XMLSettingReader;
 import frc.robot.functions.io.xmlreader.XMLStepReader;
@@ -39,6 +40,9 @@ public class Robot extends TimedRobot {
   public static List<EntityGroup> subSystemCallList = new ArrayList<>();
   public static HashMap<String, Consumer<Step>> subSystemCommandList = new HashMap<>();
   public static ArrayList<Step> currentActiveSteps = new ArrayList<>();
+  public static ArrayList<Entity> allEntities = new ArrayList<>();
+  public static EntityGroup robotEntityGroup;
+  public static EntityGroup settingsEntityGroup;
 
   public static XMLSettingReader settingReader;
   public static XMLStepReader stepReader;
@@ -82,8 +86,6 @@ public class Robot extends TimedRobot {
     enterConfigurationMode.setBoolean(false);
 
     smartDashboardTable.addListener(EnumSet.of(NetworkTableEvent.Kind.kValueAll), (table, key, event) -> {
-      System.out.println("updated: " + key);
-      System.out.println("Name: " + enterConfigurationMode.getName());
       switch (key) {
         case "ImplementChanges":
           if (implementChanges.getBoolean(false)) {

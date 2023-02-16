@@ -19,7 +19,7 @@ public class Velocity implements TranslationUnit<Velocity, Velocity.VelocityUnit
         METER_PER_SECOND (Velocity, METER, SECONDS,1.0,"M/S"),
         FEET_PER_SECOND  (Velocity, METER, SECONDS,3.280839895,"F/S"),
         MILES_PER_HOUR   (Velocity, METER, SECONDS,2.23693629, "MPH"),
-        CTRE_VELOCITY    (Velocity, METER, SECONDS, Double.NaN, "CTRE_V");
+        CTRE_VELOCITY    (Velocity, METER, SECONDS, 1.0, "CTRE_V");
 
         UnitUtil.UnitType unitType;
         Distance.DistanceUnits distanceUnits;

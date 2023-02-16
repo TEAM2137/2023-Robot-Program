@@ -4,31 +4,32 @@ import frc.robot.Robot;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.Entity;
 import frc.robot.functions.io.xmlreader.EntityGroup;
-import frc.robot.functions.io.xmlreader.XMLSettingReader;
 import frc.robot.functions.io.xmlreader.data.Step;
-import frc.robot.functions.io.xmlreader.objects.Motor;
 import frc.robot.library.Constants;
-import frc.robot.library.hardware.simpleMotorControl.SimpleMotor;
+import frc.robot.functions.io.xmlreader.objects.motor.SimpleMotorControl;
 import frc.robot.library.units.TranslationalUnits.Distance;
 import frc.robot.library.units.Number;
 import org.w3c.dom.Element;
 
+import javax.swing.*;
 import java.util.Collection;
 import java.util.concurrent.Callable;
 
 import static frc.robot.library.Constants.StepState.STATE_INIT;
+import static frc.robot.library.Constants.StepState.STATE_NOT_STARTED;
+import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.INCH;
 
 public class StringElevator extends EntityGroup implements Elevator {
 
-    private final Motor[] mLiftMotorsObj;
+    private SimpleMotorControl[] mLiftMotors;
 
-    private SimpleMotor[] mLiftMotors;
+    private FileLogger logger;
 
     private Distance mGoalPosition;
     private Distance mSpoolDiameter;
 
-    private Constants.StepState mHomingStepState;
+    private Constants.StepState mHomingStepState = STATE_NOT_STARTED;
     private Callable<Boolean> mHomingSensorState;
 
     /**
@@ -41,37 +42,47 @@ public class StringElevator extends EntityGroup implements Elevator {
     public StringElevator(Element element, EntityGroup parent, FileLogger fileLogger) {
         super(element, parent, fileLogger);
 
+        fileLogger.writeEvent(4, "Entering String Elevator constructor");
+
         Collection<Entity> keys = getEntities();
 
         int count = 0;
         for (Entity a : keys) {
-            if(a.getName().contains("Lift Motor"))
+            if(a.getName() != null && a.getName().contains("Lift Motor"))
                 count++;
         }
 
-        mLiftMotorsObj = new Motor[count];
+        fileLogger.writeEvent(4, "Found motor keys attempting to get control object");
+
+        mLiftMotors = new SimpleMotorControl[count];
         for(Entity a : keys) {
             String name = a.getName();
 
             if(name.contains("Lift Motor")) {
+                fileLogger.writeEvent(0, "Found lift motor with name: " + name);
                 String[] parts = name.split(" ");
                 int idx = Integer.parseInt(parts[parts.length - 1]) - 1;
-                mLiftMotorsObj[idx] = (Motor) a;
+                mLiftMotors[idx] = (SimpleMotorControl) a;
             }
         }
 
-        for(int i = 0; i < mLiftMotorsObj.length; i++) {
-            mLiftMotors[i] = SimpleMotor.createMotor(mLiftMotorsObj[i]);
-
+        fileLogger.writeEvent(0, "Attempting to create following relationships");
+        for(int i = 0; i < mLiftMotors.length; i++) {
             if(i != 0)
                 mLiftMotors[i].follow(mLiftMotors[0]);
         }
 
-        mSpoolDiameter = new Distance(((Number) XMLSettingReader.settingsEntityGroup.getEntity("Elevator-SpoolDiameter")).getValue(), INCH);
+        if(this.getEntity("SpoolDiameter") != null) {
+            mSpoolDiameter = new Distance(((Number) getEntity("SpoolDiameter")).getValue(), INCH);
+        } else {
+            mSpoolDiameter = new Distance(1, INCH);
+        }
         mLiftMotors[0].setDistancePerRevolution(new Distance(mSpoolDiameter.getValue(INCH) * Math.PI, INCH));
 
-        this.addSubsystemCommand(getName() + "SetPosition", this::setPosition);
-        this.addSubsystemCommand(getName() + "HomeElevator", this::homeElevator);
+        logger = fileLogger;
+
+        this.addSubsystemCommand(getName() + "-SetRawPosition", this::setRawPosition);
+        this.addSubsystemCommand(getName() + "-HomeElevator", this::homeElevator);
     }
 
     @Override
@@ -104,10 +115,10 @@ public class StringElevator extends EntityGroup implements Elevator {
     }
 
     public void homeElevator(Step step) {
-            if(step.getStepState() == STATE_INIT) {
-                homeElevator(mHomingSensorState);
-                mHomingStepState = STATE_INIT;
-            }
+        if(step.getStepState() == STATE_INIT) {
+            homeElevator(mHomingSensorState);
+            mHomingStepState = STATE_INIT;
+        }
     }
 
     @Override
@@ -116,9 +127,9 @@ public class StringElevator extends EntityGroup implements Elevator {
         mHomingSensorState = homeSensorState;
     }
 
-    public void setPosition(Step step) {
+    public void setRawPosition(Step step) {
         if (step.getStepState() == STATE_INIT) {
-            setPosition(new Distance(step.getParm(2), INCH));
+            setPosition(new Distance(step.getParm(1), INCH));
 
             step.changeStepState(Constants.StepState.STATE_FINISH);
         }
@@ -126,6 +137,7 @@ public class StringElevator extends EntityGroup implements Elevator {
 
     @Override
     public void setPosition(Distance distance) {
+        logger.writeEvent(2, FileLogger.EventType.Debug, "Setting " + getName() + " Position to " + distance.getValue(FOOT) + "ft");
         mGoalPosition = distance;
         mLiftMotors[0].setPosition(distance);
     }

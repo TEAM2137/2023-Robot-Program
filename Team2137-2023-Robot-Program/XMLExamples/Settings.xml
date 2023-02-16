@@ -287,30 +287,6 @@
             </Step>
         </Binding>
 
-        <Intake name="2021 Intake">
-            <Motor>
-                <Name>Intake Motor</Name>
-                <ID>30</ID>
-                <Type>NEO550</Type>
-                <Inverted>false</Inverted>
-                <GearRatio>1</GearRatio>
-                <CurrentLimit>20</CurrentLimit>
-                <RampRate>0</RampRate>
-            </Motor>
-        </Intake>
-
-        <Spindexer>
-            <Motor>
-                <Name>Spindexer Motor</Name>
-                <ID>35</ID>
-                <Type>WINDOW</Type>
-                <Inverted>false</Inverted>
-                <GearRatio>0</GearRatio>
-                <CurrentLimit>0</CurrentLimit>
-                <RampRate>0</RampRate>
-            </Motor>
-        </Spindexer>
-
         <Shooter>
             <Motor>
                 <Name>FlywheelMotor1</Name>

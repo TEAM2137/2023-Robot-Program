@@ -22,6 +22,7 @@ import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import frc.robot.Robot;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.XMLSettingReader;
@@ -32,7 +33,7 @@ import frc.robot.library.units.TranslationalUnits.Distance;
 import frc.robot.library.units.Number;
 import frc.robot.functions.io.xmlreader.data.PID;
 import frc.robot.functions.io.xmlreader.objects.Encoder;
-import frc.robot.functions.io.xmlreader.objects.Motor;
+import frc.robot.functions.io.xmlreader.objects.motor.Motor;
 import frc.robot.library.Constants;
 import frc.robot.library.units.TranslationalUnits.Velocity;
 import org.w3c.dom.Element;
@@ -86,10 +87,10 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
         this.mTurnCANEncoderObj = (Encoder) getEntity("Turn Encoder");
         this.mTurnCANEncoder = new CANCoder(mTurnCANEncoderObj.getID());
 
-        Number dia = (Number) XMLSettingReader.settingsEntityGroup.getEntity("DriveTrain-WheelDiameter");
+        Number dia = (Number) Robot.settingsEntityGroup.getEntity("DriveTrain-WheelDiameter");
         dblWheelDiameter = new Distance(dia.getValue(), INCH);
         dblRobotMass = new Number(60);
-        dblScaleSpeedOptimization = (Number) XMLSettingReader.settingsEntityGroup.getEntity("DriveTrain-ScaleSpeedOptimization");
+        dblScaleSpeedOptimization = (Number) Robot.settingsEntityGroup.getEntity("DriveTrain-ScaleSpeedOptimization");
 
         initialize();
         this.setOnImplementCallback(this::initialize);
@@ -131,15 +132,6 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
         logger.writeEvent(4, FileLogger.EventType.Debug, "Getting Setting Variables from file...");
         mSwerveDrivePosition = SwerveModuleState.SwerveModulePositions.getPositionFromString(this.getName());
         dblDriveWheelRotationPerFoot = new Distance((Math.PI * dblWheelDiameter.getValue(FOOT)) / this.mDriveMotorObj.getGearRatio(), FOOT); //Rotations per Foot (Moves PI/3 feet every rotation of wheel then divde by gear ratio
-    }
-
-    @Override
-    public boolean onDestroy() throws Exception {
-        this.mDriveMotor.DestroyObject();
-        this.mTurnMotor.DestroyObject();
-        this.mTurnCANEncoder.DestroyObject();
-
-        return true;
     }
 
     @Override
@@ -344,14 +336,15 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
     }
 
     public SwerveModuleState getSwerveModuleState() {
-        switch (mDriveControlType) {
-            case DISTANCE:
-                return new SwerveModuleState(getCurrentDrivePosition(), getModuleAngle(), mSwerveDrivePosition);
-            case VELOCITY:
-                return new SwerveModuleState(getDriveVelocity(), getModuleAngle(), mSwerveDrivePosition);
-            default:
-                return new SwerveModuleState(mDriveMotor.getMotorOutputPercent(), getModuleAngle(), mSwerveDrivePosition);
-        }
+        return new SwerveModuleState(getDriveVelocity(), getModuleAngle(), mSwerveDrivePosition);
+//        switch (mDriveControlType) {
+//            case DISTANCE:
+//                return new SwerveModuleState(getCurrentDrivePosition(), getModuleAngle(), mSwerveDrivePosition);
+//            case VELOCITY:
+//                return new SwerveModuleState(getDriveVelocity(), getModuleAngle(), mSwerveDrivePosition);
+//            default:
+//                return new SwerveModuleState(mDriveMotor.getMotorOutputPercent(), getModuleAngle(), mSwerveDrivePosition);
+//        }
     }
 
     @Override

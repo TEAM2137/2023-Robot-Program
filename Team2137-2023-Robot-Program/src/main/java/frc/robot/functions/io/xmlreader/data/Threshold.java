@@ -18,9 +18,10 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import frc.robot.functions.io.xmlreader.Entity;
 import frc.robot.functions.io.xmlreader.EntityGroup;
+import frc.robot.functions.io.xmlreader.EntityImpl;
 import org.w3c.dom.Element;
 
-public class Threshold extends Entity {
+public class Threshold extends EntityImpl {
     private double upperValue;
     private double lowerValue;
 
@@ -59,8 +60,8 @@ public class Threshold extends Entity {
     @Override
     public void constructTreeItemPrintout(StringBuilder builder, int depth) {
         super.constructTreeItemPrintout(builder, depth);
-        buildStringTabbedData(builder, depth, "Upper", String.valueOf(upperValue));
-        buildStringTabbedData(builder, depth, "Lower", String.valueOf(lowerValue));
+        Entity.buildStringTabbedData(builder, depth, "Upper", String.valueOf(upperValue));
+        Entity.buildStringTabbedData(builder, depth, "Lower", String.valueOf(lowerValue));
     }
 
 

@@ -21,7 +21,7 @@ import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.data.Step;
 import frc.robot.functions.io.xmlreader.objects.Gyro;
-import frc.robot.functions.io.xmlreader.objects.Motor;
+import frc.robot.functions.io.xmlreader.objects.motor.Motor;
 import frc.robot.library.Constants;
 import frc.robot.library.units.AngleUnits.Angle;
 import frc.robot.library.units.AngleUnits.AngleUnit;
@@ -94,28 +94,28 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
             this.setSwerveModuleStates(states);
 
-            //step.changeStepState(Constants.StepState.STATE_FINISH);
+//            step.changeStepState(Constants.StepState.STATE_FINISH);
         }
     }
 
     @Override
     public void periodic() {
-        SwerveModuleState lfAccelState = leftFrontModule.getSwerveModuleAccelerationState(leftFrontModule.getDriveMotorVoltage());
-        SwerveModuleState lbAccelState = leftBackModule.getSwerveModuleAccelerationState(leftBackModule.getDriveMotorVoltage());
-        SwerveModuleState rfAccelState = rightFrontModule.getSwerveModuleAccelerationState(rightFrontModule.getDriveMotorVoltage());
-        SwerveModuleState rbAccelState = rightBackModule.getSwerveModuleAccelerationState(rightBackModule.getDriveMotorVoltage());
+//        SwerveModuleState lfAccelState = leftFrontModule.getSwerveModuleAccelerationState(leftFrontModule.getDriveMotorVoltage());
+//        SwerveModuleState lbAccelState = leftBackModule.getSwerveModuleAccelerationState(leftBackModule.getDriveMotorVoltage());
+//        SwerveModuleState rfAccelState = rightFrontModule.getSwerveModuleAccelerationState(rightFrontModule.getDriveMotorVoltage());
+//        SwerveModuleState rbAccelState = rightBackModule.getSwerveModuleAccelerationState(rightBackModule.getDriveMotorVoltage());
 
         SwerveModuleState lfVelState = leftFrontModule.getSwerveModuleState();
         SwerveModuleState lbVelState = leftBackModule.getSwerveModuleState();
         SwerveModuleState rfVelState = rightFrontModule.getSwerveModuleState();
         SwerveModuleState rbVelState = rightBackModule.getSwerveModuleState();
 
-        Vector2d<Distance> dist = swerveKinematics.updateSwerveKinematics(new SwerveModuleState[] { lfVelState, lbVelState, rfVelState, rbVelState }, new SwerveModuleState[] { lfAccelState, lbAccelState, rfAccelState, rbAccelState });
-//        Vector2d<Distance> dist = swerveKinematics.updateSwerveKinematics(new SwerveModuleState[] { lfVelState, lbVelState, rfVelState, rbVelState });
-        Vector2d<Velocity> vel = swerveKinematics.getCurrentRobotVelocity();
+//        Vector2d<Distance> dist = swerveKinematics.updateSwerveKinematics(new SwerveModuleState[] { lfVelState, lbVelState, rfVelState, rbVelState }, new SwerveModuleState[] { lfAccelState, lbAccelState, rfAccelState, rbAccelState });
+        Vector2d<Distance> dist = swerveKinematics.updateSwerveKinematics(new SwerveModuleState[] { lfVelState, lbVelState, rfVelState, rbVelState });
+//        Vector2d<Velocity> vel = swerveKinematics.getCurrentRobotVelocity();
 
-        SmartDashboard.putNumber("Vel X", vel.getX().getValue(FEET_PER_SECOND));
-        SmartDashboard.putNumber("Vel Y", vel.getY().getValue(FEET_PER_SECOND));
+//        SmartDashboard.putNumber("Vel X", vel.getX().getValue(FEET_PER_SECOND));
+//        SmartDashboard.putNumber("Vel Y", vel.getY().getValue(FEET_PER_SECOND));
 
         SmartDashboard.putNumber("Dist X", dist.getX().getValue(FOOT));
         SmartDashboard.putNumber("Dist Y", dist.getX().getValue(FOOT));

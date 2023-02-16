@@ -17,6 +17,7 @@ package frc.robot.library.units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import frc.robot.functions.io.xmlreader.Entity;
+import frc.robot.functions.io.xmlreader.EntityImpl;
 import frc.robot.library.units.AngleUnits.AngleUnit;
 import frc.robot.library.units.TranslationalUnits.TranslationUnit;
 import org.w3c.dom.Element;
@@ -30,7 +31,7 @@ import static frc.robot.library.units.UnitUtil.UnitType.Scalar;
  * has the ability to be published to the Smartdashboard
  * and to the XML file
  */
-public class Number extends Entity implements AngleUnit<Number, Number.NumberUnit>, TranslationUnit<Number, Number.NumberUnit> {
+public class Number extends EntityImpl implements AngleUnit<Number, Number.NumberUnit>, TranslationUnit<Number, Number.NumberUnit> {
 
     public enum NumberUnit implements UnitEnum {
         SCALAR          (Scalar, Generic, 1.0,"Scalar");
@@ -146,7 +147,7 @@ public class Number extends Entity implements AngleUnit<Number, Number.NumberUni
     @Override
     public void constructTreeItemPrintout(StringBuilder builder, int depth) {
         super.constructTreeItemPrintout(builder, depth);
-        buildStringTabbedData(builder, depth, "Value", String.valueOf(value));
+        Entity.buildStringTabbedData(builder, depth, "Value", String.valueOf(value));
     }
 
     @Override

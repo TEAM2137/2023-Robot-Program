@@ -1,4 +1,4 @@
-package frc.robot.functions.io.xmlreader.data;
+package frc.robot.functions.io.xmlreader.data.mappings;
 
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
@@ -6,11 +6,12 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import frc.robot.Robot;
 import frc.robot.functions.io.xmlreader.Entity;
+import frc.robot.functions.io.xmlreader.EntityImpl;
 import org.w3c.dom.Element;
 
 import java.util.ArrayList;
 
-public class ControllerMapping extends Entity {
+public class ControllerMapping extends EntityImpl implements Mapping {
 
     private XboxController[] controllers;
     private final int controllerNumber;
@@ -37,7 +38,7 @@ public class ControllerMapping extends Entity {
         valueName = getNodeOrAttribute(element, "value", "value");
 
         for (XboxController.Axis axis : XboxController.Axis.values()) {
-            if(axis.toString().equalsIgnoreCase(id)) {
+            if(axis.toString().contains(id)) {
                 controllerAxis = axis;
             }
         }
@@ -49,9 +50,10 @@ public class ControllerMapping extends Entity {
         }
     }
 
+    @Override
     public double getValue() {
         if(controllerAxis != null) {
-            return controllers[controllerNumber].getAxisType(controllerAxis.value);
+            return controllers[controllerNumber].getRawAxis(controllerAxis.value);
         } else if (controllerButton != null) {
             return controllers[controllerNumber].getRawButton(controllerButton.value) ? 1 : 0;
         } else {
@@ -59,7 +61,8 @@ public class ControllerMapping extends Entity {
         }
     }
 
-    public boolean getButtonValue() {
+    @Override
+    public boolean getBooleanValue() {
         if(controllerAxis != null) {
             return controllers[controllerNumber].getAxisType(controllerAxis.value) == 1;
         } else if (controllerButton != null) {
@@ -69,29 +72,32 @@ public class ControllerMapping extends Entity {
         }
     }
 
-    public String getValueName() {
+    @Override
+    public String getPseudoName() {
         return valueName;
     }
 
-    public boolean isButton() {
+    @Override
+    public boolean isBooleanValue() {
         return controllerButton != null;
     }
 
+    @Override
     public void constructTreeItemPrintout(StringBuilder builder, int depth) {
         super.constructTreeItemPrintout(builder, depth);
 
-        buildStringTabbedData(builder, depth, "Controller", String.valueOf(controllerNumber));
+        Entity.buildStringTabbedData(builder, depth, "Controller", String.valueOf(controllerNumber));
         if(controllerAxis != null)
-            buildStringTabbedData(builder, depth, "Axis", controllerAxis.toString());
+            Entity.buildStringTabbedData(builder, depth, "Axis", controllerAxis.toString());
         if(controllerButton != null)
-            buildStringTabbedData(builder, depth, "Button", controllerButton.toString());
+            Entity.buildStringTabbedData(builder, depth, "Button", controllerButton.toString());
 
-        buildStringTabbedData(builder, depth, "ValueName", valueName);
+        Entity.buildStringTabbedData(builder, depth, "ValueName", valueName);
     }
 
     @Override
     public NetworkTable addToNetworkTable(NetworkTable dashboard) {
-        NetworkTable table = dashboard.getSubTable(getValueName());
+        NetworkTable table = dashboard.getSubTable(getPseudoName());
 
         NetworkTableEntry entryGearRatio = table.getEntry("Controller");
         entryGearRatio.setInteger(controllerNumber);

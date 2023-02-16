@@ -17,6 +17,8 @@ package frc.robot.functions.io.xmlreader.data;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.networktables.NetworkTable;
 import frc.robot.functions.io.xmlreader.Entity;
+import frc.robot.functions.io.xmlreader.EntityImpl;
+import frc.robot.functions.io.xmlreader.data.mappings.Mapping;
 import frc.robot.library.Constants;
 import frc.robot.library.units.Time;
 import org.w3c.dom.Document;
@@ -31,7 +33,7 @@ import static frc.robot.library.units.Time.TimeUnits.MILLISECONDS;
 import static frc.robot.library.units.Time.TimeUnits.SECONDS;
 
 
-public class Step extends Entity {
+public class Step extends EntityImpl {
     public enum StepValues {
         COMMAND ("COMMAND"),
         TIMEOUT ("TIMEOUT"),
@@ -43,7 +45,7 @@ public class Step extends Entity {
 
         String name = "";
 
-        StepValues(String str) { 
+        StepValues(String str) {
             this.name = str;
         }
 
@@ -53,7 +55,7 @@ public class Step extends Entity {
     private class ValueEntry {
         public String value;
         public boolean genericType;
-        public ControllerMapping mapping;
+        public Mapping mapping;
 
         public ValueEntry(String _value) {
             value = _value;
@@ -74,22 +76,22 @@ public class Step extends Entity {
     public Step(Element element) {
         super(element);
         NodeList list = element.getChildNodes();
-            for (int i = 0; i < list.getLength(); i++) {
-                Element tmp;
-                try {
-                    tmp = (Element) list.item(i); //TODO tmp solution
-                } catch(Exception e) {
-                    continue;
-                }
-
-                Node genericElement = tmp.getFirstChild();
-
-                if (genericElement.getNodeType() == Node.TEXT_NODE) {
-                    this.values.put(tmp.getNodeName().toUpperCase(), new ValueEntry(genericElement.getTextContent()));
-                } else if (genericElement.getNodeType() == Node.ELEMENT_NODE){
-                    this.values.put(tmp.getNodeName().toUpperCase(), new ValueEntry(genericElement.getNodeName(), true));
-                }
+        for (int i = 0; i < list.getLength(); i++) {
+            Element tmp;
+            try {
+                tmp = (Element) list.item(i); //TODO tmp solution
+            } catch(Exception e) {
+                continue;
             }
+
+            Node genericElement = tmp.getFirstChild();
+
+            if (genericElement.getNodeType() == Node.TEXT_NODE) {
+                this.values.put(tmp.getNodeName().toUpperCase(), new ValueEntry(genericElement.getTextContent()));
+            } else if (genericElement.getNodeType() == Node.ELEMENT_NODE){
+                this.values.put(tmp.getNodeName().toUpperCase(), new ValueEntry(genericElement.getNodeName(), true));
+            }
+        }
     }
 
     public Step (String _COMMAND, String _TIMEOUT, String _SPEED, String _XDISTANCE, String _YDISTANCE, String _PARALLEL, String[] _PARMs) {
@@ -113,7 +115,7 @@ public class Step extends Entity {
         super("Step");
     }
 
-    public void registerMappings(HashMap<String, ControllerMapping> mappings) {
+    public void registerMappings(HashMap<String, Mapping> mappings) {
         values.forEach((a, b) -> {
             if(b.genericType && mappings.containsKey(b.value)) {
                 b.mapping = mappings.get(b.value);
@@ -226,20 +228,20 @@ public class Step extends Entity {
     }
 
     public Element getXMLFileElement(Document doc) {
-            propagateBlankValues();
-            Element xmlFileElement = doc.createElement("Step");
+        propagateBlankValues();
+        Element xmlFileElement = doc.createElement("Step");
 
-            for(StepValues a : StepValues.values()) {
-                Element tmp = doc.createElement(a.toString().toLowerCase());
-                tmp.setTextContent(getValue(a.toString()));
-                xmlFileElement.appendChild(tmp);
-            }
+        for(StepValues a : StepValues.values()) {
+            Element tmp = doc.createElement(a.toString().toLowerCase());
+            tmp.setTextContent(getValue(a.toString()));
+            xmlFileElement.appendChild(tmp);
+        }
 
-            for(int i = 1; i < 8; i++) {
-                Element tmp = doc.createElement("parm" + i);
-                tmp.setTextContent(getValue("PARM" + i));
-                xmlFileElement.appendChild(tmp);
-            }
+        for(int i = 1; i < 8; i++) {
+            Element tmp = doc.createElement("parm" + i);
+            tmp.setTextContent(getValue("PARM" + i));
+            xmlFileElement.appendChild(tmp);
+        }
 
 //
 //            values.forEach((a, b) -> {
@@ -248,7 +250,7 @@ public class Step extends Entity {
 //                xmlFileElement.appendChild(tmp);
 //            });
 
-            return xmlFileElement;
+        return xmlFileElement;
     }
 
     @Override
@@ -256,7 +258,7 @@ public class Step extends Entity {
         super.constructTreeItemPrintout(builder, depth);
 
         for(Map.Entry<String, ValueEntry> val : values.entrySet()) {
-            buildStringTabbedData(builder, depth, val.getKey(), val.getValue().value);
+            Entity.buildStringTabbedData(builder, depth, val.getKey(), val.getValue().value);
         }
     }
 

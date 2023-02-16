@@ -1,4 +1,18 @@
 {
+  "HALProvider": {
+    "Other Devices": {
+      "SPARK MAX [41]": {
+        "header": {
+          "open": true
+        }
+      },
+      "SPARK MAX [42]": {
+        "header": {
+          "open": true
+        }
+      }
+    }
+  },
   "NTProvider": {
     "types": {
       "/FMSInfo": "FMSInfo"
@@ -104,6 +118,9 @@
       "root": {
         "Swerve Falcon": {
           "LeftBack": {
+            "open": true
+          },
+          "LeftFront": {
             "open": true
           },
           "open": true

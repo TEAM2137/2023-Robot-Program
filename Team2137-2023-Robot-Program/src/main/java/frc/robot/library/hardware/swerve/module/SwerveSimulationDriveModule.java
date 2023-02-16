@@ -14,11 +14,9 @@
 
 package frc.robot.library.hardware.swerve.module;
 
-import com.revrobotics.AbsoluteEncoder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.library.hardware.FalconSimulation;
@@ -27,7 +25,7 @@ import frc.robot.library.units.Time;
 import frc.robot.library.units.TranslationalUnits.Acceleration;
 import frc.robot.library.units.TranslationalUnits.Distance;
 import frc.robot.functions.io.xmlreader.objects.Encoder;
-import frc.robot.functions.io.xmlreader.objects.Motor;
+import frc.robot.functions.io.xmlreader.objects.motor.Motor;
 import frc.robot.library.Constants;
 import frc.robot.library.units.TranslationalUnits.Velocity;
 import org.w3c.dom.Element;

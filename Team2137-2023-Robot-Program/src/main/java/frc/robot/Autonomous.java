@@ -200,7 +200,7 @@ public class Autonomous implements OpMode {
                 QuinticSpline spline = new QuinticSpline(poseList, 0.6);
                 mDrivePoseWithCurvatureList = spline.getSplinePoints();
 
-                mPurePursuitLookaheadDistance = new Distance(((Number) XMLSettingReader.settingsEntityGroup.getEntity("PurePursuitLookahead")).getValue(), FOOT);
+                mPurePursuitLookaheadDistance = new Distance(((Number) Robot.settingsEntityGroup.getEntity("PurePursuitLookahead")).getValue(), FOOT);
                 mDrivePurePursuitGenerator = new PurePursuitGenerator(mPurePursuitLookaheadDistance, mDrivePoseWithCurvatureList);
 
                 velocityGenerator = new VelocityGenerator(mDrivePoseWithCurvatureList, new Velocity(16.5, FEET_PER_SECOND), new Acceleration(4, FEET_PER_SECOND2), 1);

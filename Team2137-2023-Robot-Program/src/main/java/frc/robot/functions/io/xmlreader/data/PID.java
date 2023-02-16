@@ -21,9 +21,10 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.Entity;
 import frc.robot.functions.io.xmlreader.EntityGroup;
+import frc.robot.functions.io.xmlreader.EntityImpl;
 import org.w3c.dom.Element;
 
-public class PID extends Entity {
+public class PID extends EntityImpl {
 
     private Double P, I, D, IZ, FF;
     private Double S, V, A;
@@ -215,9 +216,9 @@ public class PID extends Entity {
     @Override
     public void constructTreeItemPrintout(StringBuilder builder, int depth) {
         super.constructTreeItemPrintout(builder, depth);
-        buildStringTabbedData(builder, depth, "P", String.valueOf(P));
-        buildStringTabbedData(builder, depth, "I", String.valueOf(I));
-        buildStringTabbedData(builder, depth, "D", String.valueOf(D));
+        Entity.buildStringTabbedData(builder, depth, "P", String.valueOf(P));
+        Entity.buildStringTabbedData(builder, depth, "I", String.valueOf(I));
+        Entity.buildStringTabbedData(builder, depth, "D", String.valueOf(D));
     }
 
     @Override

@@ -1,10 +1,12 @@
 package frc.robot.functions.io.xmlreader.data;
 
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.Entity;
 import frc.robot.functions.io.xmlreader.EntityGroup;
+import frc.robot.functions.io.xmlreader.data.mappings.Mapping;
 import frc.robot.library.Constants;
 import org.w3c.dom.Element;
 
@@ -14,9 +16,9 @@ import java.util.Map;
 
 public class Binding extends EntityGroup {
 
-    private HashMap<String, ControllerMapping> mappings = new HashMap<String, ControllerMapping>();
-    private ArrayList<ControllerMapping> buttons = new ArrayList<>();
-    private ArrayList<Step> steps = new ArrayList<>();
+    private final HashMap<String, Mapping> mappings = new HashMap<String, Mapping>();
+    private final ArrayList<Mapping> buttons = new ArrayList<>();
+    private final ArrayList<Step> steps = new ArrayList<>();
 
     /**
      * Takes in a part of the xml file and parses it into variables and subtypes using recursion
@@ -30,8 +32,8 @@ public class Binding extends EntityGroup {
 
         for(Entity entry : getEntities()) {
             if(entry.getName().equalsIgnoreCase("Map")) {
-                ControllerMapping map = (ControllerMapping) entry;
-                mappings.put(map.getValueName(), map);
+                Mapping map = (Mapping) entry;
+                mappings.put(map.getPseudoName(), map);
             }
         }
 
@@ -45,8 +47,8 @@ public class Binding extends EntityGroup {
         }
 
         boolean flag = true;
-        for(ControllerMapping entry : mappings.values()) {
-            if(entry.isButton()) {
+        for(Mapping entry : mappings.values()) {
+            if(entry.isBooleanValue()) {
                 buttons.add(entry);
             } else if(flag) {
                 Robot.currentActiveSteps.addAll(steps);
@@ -57,24 +59,23 @@ public class Binding extends EntityGroup {
 
     @Override
     public void periodic() {
-        for (ControllerMapping button : buttons) {
-            if(button.getButtonValue()) {
+
+//        Robot.currentActiveSteps.addAll(steps);
+
+        for (Mapping button : buttons) {
+            if(button.getBooleanValue()) {
                 for (Step step : steps)
                     step.changeStepState(Constants.StepState.STATE_INIT);
                 Robot.currentActiveSteps.addAll(steps);
             }
         }
-
-//        if(isAutonomous() || isTeleop() || isTest()) {
-//            Robot.currentActiveSteps.addAll(steps);
-//        }
     }
 
     @Override
     public void constructTreeItemPrintout(StringBuilder builder, int depth) {
         super.constructTreeItemPrintout(builder, depth);
 
-        for(ControllerMapping mapping : mappings.values()) {
+        for(Mapping mapping : mappings.values()) {
             mapping.constructTreeItemPrintout(builder, depth + 1);
         }
     }
@@ -83,7 +84,7 @@ public class Binding extends EntityGroup {
     public NetworkTable addToNetworkTable(NetworkTable dashboard) {
         NetworkTable table = super.addToNetworkTable(dashboard);
 
-        for(ControllerMapping mapping : mappings.values()) {
+        for(Mapping mapping : mappings.values()) {
             mapping.addToNetworkTable(table);
         }
 

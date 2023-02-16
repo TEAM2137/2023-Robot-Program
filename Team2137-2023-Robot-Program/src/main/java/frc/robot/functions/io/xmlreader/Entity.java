@@ -14,34 +14,21 @@
 
 package frc.robot.functions.io.xmlreader;
 
-import edu.wpi.first.math.Pair;
 import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableEvent;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import frc.robot.functions.io.FileLogger;
+import frc.robot.Robot;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import javax.security.auth.callback.Callback;
-import java.io.File;
-import java.security.KeyPair;
-import java.util.HashSet;
-import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
-public class Entity {
+public interface Entity {
 
-    private final String strName;
-    private Element savedElement;
-    private boolean boolIsHardwareDevice = true;
-    private NetworkTable currentInstance;
-    private Callable<Boolean> onDestroyCallback;
-    private Runnable onImplementCallback;
+//    private final String strName;
+//    private Element savedElement;
+//    private NetworkTable currentInstance;
+//    private Callable<Boolean> onDestroyCallback;
+//    private Runnable onImplementCallback;
 
     /**
      * Constructs a new Entity with only a name value (Not linked to XML Element)
@@ -49,21 +36,23 @@ public class Entity {
      * just a number.
      * @param name - Name of the Entity
      */
-    public Entity(String name) {
-        strName = name;
-        onDestroyCallback = () -> false;
+//    public Entity(String name) {
+//        strName = name;
+//        onDestroyCallback = () -> false;
+//        Robot.allEntities.add(this);
 //        Robot.deviceCallList.put(strName, this);
-    }
+//    }
 
-    public Entity(String name, String defaultValue) {
-        if(name == null) {
-            strName = defaultValue;
-        } else {
-            strName = name;
-        }
-
-        onDestroyCallback = () -> false;
-    }
+//    public Entity(String name, String defaultValue) {
+//        if(name == null) {
+//            strName = defaultValue;
+//        } else {
+//            strName = name;
+//        }
+//        Robot.allEntities.add(this);
+//
+//        onDestroyCallback = () -> false;
+//    }
 
     /**
      * Constructs a new Entity with Element linkage
@@ -71,27 +60,11 @@ public class Entity {
      * just a number
      * @param element
      */
-    public Entity(Element element) {
-        this(getNodeOrAttribute(element, "name", null), element.getTagName());
-
-        savedElement = element;
-    }
-
-    /**
-     * Sets the boolean flag on whether this Entity is a hardware device (ie. Motor, Camera)
-     * @param value - True for hardware device and False for everything else
-     */
-    public void setHardwareDevice(boolean value) {
-        boolIsHardwareDevice = value;
-    }
-
-    /**
-     * Gets the boolean flag on whther this Enitity is a hardware device (ie Motor, Camera)
-     * @return - True for hardware device and False for everything else
-     */
-    public boolean isHardwareDevice() {
-        return boolIsHardwareDevice;
-    }
+//    public Entity(Element element) {
+//        this(getNodeOrAttribute(element, "name", null), element.getTagName());
+//
+//        savedElement = element;
+//    }
 
     /**
      * Safe method that tried to retrieve a string from SubElement with given name
@@ -100,7 +73,7 @@ public class Entity {
      * @param defaultReturn - Default string value to return if it does not exist
      * @return - Returns String value from XML file or on fail the defaultReturn value
      */
-    protected static String getOrDefault(Element element, String name, String defaultReturn) {
+    public static String getOrDefault(Element element, String name, String defaultReturn) {
         NodeList childNodes = element.getChildNodes();
         for(int i = 0; i < childNodes.getLength(); i++) {
             Node a = childNodes.item(i);
@@ -124,7 +97,7 @@ public class Entity {
      * @param defaultReturn - Default string value to return if it does not exist
      * @return - Returns String value from XML file or on fail the defaultReturn value
      */
-    protected static String getAttributeOrDefault(Element element, String name, String defaultReturn) {
+    public default String getAttributeOrDefault(Element element, String name, String defaultReturn) {
         String value = element.getAttribute(name);
         if(value.equals(""))
             return defaultReturn;
@@ -139,7 +112,7 @@ public class Entity {
      * @param defaultReturn - Default string value to return if it does not exist
      * @return - Returns String value from XML file or on fail the defaultReturn value
      */
-    protected static String getNodeOrAttribute(Element element, String name, String defaultReturn) {
+    public default String getNodeOrAttribute(Element element, String name, String defaultReturn) {
         String capitalizedFirstLetter = String.valueOf(name.charAt(0)).toUpperCase() + name.substring(1).toLowerCase();
 
         String nodeResult = getOrDefault(element, capitalizedFirstLetter, null);
@@ -157,11 +130,7 @@ public class Entity {
      * Gets the set name of the Entity
      * @return - If no name is present return "Default"
      */
-    public String getName() {
-        if(strName == null)
-            return "Default";
-        return strName;
-    }
+    public String getName();
 
     /**
      * Appends the Entity values into a {@see StringBuilder} and is meant to be Overwritten by Child classes in order
@@ -169,7 +138,7 @@ public class Entity {
      * @param builder - StringBuilder to append values to
      * @param depth - Current depth (amount of tabs to add)
      */
-    public void constructTreeItemPrintout(StringBuilder builder, int depth) {
+    public default void constructTreeItemPrintout(StringBuilder builder, int depth) {
         builder.append("\n");
         buildStringTabbedData(builder, Math.max(0, depth - 1), "Name", getName());
     }
@@ -181,7 +150,7 @@ public class Entity {
      * @param title - Title of the value
      * @param message - Value or message about value
      */
-    public final void buildStringTabbedData(StringBuilder builder, int number, String title, String message) {
+    public static void buildStringTabbedData(StringBuilder builder, int number, String title, String message) {
         builder.append("\t".repeat(number));
         builder.append(title);
         builder.append(": ");
@@ -189,35 +158,12 @@ public class Entity {
         builder.append("\n");
     }
 
-    /**
-     * Gets a callable for the OnDestroy Function
-     * @return - the onDestroy Callable
-     */
-    public Callable<Boolean> getOnDestroyCallback() {
-        return onDestroyCallback;
-    }
+    public void setOnImplementCallback(Runnable run);
+    public Runnable getOnImplementCallback();
 
-    /**
-     * Sets a callable for the OnDestroy Event
-     * @param onDestroyCallback - Callable to destroy Entity
-     */
-    public void setOnDestroyCallback(Callable<Boolean> onDestroyCallback) {
-        this.onDestroyCallback = onDestroyCallback;
-    }
-
-    
-    public boolean onDestroy() throws Exception {
-        return this.onDestroyCallback.call(); //Flag for function that can not destroy themselves
-    }
-
-
-    public void setOnImplementCallback(Runnable run) {
-        this.onImplementCallback = run;
-    }
-
-    public void OnImplement() {
-        if(onImplementCallback != null)
-            this.onImplementCallback.run();
+    public default void OnImplement() {
+        if(getOnImplementCallback() != null)
+            this.getOnImplementCallback().run();
     }
 
     /**
@@ -225,25 +171,25 @@ public class Entity {
      * @param instance - Parent Network table instance
      * @return - SubTable instance
      */
-    public NetworkTable addToNetworkTable(NetworkTable instance) {
-        currentInstance = instance.getSubTable(getName());
-        return currentInstance;
+    public default NetworkTable addToNetworkTable(NetworkTable instance) {
+        setCurrentNetworkInstance(instance.getSubTable(getName()));
+        return getCurrentNetworkInstance();
     }
 
     /**
      * Gets the value from the Network Table and sets it to the objects
      * @return - SubTable instance
      */
-    public NetworkTable pullFromNetworkTable() {
-        return currentInstance;
+    public default NetworkTable pullFromNetworkTable() {
+        return getCurrentNetworkInstance();
     }
 
     /**
      * To be implemented but removes this Entity SubTable in the Network Tables
      * Child classes should extend this and add all XML values
      */
-    public NetworkTable removeFromNetworkTable() {
-        return currentInstance;
+    public default NetworkTable removeFromNetworkTable() {
+        return getCurrentNetworkInstance();
     }
 
     /**
@@ -252,37 +198,34 @@ public class Entity {
      * @param instance - Parent Network table instance
      * @return - SubTable instance
      */
-    protected NetworkTable addToNetworkTable(String name, NetworkTable instance) {
-        currentInstance = instance.getSubTable(name);
-        return currentInstance;
+    public default NetworkTable addToNetworkTable(String name, NetworkTable instance) {
+        setCurrentNetworkInstance(instance.getSubTable(name));
+        return getCurrentNetworkInstance();
     }
 
-    public NetworkTable getCurrentNetworkInstance() {
-        return currentInstance;
-    }
+    public NetworkTable getCurrentNetworkInstance();
+    public void setCurrentNetworkInstance(NetworkTable instance);
 
     /**
      * Returns the linked Element object
      * @return - Linked Element object
      */
-    protected Element getSavedElement() {
-        return savedElement;
-    }
+    Element getSavedElement();
 
     /**
      * Updates the linked Element's (if present) values to the stored one
      * Child class should extend this and update all XML values
      * @return - Returns the linked element
      */
-    public Element updateElement() {
-        if (savedElement == null || this.strName == null)
+    public default Element updateElement() {
+        if (getSavedElement() == null || this.getName() == null)
             return getSavedElement();
 
-        if(savedElement.hasAttribute(getName().toLowerCase()))
-            savedElement.setAttribute("name", getName());
-        else if (savedElement.getElementsByTagName("Name").getLength() > 0)
-            savedElement.getElementsByTagName("Name").item(0).setTextContent(getName());
+        if(getSavedElement().hasAttribute(getName().toLowerCase()))
+            getSavedElement().setAttribute("name", getName());
+        else if (getSavedElement().getElementsByTagName("Name").getLength() > 0)
+            getSavedElement().getElementsByTagName("Name").item(0).setTextContent(getName());
 
-        return savedElement;
+        return getSavedElement();
     }
 }

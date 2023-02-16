@@ -18,9 +18,10 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import frc.robot.functions.io.xmlreader.Entity;
 import frc.robot.functions.io.xmlreader.EntityGroup;
+import frc.robot.functions.io.xmlreader.EntityImpl;
 import org.w3c.dom.Element;
 
-public class Gyro extends Entity {
+public class Gyro extends EntityImpl {
 
     public enum GyroTypes {
         PIGEON ("PIGEON");
@@ -53,10 +54,10 @@ public class Gyro extends Entity {
     public Gyro(Element element) {
         super(element);
 
-        this.type = GyroTypes.valueOf(getOrDefault(element, "Type", "Pigeon"));
-        this.inverted = Boolean.parseBoolean(getOrDefault(element, "Inverted", "false"));
-        this.offset = Double.parseDouble(getOrDefault(element, "Offset", "0"));
-        this.id = Integer.parseInt(getOrDefault(element, "ID", "0"));
+        this.type = GyroTypes.valueOf(Entity.getOrDefault(element, "Type", "Pigeon"));
+        this.inverted = Boolean.parseBoolean(Entity.getOrDefault(element, "Inverted", "false"));
+        this.offset = Double.parseDouble(Entity.getOrDefault(element, "Offset", "0"));
+        this.id = Integer.parseInt(Entity.getOrDefault(element, "ID", "0"));
     }
 
     public GyroTypes getEncoderType() {
@@ -129,10 +130,10 @@ public class Gyro extends Entity {
     @Override
     public void constructTreeItemPrintout(StringBuilder builder, int depth) {
         super.constructTreeItemPrintout(builder, depth);
-        buildStringTabbedData(builder, depth, "ID", String.valueOf(id));
-        buildStringTabbedData(builder, depth, "Type", type.toString());
-        buildStringTabbedData(builder, depth, "Inverted", String.valueOf(inverted));
-        buildStringTabbedData(builder, depth, "Offset", String.valueOf(offset));
+        Entity.buildStringTabbedData(builder, depth, "ID", String.valueOf(id));
+        Entity.buildStringTabbedData(builder, depth, "Type", type.toString());
+        Entity.buildStringTabbedData(builder, depth, "Inverted", String.valueOf(inverted));
+        Entity.buildStringTabbedData(builder, depth, "Offset", String.valueOf(offset));
     }
 
     @Override

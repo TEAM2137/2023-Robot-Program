@@ -18,24 +18,29 @@ import edu.wpi.first.networktables.NetworkTable;
 import frc.robot.Robot;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.data.Binding;
-import frc.robot.functions.io.xmlreader.data.ControllerMapping;
+import frc.robot.functions.io.xmlreader.data.PID;
+import frc.robot.functions.io.xmlreader.data.mappings.CANifierMapping;
+import frc.robot.functions.io.xmlreader.data.mappings.ControllerMapping;
 import frc.robot.functions.io.xmlreader.data.Step;
+import frc.robot.functions.io.xmlreader.data.mappings.Mapping;
+import frc.robot.functions.io.xmlreader.objects.motor.FalconMotor;
+import frc.robot.functions.io.xmlreader.objects.motor.NeoMotor;
 import frc.robot.library.hardware.elevators.StringElevator;
 import frc.robot.library.units.Number;
 import frc.robot.functions.io.xmlreader.data.Threshold;
 import frc.robot.functions.io.xmlreader.objects.Camera;
 import frc.robot.functions.io.xmlreader.objects.Encoder;
 import frc.robot.functions.io.xmlreader.objects.Gyro;
-import frc.robot.functions.io.xmlreader.objects.Motor;
+import frc.robot.functions.io.xmlreader.objects.motor.Motor;
 import frc.robot.library.hardware.swerve.SwerveDrivetrain;
 import frc.robot.library.hardware.swerve.module.SwerveFALCONDriveModule;
 import frc.robot.library.hardware.swerve.module.SwerveNEODriveModule;
 import frc.robot.library.hardware.swerve.module.SwerveSimulationDriveModule;
-import frc.robot.library.units.*;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -46,7 +51,7 @@ import java.util.function.Consumer;
  *
  * Created By... Wyatt Ashley 1/19/2022
  */
-public class EntityGroup extends Entity {
+public class EntityGroup extends EntityImpl {
 
     private final String type; //Type of EntityGroup (Intake, Climber, etc.)
     private final ArrayList<Entity> childEntities = new ArrayList<>(); //Child devices
@@ -55,9 +60,9 @@ public class EntityGroup extends Entity {
     private String entityPath = "root";
 
     private FileLogger logger;
-    public static boolean autoClassCreationEnabled = true;
 
     public static HashMap<String, HashMap<String, Class<? extends EntityGroup>>> entityGroupClassMappings = new HashMap<>();
+    public static HashMap<String, HashMap<String, Class<? extends Entity>>> entityClassMappings = new HashMap<>();
 
     static {
         //Only single encapsulation is supported right now
@@ -78,67 +83,48 @@ public class EntityGroup extends Entity {
         HashMap<String, Class<? extends EntityGroup>> driveTrainImplements = new HashMap<>();
         driveTrainImplements.put("SWERVE", SwerveDrivetrain.class);
         entityGroupClassMappings.put("DRIVETRAIN", driveTrainImplements);
-    }
 
-    public enum EntityTypes {
-        //Actual Objects
-        USBCAMERA ("USBCAMERA", Camera.class, true),
-        ENCODER ("ENCODER", Encoder.class, true),
-        GYRO ("GYRO", Gyro.class, true),
-        MOTOR ("MOTOR", Motor.class, true),
+        //---------------------------------------------Entity Types---------------------------------------------------//
+        HashMap<String, Class<? extends Entity>> usbCameraImplements = new HashMap<>();
+        usbCameraImplements.put("DEFAULT", Camera.class);
+        entityClassMappings.put("USBCAMERA", usbCameraImplements);
 
-        //Data Types
-        THRESHOLD ("THRESHOLD", Threshold.class, false),
-        NUMBER ("NUMBER", Number.class, false),
-        PID ("PID", frc.robot.functions.io.xmlreader.data.PID.class, false),
-        MAP ("MAP", ControllerMapping.class, false),
-        STEP ("STEP", Step.class, false)
-        ;
+        HashMap<String, Class<? extends Entity>> encoderImplements = new HashMap<>();
+        encoderImplements.put("DEFAULT", Encoder.class);
+        entityClassMappings.put("ENCODER", encoderImplements);
 
-        String name = "";
-        Class<? extends Entity> enclosingClass = Entity.class;
-        boolean hardwareDevice = true;
+        HashMap<String, Class<? extends Entity>> gyroImplements = new HashMap<>();
+        gyroImplements.put("DEFAULT", Gyro.class);
+        entityClassMappings.put("GYRO", gyroImplements);
 
-        EntityTypes(String _name, Class<? extends Entity> object, boolean _hardwareDevice) {
-            name = _name;
-            enclosingClass = object;
-            hardwareDevice = _hardwareDevice;
-        }
+        HashMap<String, Class<? extends Entity>> motorImplements = new HashMap<>();
+        motorImplements.put("DEFAULT", Motor.class);
+        motorImplements.put("FALCON", FalconMotor.class);
+        motorImplements.put("NEO", NeoMotor.class);
+        entityClassMappings.put("MOTOR", motorImplements);
 
-        public Entity createEntity(Element element) {
-            try {
-                Entity returner = enclosingClass.getDeclaredConstructor(Element.class).newInstance(element);
-                returner.setHardwareDevice(hardwareDevice);
 
-                return returner;
-            } catch (NoSuchMethodException e) {
-                System.out.println("Could not find constructor for " + name + " Entity");
-                return null;
-            } catch (Exception e) {
-                System.out.println("Another exception occurred in the Entities constructor");
-                return null;
-            }
-        }
+        HashMap<String, Class<? extends Entity>> thresholdImplements = new HashMap<>();
+        thresholdImplements.put("DEFAULT", Threshold.class);
+        entityClassMappings.put("THRESHOLD", thresholdImplements);
 
-        public boolean isHardwareDevice() {
-            return hardwareDevice;
-        }
+        HashMap<String, Class<? extends Entity>> numberImplements = new HashMap<>();
+        numberImplements.put("DEFAULT", Number.class);
+        entityClassMappings.put("NUMBER", numberImplements);
 
-//        public static Entity createEntity(Element element, String name) {
-//            try {
-//                return EntityTypes.valueOf(name.toUpperCase()).createEntity(element);
-//            } catch (Exception e) {
-//                return null;
-//            }
-//        }
+        HashMap<String, Class<? extends Entity>> pidImplements = new HashMap<>();
+        pidImplements.put("DEFAULT", PID.class);
+        entityClassMappings.put("PID", pidImplements);
 
-        public static EntityTypes safeValueOf(String name) {
-            try {
-                return valueOf(name);
-            } catch (Exception e) {
-                return null;
-            }
-        }
+        HashMap<String, Class<? extends Entity>> mapImplements = new HashMap<>();
+        mapImplements.put("DEFAULT", ControllerMapping.class);
+        mapImplements.put("CONTROLLER", ControllerMapping.class);
+        mapImplements.put("CANIFIER", CANifierMapping.class);
+        entityClassMappings.put("MAP", mapImplements);
+
+        HashMap<String, Class<? extends Entity>> stepImplements = new HashMap<>();
+        stepImplements.put("DEFAULT", Step.class);
+        entityClassMappings.put("STEP", stepImplements);
     }
 
     public EntityGroup(String _name, String _type) {
@@ -152,9 +138,10 @@ public class EntityGroup extends Entity {
      * @param element - Portion of the XML File
      */
     public EntityGroup(Element element, EntityGroup parent, FileLogger fileLogger) {
-        super(element); //Supply super with info
-        logger = fileLogger;
+        super(element);
         type = element.getTagName(); //Record the Tag Name or the Type
+        logger = fileLogger;
+
         Robot.subSystemCallList.add(this);
 
         if(parent != null)
@@ -165,11 +152,20 @@ public class EntityGroup extends Entity {
 
     public Class<? extends EntityGroup> createEntityGroup(Element tmp) {
         if(tmp.hasAttribute("type"))
-            return entityGroupClassMappings.get(tmp.getTagName().toUpperCase()).get(tmp.getAttribute("type"));
+            return entityGroupClassMappings.get(tmp.getTagName().toUpperCase()).get(tmp.getAttribute("type").toUpperCase());
         else if (entityGroupClassMappings.containsKey(tmp.getTagName().toUpperCase()))
             return entityGroupClassMappings.get(tmp.getTagName().toUpperCase()).get("default".toUpperCase());
         else
             return EntityGroup.class;
+    }
+
+    public Class<? extends Entity> createEntity(Element tmp) {
+        if(tmp.hasAttribute("type"))
+            return entityClassMappings.get(tmp.getTagName().toUpperCase()).get(tmp.getAttribute("type").toUpperCase());
+        else if (entityClassMappings.containsKey(tmp.getTagName().toUpperCase()))
+            return entityClassMappings.get(tmp.getTagName().toUpperCase()).get("default".toUpperCase());
+        else
+            return Entity.class;
     }
 
     protected void findEntities(Node element, FileLogger fileLogger) {
@@ -180,32 +176,26 @@ public class EntityGroup extends Entity {
                 if(list.item(i).getNodeType() == Node.ELEMENT_NODE) {
                     Element tmp = (Element) list.item(i);
 
-                    EntityGroup.EntityTypes type = EntityGroup.EntityTypes.safeValueOf(tmp.getTagName().toUpperCase());
+                    if(entityClassMappings.containsKey(tmp.getTagName().toUpperCase())) {
+                        Class<? extends Entity> entityClass = createEntity(tmp);
 
-                    if(type != null) {
-                        Entity e = type.createEntity(tmp);
+                        try {
+                            Entity returner = entityClass.getDeclaredConstructor(Element.class).newInstance(tmp);
 
-                        if(e == null)
-                            continue;
-
-                        //fileLogger.rawWrite("\t".repeat(depth + 1) + tmp.getTagName() + " - " + e.getName() + "\n");
-
-//                        StringBuilder outputBuilder = new StringBuilder();
-//                        e.constructTreeItemPrintout(outputBuilder, depth + 1);
-//                        fileLogger.rawWrite(outputBuilder.toString() + "\n");
-
-
-                        childEntities.add(e);
-
-                    } else {
-                        //fileLogger.rawWrite("\n" + "\t".repeat(depth + 1) + tmp.getTagName() + " - " + getNodeOrAttribute(tmp, "name", null) + "\n");
-
-                        Class<? extends EntityGroup> entityGroupClass;
-                        if(autoClassCreationEnabled) {
-                            entityGroupClass = createEntityGroup(tmp);
-                        } else {
-                            entityGroupClass = EntityGroup.class;
+                            childEntities.add(returner);
+                        } catch (InvocationTargetException invocationTargetException) {
+                            invocationTargetException.printStackTrace();
+                            fileLogger.writeLine(invocationTargetException.getTargetException().getMessage());
+                        } catch (NoSuchMethodException e) {
+                            fileLogger.writeLine("Could not find constructor for " + tmp.getTagName() + " device");
+                        } catch (Exception e) {
+                            fileLogger.writeLine("An exception occurred in the Entity's constructor");
+                            fileLogger.writeLine(e.toString());
+                            e.printStackTrace();
+                            fileLogger.writeLine("Proceeding with out...");
                         }
+                    } else {
+                        Class<? extends EntityGroup> entityGroupClass = createEntityGroup(tmp);
 
                         try {
                             if(entityGroupClass == null) {
@@ -223,8 +213,6 @@ public class EntityGroup extends Entity {
                             e.printStackTrace();
                             fileLogger.writeLine("Proceeding with out...");
                         }
-
-//                        tmpSubSystem.findEntities(tmp, depth + 1, printProcess);
                     }
                 }
             }
@@ -367,10 +355,7 @@ public class EntityGroup extends Entity {
     @Override
     public NetworkTable addToNetworkTable(NetworkTable instance) {
         NetworkTable subInstance;
-        if(getName().equalsIgnoreCase("Default"))
-            subInstance = super.addToNetworkTable(getGroupType(), instance);
-        else
-            subInstance = super.addToNetworkTable(instance);
+        subInstance = instance.getSubTable(getName());
 
         childEntities.forEach((b) -> b.addToNetworkTable(subInstance));
         childSubsystem.forEach((a, b) -> b.addToNetworkTable(subInstance));
@@ -388,9 +373,19 @@ public class EntityGroup extends Entity {
         return subInstance;
     }
 
+    /**
+     * Returns the linked Element object
+     *
+     * @return - Linked Element object
+     */
+    @Override
+    public Element getSavedElement() {
+        return null;
+    }
+
     @Override
     public NetworkTable pullFromNetworkTable() {
-        NetworkTable subInstance = super.removeFromNetworkTable();
+        NetworkTable subInstance = super.pullFromNetworkTable();
 
         childEntities.forEach(Entity::pullFromNetworkTable);
         childSubsystem.forEach((a, b) -> b.pullFromNetworkTable());
@@ -399,36 +394,10 @@ public class EntityGroup extends Entity {
     }
 
     @Override
-    public boolean onDestroy() throws Exception {
-        var ref = new Object() {
-            boolean flag = true;
-        };
-
-        childEntities.forEach((b) ->  {
-            try {
-                ref.flag = ref.flag && b.onDestroy();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
-        childSubsystem.forEach((a, b) -> {
-            try {
-                ref.flag = ref.flag && b.onDestroy();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
-
-        ref.flag = ref.flag && super.onDestroy();
-
-        return ref.flag;
-    }
-
-    @Override
     public Element updateElement() {
         super.updateElement();
 
-        childEntities.forEach((b) -> b.updateElement());
+        childEntities.forEach(Entity::updateElement);
         childSubsystem.forEach((a, b) -> b.updateElement());
 
         return getSavedElement();
@@ -441,14 +410,6 @@ public class EntityGroup extends Entity {
         childEntities.forEach((b) -> b.OnImplement());
         childSubsystem.forEach((a, b) -> b.OnImplement());
     }
-
-//    @Override
-//    public String getName() {
-//        if(super.getName().equalsIgnoreCase("default"))
-//            return type;
-//        else
-//            return super.getName();
-//    }
 
     public String getEntityPath() {
         return entityPath + "/";
