@@ -46,8 +46,8 @@ public class PurePursuitGenerator {
         lookAheadDistance = _lookAheadDistance;
     }
 
-    public Map.Entry<Transform2d, Map.Entry<Translation2d, Translation2d>> calculateGoalPose(Translation2d currentPosition) {
-        Map.Entry<Translation2d, Map.Entry<Translation2d, Translation2d>> lookAheadInfo = getLookaheadPoint(currentPosition.getX(), currentPosition.getY(), lookAheadDistance.getValue(FOOT));
+    public Map.Entry<Transform2d, Map.Entry<Integer, Integer>> calculateGoalPose(Translation2d currentPosition) {
+        Map.Entry<Translation2d, Map.Entry<Integer, Integer>> lookAheadInfo = getLookaheadPoint(currentPosition.getX(), currentPosition.getY(), lookAheadDistance.getValue(FOOT));
 
 //        if (lookAhead == null) {
 //            for(int i = 1; i < pointList.size(); i++) {
@@ -102,9 +102,9 @@ public class PurePursuitGenerator {
      * @return A float[] coordinate pair if the lookahead point exists, or null.
      * @see <a href="http://mathworld.wolfram.com/Circle-LineIntersection.html">Circle-Line Intersection</a>
      */
-    private Map.Entry<Translation2d, Map.Entry<Translation2d, Translation2d>> getLookaheadPoint(double x, double y, double r) {
+    private Map.Entry<Translation2d, Map.Entry<Integer, Integer>> getLookaheadPoint(double x, double y, double r) {
         Translation2d lookahead = null;
-        Map.Entry<Translation2d, Translation2d> startAndEnd = null;
+        Map.Entry<Integer, Integer> startAndEnd = null;
 
         // iterate through all pairs of points
         for (int i = 0; i < pointList.size() - 1; i++) {
@@ -146,7 +146,7 @@ public class PurePursuitGenerator {
             // select the first one if it's valid
             if (validIntersection1) {
                 lookahead = new Translation2d(x1 + x, y1 + y);
-                startAndEnd = Map.entry(segmentStart, segmentEnd);
+                startAndEnd = Map.entry(i, i + 1);
             }
 
             // select the second one if it's valid and either lookahead is none,
@@ -154,7 +154,7 @@ public class PurePursuitGenerator {
             if (validIntersection2) {
                 if (lookahead == null || Math.abs(x1 - p2[0]) > Math.abs(x2 - p2[0]) || Math.abs(y1 - p2[1]) > Math.abs(y2 - p2[1])) {
                     lookahead = new Translation2d(x2 + x, y2 + y);
-                    startAndEnd = Map.entry(segmentStart, segmentEnd);
+                    startAndEnd = Map.entry(i, i + 1);
                 }
             }
         }
@@ -168,7 +168,7 @@ public class PurePursuitGenerator {
 
             // if we are closer than lookahead distance to the end, set it as the lookahead
             if (Math.sqrt((endX - x) * (endX - x) + (endY - y) * (endY - y)) <= r) {
-                return Map.entry(new Translation2d(endX, endY), Map.entry(lastPoint, lastPoint));
+                return Map.entry(new Translation2d(endX, endY), Map.entry(pointList.size() - 1, pointList.size() - 1));
             }
         }
 

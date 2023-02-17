@@ -27,6 +27,7 @@ import frc.robot.functions.io.xmlreader.XMLSettingReader;
 import frc.robot.functions.io.xmlreader.data.Step;
 import frc.robot.functions.io.xmlreader.XMLStepReader;
 import frc.robot.functions.splines.QuinticSpline;
+import frc.robot.functions.splines.TrapezoidalVelocity;
 import frc.robot.functions.splines.VelocityGenerator;
 import frc.robot.library.*;
 import frc.robot.library.Constants.StepState;
@@ -49,9 +50,11 @@ import java.util.Map;
 
 import static frc.robot.library.units.AngleUnits.Angle.AngleUnits.RADIAN;
 import static frc.robot.library.units.TranslationalUnits.Acceleration.AccelerationUnits.FEET_PER_SECOND2;
+import static frc.robot.library.units.TranslationalUnits.Acceleration.AccelerationUnits.METER_PER_SECOND2;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
 import static frc.robot.library.units.Time.TimeUnits.SECONDS;
 import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.FEET_PER_SECOND;
+import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.METER_PER_SECOND;
 
 
 @SuppressWarnings(value="FieldCanBeLocal")
@@ -201,11 +204,11 @@ public class Autonomous implements OpMode {
                 QuinticSpline spline = new QuinticSpline(poseList, 0.6);
                 mDrivePoseWithCurvatureList = spline.getSplinePoints();
 
+                velocityGenerator = new VelocityGenerator(mDrivePoseWithCurvatureList, new Velocity(4.06, METER_PER_SECOND), new Acceleration(4, METER_PER_SECOND2), 1);
+                mDrivePoseVelocities = velocityGenerator.getSpeeds();
+
                 mPurePursuitLookaheadDistance = new Distance(((Number) Robot.settingsEntityGroup.getEntity("PurePursuitLookahead")).getValue(), FOOT);
                 mDrivePurePursuitGenerator = new PurePursuitGenerator(mPurePursuitLookaheadDistance, mDrivePoseWithCurvatureList);
-
-                velocityGenerator = new VelocityGenerator(mDrivePoseWithCurvatureList, new Velocity(16.5, FEET_PER_SECOND), new Acceleration(4, FEET_PER_SECOND2), 1);
-                mDrivePoseVelocities = velocityGenerator.getSpeeds();
 
                 mDriveStepState = StepState.STATE_RUNNING;
                 break;
@@ -213,7 +216,7 @@ public class Autonomous implements OpMode {
                 SwerveDrivetrain drivetrain = mDrivetrain;
                 frc.robot.library.units.UnitContainers.Pose2d<Distance> currentPosition = drivetrain.getCurrentOdometryPosition();
 
-                Map.Entry<Transform2d, Map.Entry<Translation2d, Translation2d>> results = mDrivePurePursuitGenerator.calculateGoalPose(new Translation2d(currentPosition.getX().getValue(FOOT), currentPosition.getY().getValue(FOOT)));
+                Map.Entry<Transform2d, Map.Entry<Integer, Integer>> results = mDrivePurePursuitGenerator.calculateGoalPose(new Translation2d(currentPosition.getX().getValue(FOOT), currentPosition.getY().getValue(FOOT)));
 
                 Vector2d<Distance> goalVector = new Vector2d<Distance>(new Distance(results.getKey().getX(), FOOT), new Distance(results.getKey().getY(), FOOT));
                 Vector2d<Distance> normalizedVector = goalVector.normalize();

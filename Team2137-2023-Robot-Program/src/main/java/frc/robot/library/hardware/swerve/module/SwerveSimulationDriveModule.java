@@ -19,7 +19,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
-import frc.robot.library.hardware.FalconSimulation;
+import frc.robot.library.hardware.DriveTrainSimulation;
 import frc.robot.library.units.AngleUnits.AngularAcceleration;
 import frc.robot.library.units.Time;
 import frc.robot.library.units.TranslationalUnits.Acceleration;
@@ -86,19 +86,18 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
 
     @Override
     public void periodic() {
-        if(Math.abs(mDriveRawGoal) > 0.1 && mCurrentDriveRPM < 6500.0) {
-            mDriveAccelerationCurrent = FalconSimulation.getAcceleration(Math.abs(mCurrentDriveRPM), Math.abs(getDriveMotorVoltage()), 0.0508 / 2, 60.0/4).times(Math.signum(mDriveRawGoal));
-        } else if(Math.abs(mCurrentDriveRPM) > 10){
-            mDriveAccelerationCurrent = new Acceleration( 3 * -Math.signum(mDriveRawGoal), METER_PER_SECOND2);
-        } else {
-            mDriveAccelerationCurrent = new Acceleration(0, METER_PER_SECOND2);
-        }
+//        if(Math.abs(mDriveRawGoal) > 0.1 && mCurrentDriveRPM < 6500.0) {
+//            mDriveAccelerationCurrent = DriveTrainSimulation.getAcceleration(Math.abs(mCurrentDriveRPM), Math.abs(getDriveMotorVoltage()), 0.0508 / 2, 60.0/4).times(Math.signum(mDriveRawGoal));
+//        } else if(Math.abs(mCurrentDriveRPM) > 10){
+//            mDriveAccelerationCurrent = new Acceleration( 3 * -Math.signum(mDriveRawGoal), METER_PER_SECOND2);
+//        } else {
+//            mDriveAccelerationCurrent = new Acceleration(0, METER_PER_SECOND2);
+//        }
+//
+//        Velocity deltaV = mDriveAccelerationCurrent.times(new Time(System.currentTimeMillis() - lastLoopTime, MILLISECONDS)).times(8.75);
 
-        Velocity deltaV = mDriveAccelerationCurrent.times(new Time(System.currentTimeMillis() - lastLoopTime, MILLISECONDS)).times(8.75);
-
-        double deltaRPM = (deltaV.getValue(METER_PER_SECOND) / (Math.PI * 2 * 0.0508)) * 60;
-        mCurrentDriveRPM += deltaRPM;
-//        mCurrentDriveRPM = Math.max(mCurrentDriveRPM, 0.0);
+//        double deltaRPM = (deltaV.getValue(METER_PER_SECOND) / (Math.PI * 2 * 0.0508)) * 60;
+//        mCurrentDriveRPM += deltaRPM;
 
         lastLoopTime = System.currentTimeMillis();
 

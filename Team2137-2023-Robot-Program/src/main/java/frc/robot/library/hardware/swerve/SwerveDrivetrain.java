@@ -112,8 +112,6 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
             SwerveModuleState[] states = calculateSwerveMotorSpeedsFieldCentric(step.getXDistance(), -step.getYDistance(), step.getParm(1));
 
             this.setSwerveModuleStates(states);
-
-//            step.changeStepState(Constants.StepState.STATE_FINISH);
         }
     }
 
@@ -151,6 +149,7 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         return calculateSwerveMotorSpeeds(Constants.convertFrame(getAngle(), Constants.createFrameMatrix(xMag, yMag, rMag)), 1, 1, Constants.DriveControlType.RAW);
     }
 
+    @Deprecated
     public SwerveModuleState[] calculateSwerveMotorSpeedsFieldCentric(double xMag, double yMag, double rMag, double trackWidth, double wheelBase, Constants.DriveControlType controlType) {
         return calculateSwerveMotorSpeeds(Constants.convertFrame(getAngle(), Constants.createFrameMatrix(xMag, yMag, rMag)), trackWidth, wheelBase, controlType);
     }
@@ -167,6 +166,7 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
      * [Right Front Speed]  [Right Front Angle]
      * [Right Back Speed]   [Right Back Angle]
      */
+    @Deprecated
     public SwerveModuleState[] calculateSwerveMotorSpeeds(SimpleMatrix directions, double trackWidth, double wheelBase, Constants.DriveControlType controlType) {
         return calculateSwerveMotorSpeeds(directions.get(0, 0), directions.get(1, 0), directions.get(2, 0), trackWidth, wheelBase, controlType);
     }
@@ -180,6 +180,7 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
      * tD - The rightjoy stick or turning button -1 ~ 1
      * @return An Array of Points with x being drive speed and y wheel angle in degree
      */
+    @Deprecated
     public SwerveModuleState[] calculateSwerveMotorSpeeds(double xMag, double yMag, double rMag, double axelDistance, double wheelBase, Constants.DriveControlType controlType) {
         //double r = Math.sqrt((axelDistance * axelDistance) + (wheelBase * wheelBase)) / 2.0; //Distance between adjacent wheel
 
@@ -285,14 +286,7 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
     @Override
     public Angle getAngle() {
         double raw = pigeonIMU.getYaw() % 360;
-
-//        if(raw >= 180)
-//            raw -= 360;
-//        else if(raw < -180)
-//            raw += 360;
-
         return new Angle(raw, DEGREE);
-//        return Rotation2d.fromDegrees(0);
     }
 
 
@@ -317,33 +311,4 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
     public CartesianValue<Rotation2d> getGyroReading() {
         return new CartesianValue<>(Rotation2d.fromRadians(pigeonIMU.getPitch()), Rotation2d.fromRadians(pigeonIMU.getRoll()), Rotation2d.fromRadians(pigeonIMU.getYaw()));
     }
-
-//    public void logModuleStates() {
-//        logModuleStates(new SwerveModuleState[] {leftFrontModule.getSwerveModuleState(), leftBackModule.getSwerveModuleState(), rightFrontModule.getSwerveModuleState(), rightBackModule.getSwerveModuleState()});
-//    }
-//
-//    public void logModuleStates(SwerveModuleState[] states) {
-//        logModuleStates(states, new Transform2d(currentRobotPosition, getAngle()));
-//    }
-//
-//    public void logModuleStates(SwerveModuleState[] states, Transform2d robot) {
-//        StringBuilder builder = new StringBuilder();
-//        DecimalFormat formater = new DecimalFormat();
-//        formater.setMaximumFractionDigits(4);
-//
-//        builder.append("Q~SWDSE~ ");
-//        builder.append(formater.format(leftFrontModule.getModuleAngle().getRadians())).append(" ");
-//        builder.append(formater.format(leftFrontModule.getRawDrivePower())).append(" ");
-//        builder.append(formater.format(leftBackModule.getModuleAngle().getRadians())).append(" ");
-//        builder.append(formater.format(leftBackModule.getRawDrivePower())).append(" ");
-//        builder.append(formater.format(rightFrontModule.getModuleAngle().getRadians())).append(" ");
-//        builder.append(formater.format(rightFrontModule.getRawDrivePower())).append(" ");
-//        builder.append(formater.format(rightBackModule.getModuleAngle().getRadians())).append(" ");
-//        builder.append(formater.format(rightBackModule.getRawDrivePower())).append(" ");
-//        builder.append(formater.format(robot.getX())).append(" ");
-//        builder.append(formater.format(robot.getY())).append(" ");
-//        builder.append(formater.format(robot.getRotation().getRadians())).append(" ");
-//
-//        logger.writeLine(builder.toString());
-//    }
 }

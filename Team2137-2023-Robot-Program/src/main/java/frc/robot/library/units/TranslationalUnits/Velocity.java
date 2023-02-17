@@ -107,6 +107,9 @@ public class Velocity implements TranslationUnit<Velocity, Velocity.VelocityUnit
     public AngularVelocity divide(Distance dia) {
         return new AngularVelocity(value / (dia.getValue(METER) / 2), RADIAN_PER_SECOND);
     }
+    public Time divide(Acceleration acceleration) {
+        return new Time(value / acceleration.getValue(Acceleration.AccelerationUnits.METER_PER_SECOND2), SECONDS);
+    }
 
     @Override
     public Velocity add(double scalar) {

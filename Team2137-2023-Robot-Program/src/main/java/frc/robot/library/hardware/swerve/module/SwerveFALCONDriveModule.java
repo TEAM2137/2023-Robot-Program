@@ -25,8 +25,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.robot.Robot;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
-import frc.robot.functions.io.xmlreader.XMLSettingReader;
-import frc.robot.library.hardware.FalconSimulation;
+import frc.robot.library.hardware.DriveTrainSimulation;
 import frc.robot.library.units.AngleUnits.AngularAcceleration;
 import frc.robot.library.units.TranslationalUnits.Acceleration;
 import frc.robot.library.units.TranslationalUnits.Distance;
@@ -227,7 +226,7 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
 
     @Override
     public SwerveModuleState getSwerveModuleAccelerationState(double voltage) {
-        Acceleration accel = FalconSimulation.getAcceleration(getCurrentDriveRPM(), voltage, dblWheelDiameter.getValue(METER) / 2, dblRobotMass.getValue() / 4.0);
+        Acceleration accel = DriveTrainSimulation.getAcceleration(getCurrentDriveRPM(), voltage, dblWheelDiameter.getValue(METER) / 2, dblRobotMass.getValue() / 4.0);
 
         return new SwerveModuleState(accel, new AngularAcceleration(0, RADIAN_PER_SECOND2), mSwerveDrivePosition);
     }

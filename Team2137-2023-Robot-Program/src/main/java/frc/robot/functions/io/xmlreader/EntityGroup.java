@@ -25,6 +25,7 @@ import frc.robot.functions.io.xmlreader.data.Step;
 import frc.robot.functions.io.xmlreader.data.mappings.Mapping;
 import frc.robot.functions.io.xmlreader.objects.motor.FalconMotor;
 import frc.robot.functions.io.xmlreader.objects.motor.NeoMotor;
+import frc.robot.library.hardware.LazySusan;
 import frc.robot.library.hardware.elevators.StringElevator;
 import frc.robot.library.units.Number;
 import frc.robot.functions.io.xmlreader.data.Threshold;
@@ -76,6 +77,10 @@ public class EntityGroup extends EntityImpl {
         elevatorImplements.put("STRING", StringElevator.class);
         entityGroupClassMappings.put("ELEVATOR", elevatorImplements);
 
+        HashMap<String, Class<? extends EntityGroup>> lazySusanImplements = new HashMap<>();
+        lazySusanImplements.put("DEFAULT", LazySusan.class);
+        entityGroupClassMappings.put("LazySusan", lazySusanImplements);
+
         HashMap<String, Class<? extends EntityGroup>> bindingGroup = new HashMap<>();
         bindingGroup.put("DEFAULT", Binding.class);
         entityGroupClassMappings.put("BINDING", bindingGroup);
@@ -102,7 +107,6 @@ public class EntityGroup extends EntityImpl {
         motorImplements.put("FALCON", FalconMotor.class);
         motorImplements.put("NEO", NeoMotor.class);
         entityClassMappings.put("MOTOR", motorImplements);
-
 
         HashMap<String, Class<? extends Entity>> thresholdImplements = new HashMap<>();
         thresholdImplements.put("DEFAULT", Threshold.class);

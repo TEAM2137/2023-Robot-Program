@@ -92,6 +92,7 @@ public class Distance extends EntityImpl implements TranslationUnit<Distance, fr
         return new Distance(getValue(METER) / other.getValue(METER), METER);
     }
 
+
     @Override
     public Distance add(double scalar) {
         return new Distance(getValue(METER) + scalar, METER);
