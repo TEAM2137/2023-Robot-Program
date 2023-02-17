@@ -17,7 +17,7 @@ import java.util.Map;
 public class Binding extends EntityGroup {
 
     private final HashMap<String, Mapping> mappings = new HashMap<String, Mapping>();
-    private final ArrayList<Mapping> buttons = new ArrayList<>();
+    private final ArrayList<Mapping> booleanEntries = new ArrayList<>();
     private final ArrayList<Step> steps = new ArrayList<>();
 
     /**
@@ -49,7 +49,7 @@ public class Binding extends EntityGroup {
         boolean flag = true;
         for(Mapping entry : mappings.values()) {
             if(entry.isBooleanValue()) {
-                buttons.add(entry);
+                booleanEntries.add(entry);
             } else if(flag) {
                 Robot.currentActiveSteps.addAll(steps);
                 flag = false;
@@ -59,10 +59,7 @@ public class Binding extends EntityGroup {
 
     @Override
     public void periodic() {
-
-//        Robot.currentActiveSteps.addAll(steps);
-
-        for (Mapping button : buttons) {
+        for (Mapping button : booleanEntries) {
             if(button.getBooleanValue()) {
                 for (Step step : steps)
                     step.changeStepState(Constants.StepState.STATE_INIT);

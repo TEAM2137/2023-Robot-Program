@@ -26,6 +26,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import javax.script.ScriptException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,7 +57,7 @@ public class Step extends EntityImpl {
     private class ValueEntry {
         public String value;
         public boolean genericType;
-        public Mapping mapping;
+        public Mapping mappings;
 
         public ValueEntry(String _value) {
             value = _value;
@@ -89,7 +91,8 @@ public class Step extends EntityImpl {
             if (genericElement.getNodeType() == Node.TEXT_NODE) {
                 this.values.put(tmp.getNodeName().toUpperCase(), new ValueEntry(genericElement.getTextContent()));
             } else if (genericElement.getNodeType() == Node.ELEMENT_NODE){
-                this.values.put(tmp.getNodeName().toUpperCase(), new ValueEntry(genericElement.getNodeName(), true));
+//                this.values.put(tmp.getNodeName().toUpperCase(), new ValueEntry(genericElement.getNodeName(), true));
+                this.values.put(tmp.getNodeName().toUpperCase(), new ValueEntry(genericElement.getTextContent(), true));
             }
         }
     }
@@ -115,10 +118,10 @@ public class Step extends EntityImpl {
         super("Step");
     }
 
-    public void registerMappings(HashMap<String, Mapping> mappings) {
+    public void registerMappings(HashMap<String, Mapping> suppliedMappings) {
         values.forEach((a, b) -> {
-            if(b.genericType && mappings.containsKey(b.value)) {
-                b.mapping = mappings.get(b.value);
+            if(b.genericType && suppliedMappings.containsKey(b.value)) {
+                b.mappings = suppliedMappings.get(b.value);
             }
         });
     }
@@ -136,7 +139,17 @@ public class Step extends EntityImpl {
             ValueEntry entry = values.get(key);
 
             if(entry.genericType) {
-                return String.valueOf(entry.mapping.getValue());
+//                String workingString = entry.value;
+//                for(Mapping map : entry.mappings) {
+//                    workingString = workingString.replace("<" + map.getPseudoName() + "/>", String.valueOf(map.getValue()));
+//                }
+                return String.valueOf(entry.mappings.getValue());
+//                try {
+//                    return mJavaScriptEngine.eval(workingString).toString();
+//                } catch (ScriptException e) {
+//                    e.printStackTrace();
+//                    return "0";
+//                }
             } else {
                 return entry.value;
             }

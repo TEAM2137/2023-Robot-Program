@@ -21,6 +21,8 @@ import frc.robot.functions.io.xmlreader.data.Step;
 import frc.robot.library.Constants;
 import frc.robot.library.OpMode;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 import java.io.Console;
 import java.util.ArrayList;
 import java.util.EnumSet;

@@ -41,8 +41,8 @@ import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.
 //@SuppressWarnings("All")
 public class SwerveNEODriveModule extends EntityGroup implements SwerveModule {
 
-    private NeoMotor mDriveMotor;
-    private NeoMotor mTurnMotor;
+    private final NeoMotor mDriveMotor;
+    private final NeoMotor mTurnMotor;
 
     private static final int intDriveVelocityPIDSlotID = 0;
     private static final int intDriveDistancePIDSlotID = 1;

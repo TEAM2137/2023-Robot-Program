@@ -185,10 +185,10 @@ public class SwerveModuleState {
                 rawPowerValue = -rawPowerValue;
                 break;
             case DISTANCE:
-                distance2d = (Distance) distance2d.times(-1.0);
+                distance2d = distance2d.times(-1.0);
                 break;
             case VELOCITY:
-                speed2d = (Velocity) speed2d.times(-1.0);
+                speed2d = speed2d.times(-1.0);
                 break;
         }
     }

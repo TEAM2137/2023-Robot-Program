@@ -22,23 +22,23 @@ import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.
 public class NeoMotor extends CANSparkMax implements Entity, SimpleMotorControl {
 
     private NetworkTable savedNetworkTableInstance;
-    private org.w3c.dom.Element savedElement;
-    private String name;
+    private final org.w3c.dom.Element savedElement;
+    private final String name;
     private Runnable onImplement;
 
     public static final int NUMBEROFPIDSLOTS = 2;
 
     private int id = 0;
-    private Motor.MotorTypes type = Motor.MotorTypes.NEO;
+    private final Motor.MotorTypes type = Motor.MotorTypes.NEO;
     private boolean inverted = false;
     private int currentLimit = 0;
     private double gearRatio = 0;
     private double rampRate = 0;
-    private PID[] pidValues = new PID[NUMBEROFPIDSLOTS];
+    private final PID[] pidValues = new PID[NUMBEROFPIDSLOTS];
     private IdleMode idleMode = IdleMode.kBrake;
 
-    private RelativeEncoder relativeEncoder;
-    private SparkMaxPIDController pidController;
+    private final RelativeEncoder relativeEncoder;
+    private final SparkMaxPIDController pidController;
 
     private Distance distancePerRevolution;
 

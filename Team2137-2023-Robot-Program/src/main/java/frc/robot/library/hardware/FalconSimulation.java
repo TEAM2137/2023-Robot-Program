@@ -37,30 +37,30 @@ public class FalconSimulation {
     }
 
 
-    private double mCurrentRPM = 0;
-    private boolean mDirectionForward = true;
+    private final double mCurrentRPM = 0;
+    private final boolean mDirectionForward = true;
     private boolean mMotorEnabled = true;
-    private boolean mStopping = false;
+    private final boolean mStopping = false;
     private boolean mSlip = false;
 
     //Current Variables
     private double mVoltage = 0;
     private double mVelocity = 0;
     private double mDistance = 0;
-    private double mRestingVoltage = 0;
+    private final double mRestingVoltage = 0;
 
     private long mLastRunTime = 0;
 
     //Const Values
-    private double mWheelRadius = 0;
-    private double mMaxCurrent = 0;
-    private double mMotorRatio = 0;
-    private double mRobotMass = 60;
-    private double mMaxVelocityChange = 0;
-    private double mResistance = 0;
-    private double mCoefficientOfStaticFriction = 0;
-    private double mCoefficientOfDynamicFriction = 0;
-    private String mStopMethod = "Brake";
+    private final double mWheelRadius = 0;
+    private final double mMaxCurrent = 0;
+    private final double mMotorRatio = 0;
+    private final double mRobotMass = 60;
+    private final double mMaxVelocityChange = 0;
+    private final double mResistance = 0;
+    private final double mCoefficientOfStaticFriction = 0;
+    private final double mCoefficientOfDynamicFriction = 0;
+    private final String mStopMethod = "Brake";
 
     public FalconSimulation() {
 

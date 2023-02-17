@@ -15,6 +15,10 @@ public class EntityImpl implements Entity {
     private String name;
     private Runnable onImplement;
 
+    public EntityImpl() {
+
+    }
+
     public EntityImpl(String _name) {
         name = _name;
     }

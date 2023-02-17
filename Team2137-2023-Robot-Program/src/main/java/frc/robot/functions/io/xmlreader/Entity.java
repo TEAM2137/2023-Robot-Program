@@ -73,7 +73,7 @@ public interface Entity {
      * @param defaultReturn - Default string value to return if it does not exist
      * @return - Returns String value from XML file or on fail the defaultReturn value
      */
-    public static String getOrDefault(Element element, String name, String defaultReturn) {
+    static String getOrDefault(Element element, String name, String defaultReturn) {
         NodeList childNodes = element.getChildNodes();
         for(int i = 0; i < childNodes.getLength(); i++) {
             Node a = childNodes.item(i);
@@ -97,7 +97,7 @@ public interface Entity {
      * @param defaultReturn - Default string value to return if it does not exist
      * @return - Returns String value from XML file or on fail the defaultReturn value
      */
-    public default String getAttributeOrDefault(Element element, String name, String defaultReturn) {
+    default String getAttributeOrDefault(Element element, String name, String defaultReturn) {
         String value = element.getAttribute(name);
         if(value.equals(""))
             return defaultReturn;
@@ -112,7 +112,7 @@ public interface Entity {
      * @param defaultReturn - Default string value to return if it does not exist
      * @return - Returns String value from XML file or on fail the defaultReturn value
      */
-    public default String getNodeOrAttribute(Element element, String name, String defaultReturn) {
+    default String getNodeOrAttribute(Element element, String name, String defaultReturn) {
         String capitalizedFirstLetter = String.valueOf(name.charAt(0)).toUpperCase() + name.substring(1).toLowerCase();
 
         String nodeResult = getOrDefault(element, capitalizedFirstLetter, null);
@@ -130,7 +130,7 @@ public interface Entity {
      * Gets the set name of the Entity
      * @return - If no name is present return "Default"
      */
-    public String getName();
+    String getName();
 
     /**
      * Appends the Entity values into a {@see StringBuilder} and is meant to be Overwritten by Child classes in order
@@ -138,7 +138,7 @@ public interface Entity {
      * @param builder - StringBuilder to append values to
      * @param depth - Current depth (amount of tabs to add)
      */
-    public default void constructTreeItemPrintout(StringBuilder builder, int depth) {
+    default void constructTreeItemPrintout(StringBuilder builder, int depth) {
         builder.append("\n");
         buildStringTabbedData(builder, Math.max(0, depth - 1), "Name", getName());
     }
@@ -150,7 +150,7 @@ public interface Entity {
      * @param title - Title of the value
      * @param message - Value or message about value
      */
-    public static void buildStringTabbedData(StringBuilder builder, int number, String title, String message) {
+    static void buildStringTabbedData(StringBuilder builder, int number, String title, String message) {
         builder.append("\t".repeat(number));
         builder.append(title);
         builder.append(": ");
@@ -158,10 +158,10 @@ public interface Entity {
         builder.append("\n");
     }
 
-    public void setOnImplementCallback(Runnable run);
-    public Runnable getOnImplementCallback();
+    void setOnImplementCallback(Runnable run);
+    Runnable getOnImplementCallback();
 
-    public default void OnImplement() {
+    default void OnImplement() {
         if(getOnImplementCallback() != null)
             this.getOnImplementCallback().run();
     }
@@ -171,7 +171,7 @@ public interface Entity {
      * @param instance - Parent Network table instance
      * @return - SubTable instance
      */
-    public default NetworkTable addToNetworkTable(NetworkTable instance) {
+    default NetworkTable addToNetworkTable(NetworkTable instance) {
         setCurrentNetworkInstance(instance.getSubTable(getName()));
         return getCurrentNetworkInstance();
     }
@@ -180,7 +180,7 @@ public interface Entity {
      * Gets the value from the Network Table and sets it to the objects
      * @return - SubTable instance
      */
-    public default NetworkTable pullFromNetworkTable() {
+    default NetworkTable pullFromNetworkTable() {
         return getCurrentNetworkInstance();
     }
 
@@ -188,7 +188,7 @@ public interface Entity {
      * To be implemented but removes this Entity SubTable in the Network Tables
      * Child classes should extend this and add all XML values
      */
-    public default NetworkTable removeFromNetworkTable() {
+    default NetworkTable removeFromNetworkTable() {
         return getCurrentNetworkInstance();
     }
 
@@ -198,13 +198,13 @@ public interface Entity {
      * @param instance - Parent Network table instance
      * @return - SubTable instance
      */
-    public default NetworkTable addToNetworkTable(String name, NetworkTable instance) {
+    default NetworkTable addToNetworkTable(String name, NetworkTable instance) {
         setCurrentNetworkInstance(instance.getSubTable(name));
         return getCurrentNetworkInstance();
     }
 
-    public NetworkTable getCurrentNetworkInstance();
-    public void setCurrentNetworkInstance(NetworkTable instance);
+    NetworkTable getCurrentNetworkInstance();
+    void setCurrentNetworkInstance(NetworkTable instance);
 
     /**
      * Returns the linked Element object
@@ -217,7 +217,7 @@ public interface Entity {
      * Child class should extend this and update all XML values
      * @return - Returns the linked element
      */
-    public default Element updateElement() {
+    default Element updateElement() {
         if (getSavedElement() == null || this.getName() == null)
             return getSavedElement();
 

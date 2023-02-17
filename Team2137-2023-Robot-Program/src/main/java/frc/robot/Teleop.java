@@ -70,6 +70,8 @@ public class Teleop implements OpMode {
                 mKinematic = new SwerveKinematics<>(new Distance(1, INCH), new Distance(1, INCH));
                 break;
         }
+
+        Robot.currentActiveSteps.clear();
     }
 
     @Override

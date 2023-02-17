@@ -17,6 +17,7 @@ package frc.robot.library.hardware.swerve;
 import com.ctre.phoenix.sensors.PigeonIMU;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Robot;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.data.Step;
@@ -53,33 +54,51 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
     public SwerveModule rightFrontModule;
     public SwerveModule rightBackModule;
 
-    public SwerveKinematics<Number> swerveKinematics;
+    private Distance robotLength;
+    private Distance robotWidth;
 
+    public SwerveKinematics<Number> swerveKinematics;
     private DeadWheelActiveTracking mDeadWheelActiveTracking;
 
     public Motor.MotorTypes driveTrainType;
 
     private final FileLogger logger;
 
-    private PigeonIMU pigeonIMU;
+    private final PigeonIMU pigeonIMU;
 
     public SwerveDrivetrain(Element element, EntityGroup parent, FileLogger fileLogger) {
         super(element, parent, fileLogger);
 
         logger = fileLogger;
-        swerveKinematics = new SwerveKinematics<>(new Distance(28, INCH), new Distance(28, INCH));
+        logger.setTag("SwerveDriveTrainConstructor");
 
+        robotLength = (Distance) Robot.settingsEntityGroup.getEntity("RobotLength");
+        if(robotLength == null) {
+            logger.writeEvent(1, FileLogger.EventType.Error, "RobotLength Element is not found! Using default 28\"");
+            robotLength = new Distance(28, INCH);
+        }
+
+        robotWidth = (Distance) Robot.settingsEntityGroup.getEntity("RobotWidth");
+        if(robotWidth == null) {
+            logger.writeEvent(1, FileLogger.EventType.Error, "RobotWidth Element is not found! Using default 28\"");
+            robotWidth = new Distance(28, INCH);
+        }
+
+        logger.writeEvent(6, FileLogger.EventType.Debug, "Creating Swerve Kinematics class...");
+        swerveKinematics = new SwerveKinematics<>(robotWidth, robotLength);
+
+        logger.writeEvent(6, FileLogger.EventType.Debug, "Finding swerve modules from EntityGroup");
         try {
             leftFrontModule = (SwerveModule) getChildEntityGroup("LeftFront");
             leftBackModule = (SwerveModule) getChildEntityGroup("LeftBack");
             rightFrontModule = (SwerveModule) getChildEntityGroup("RightFront");
             rightBackModule = (SwerveModule) getChildEntityGroup("RightBack");
-
-            //driveTrainType = leftFrontModule.get
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.writeEvent(0, FileLogger.EventType.Error, "Failed to find or convert to Swerve Modules!!");
+            logger.writeLine(e.getMessage());
         }
 
+        logger.writeEvent(6, FileLogger.EventType.Debug, "Creating Pigeon Gyro...");
         Gyro gyro = (Gyro) getEntity("Pigeon");
         pigeonIMU = new PigeonIMU(gyro.getID());
         pigeonIMU.configFactoryDefault();
@@ -100,22 +119,12 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
     @Override
     public void periodic() {
-//        SwerveModuleState lfAccelState = leftFrontModule.getSwerveModuleAccelerationState(leftFrontModule.getDriveMotorVoltage());
-//        SwerveModuleState lbAccelState = leftBackModule.getSwerveModuleAccelerationState(leftBackModule.getDriveMotorVoltage());
-//        SwerveModuleState rfAccelState = rightFrontModule.getSwerveModuleAccelerationState(rightFrontModule.getDriveMotorVoltage());
-//        SwerveModuleState rbAccelState = rightBackModule.getSwerveModuleAccelerationState(rightBackModule.getDriveMotorVoltage());
-
         SwerveModuleState lfVelState = leftFrontModule.getSwerveModuleState();
         SwerveModuleState lbVelState = leftBackModule.getSwerveModuleState();
         SwerveModuleState rfVelState = rightFrontModule.getSwerveModuleState();
         SwerveModuleState rbVelState = rightBackModule.getSwerveModuleState();
 
-//        Vector2d<Distance> dist = swerveKinematics.updateSwerveKinematics(new SwerveModuleState[] { lfVelState, lbVelState, rfVelState, rbVelState }, new SwerveModuleState[] { lfAccelState, lbAccelState, rfAccelState, rbAccelState });
         Vector2d<Distance> dist = swerveKinematics.updateSwerveKinematics(new SwerveModuleState[] { lfVelState, lbVelState, rfVelState, rbVelState });
-//        Vector2d<Velocity> vel = swerveKinematics.getCurrentRobotVelocity();
-
-//        SmartDashboard.putNumber("Vel X", vel.getX().getValue(FEET_PER_SECOND));
-//        SmartDashboard.putNumber("Vel Y", vel.getY().getValue(FEET_PER_SECOND));
 
         SmartDashboard.putNumber("Dist X", dist.getX().getValue(FOOT));
         SmartDashboard.putNumber("Dist Y", dist.getX().getValue(FOOT));

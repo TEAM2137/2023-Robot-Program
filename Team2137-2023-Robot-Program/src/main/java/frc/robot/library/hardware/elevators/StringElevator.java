@@ -1,10 +1,10 @@
 package frc.robot.library.hardware.elevators;
 
-import frc.robot.Robot;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.Entity;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.data.Step;
+import frc.robot.functions.io.xmlreader.data.mappings.Mapping;
 import frc.robot.library.Constants;
 import frc.robot.functions.io.xmlreader.objects.motor.SimpleMotorControl;
 import frc.robot.library.units.TranslationalUnits.Distance;
@@ -22,15 +22,16 @@ import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.
 
 public class StringElevator extends EntityGroup implements Elevator {
 
-    private SimpleMotorControl[] mLiftMotors;
+    private final SimpleMotorControl[] mLiftMotors;
 
-    private FileLogger logger;
+    private final FileLogger logger;
 
     private Distance mGoalPosition;
-    private Distance mSpoolDiameter;
+    private final Distance mSpoolDiameter;
 
     private Constants.StepState mHomingStepState = STATE_NOT_STARTED;
-    private Callable<Boolean> mHomingSensorState;
+
+    private final Mapping mHomingSensorMap;
 
     /**
      * Takes in a part of the xml file and parses it into variables and subtypes using recursion
@@ -79,9 +80,12 @@ public class StringElevator extends EntityGroup implements Elevator {
         }
         mLiftMotors[0].setDistancePerRevolution(new Distance(mSpoolDiameter.getValue(INCH) * Math.PI, INCH));
 
+        mHomingSensorMap = (Mapping) this.getEntity("HomingMap");
+        
         logger = fileLogger;
 
         this.addSubsystemCommand(getName() + "-SetRawPosition", this::setRawPosition);
+        this.addSubsystemCommand(getName() + "-SetSpeed", this::setSpeed);
         this.addSubsystemCommand(getName() + "-HomeElevator", this::homeElevator);
     }
 
@@ -89,7 +93,7 @@ public class StringElevator extends EntityGroup implements Elevator {
     public void periodic() {
         switch (mHomingStepState) {
             case STATE_INIT:
-                if(mHomingSensorState == null) {
+                if(mHomingSensorMap == null) {
                     mHomingStepState = Constants.StepState.STATE_FINISH;
                 } else {
                     setSpeed(-0.5);
@@ -97,7 +101,7 @@ public class StringElevator extends EntityGroup implements Elevator {
                 break;
             case STATE_RUNNING:
                 try {
-                    if(mHomingSensorState.call()) {
+                    if(mHomingSensorMap.getBooleanValue()) {
                         setSpeed(0.0);
                         mLiftMotors[0].setIntegratedSensorPosition(0);
                         mHomingStepState = Constants.StepState.STATE_FINISH;
@@ -114,17 +118,21 @@ public class StringElevator extends EntityGroup implements Elevator {
         mLiftMotors[0].set(speed);
     }
 
+    public void setSpeed(Step step) {
+        if(step.getStepState() == STATE_INIT && step.getParm(2) < Math.abs(step.getParm(1))) {
+            mLiftMotors[0].set(step.getParm(1));
+        }
+    }
+
     public void homeElevator(Step step) {
         if(step.getStepState() == STATE_INIT) {
-            homeElevator(mHomingSensorState);
             mHomingStepState = STATE_INIT;
         }
     }
 
     @Override
-    public void homeElevator(Callable<Boolean> homeSensorState) {
+    public void homeElevator() {
         mHomingStepState = STATE_INIT;
-        mHomingSensorState = homeSensorState;
     }
 
     public void setRawPosition(Step step) {

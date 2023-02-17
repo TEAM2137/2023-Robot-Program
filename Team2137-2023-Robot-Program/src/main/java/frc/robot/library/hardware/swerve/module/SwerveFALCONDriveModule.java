@@ -56,9 +56,9 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
     private Rotation2d goalModuleAngle = Rotation2d.fromDegrees(0);
 
     private Distance dblDriveWheelRotationPerFoot;//Rotations per Unit
-    private Distance dblWheelDiameter;
-    private Number dblRobotMass;
-    private Number dblScaleSpeedOptimization;
+    private final Distance dblWheelDiameter;
+    private final Number dblRobotMass;
+    private final Number dblScaleSpeedOptimization;
 
     private Velocity mDriveVelocityGoal = new Velocity(0, FEET_PER_SECOND);
     private Distance mDriveDistanceGoal = new Distance(0, FOOT);

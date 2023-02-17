@@ -32,13 +32,13 @@ import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.
 
 public class DeadWheelActiveTracking extends EntityGroup {
 
-    private Encoder xEncoderObj;
-    private Encoder yEncoderObj;
+    private final Encoder xEncoderObj;
+    private final Encoder yEncoderObj;
 
     private final CANCoder xCANCoder;
     private final CANCoder yCANCoder;
 
-    private Distance wheelDiameter;
+    private final Distance wheelDiameter;
 
     private double xConversionFactor = 1; //Counts for every inch
     private double yConversionFactor = 1; //Counts for every inch
@@ -46,11 +46,11 @@ public class DeadWheelActiveTracking extends EntityGroup {
     private final Distance previousXReading = new Distance(0, FOOT);
     private final Distance previousYReading = new Distance(0, FOOT);
 
-    private Distance xValue = new Distance(0, FOOT);
-    private Distance yValue = new Distance(0, FOOT);
+    private final Distance xValue = new Distance(0, FOOT);
+    private final Distance yValue = new Distance(0, FOOT);
 
-    private Velocity xSpeed = new Velocity(0, FEET_PER_SECOND);
-    private Velocity ySpeed = new Velocity(0, FEET_PER_SECOND);
+    private final Velocity xSpeed = new Velocity(0, FEET_PER_SECOND);
+    private final Velocity ySpeed = new Velocity(0, FEET_PER_SECOND);
 
     public DeadWheelActiveTracking(Element element, EntityGroup parent, FileLogger fileLogger) {
         super(element, parent, fileLogger);

@@ -30,10 +30,10 @@ public class Pose2d<T extends Unit<T, ?>> {
     }
 
     public void mutableAddVector(Vector2d<T> vector, Angle angle) {
-        x = (T) x.add(vector.x);
-        y = (T) y.add(vector.y);
+        x = x.add(vector.x);
+        y = y.add(vector.y);
 
-        theta = (Angle) theta.add(angle);
+        theta = theta.add(angle);
     }
 
     @Override

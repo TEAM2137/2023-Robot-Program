@@ -52,7 +52,6 @@ import static frc.robot.library.units.TranslationalUnits.Acceleration.Accelerati
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
 import static frc.robot.library.units.Time.TimeUnits.SECONDS;
 import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.FEET_PER_SECOND;
-import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.METER_PER_SECOND;
 
 
 @SuppressWarnings(value="FieldCanBeLocal")
@@ -91,6 +90,8 @@ public class Autonomous implements OpMode {
         this.logger.writeEvent(5, EventType.Status, "Setting Reader Initialized");
 
         this.mRobotSubsystem = mSettingReader.getRobot();
+
+        Robot.currentActiveSteps.clear();
 
         this.mSettingReader = xmlSettingReader;
         this.mStepReader = xmlStepReader;

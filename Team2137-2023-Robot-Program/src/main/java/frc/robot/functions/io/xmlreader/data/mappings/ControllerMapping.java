@@ -13,9 +13,9 @@ import java.util.ArrayList;
 
 public class ControllerMapping extends EntityImpl implements Mapping {
 
-    private XboxController[] controllers;
+    private final XboxController[] controllers;
     private final int controllerNumber;
-    private String valueName;
+    private final String valueName;
     private XboxController.Axis controllerAxis;
     private XboxController.Button controllerButton;
 

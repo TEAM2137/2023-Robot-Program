@@ -51,7 +51,7 @@ public class FusedTrackingAlgorithm {
     private double currentX;
     private double currentY;
 
-    private Consumer<Acceleration> tipEvent;
+    private final Consumer<Acceleration> tipEvent;
 
     public FusedTrackingAlgorithm(double _robotMass, Consumer<Acceleration> _tipEvent) {
         robotMass = _robotMass;

@@ -53,10 +53,10 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
     private Acceleration mDriveAccelerationCurrent = new Acceleration(0, METER_PER_SECOND2);
     private final Velocity mDriveVelocityCurrent = new Velocity(0, FEET_PER_SECOND);
     private final Distance mDriveDistanceCurrent = new Distance(0, FOOT);
-    private double mDriveRawPercent = 0;
+    private final double mDriveRawPercent = 0;
     private double mCurrentDriveRPM = 0;
     private final Rotation2d turningCurrent = Rotation2d.fromDegrees(0);
-    private Distance dblWheelDiameter = new Distance(4, INCH);
+    private final Distance dblWheelDiameter = new Distance(4, INCH);
 
     private Constants.DriveControlType mDriveControlType = Constants.DriveControlType.RAW;
     //private SwerveModuleState.SwerveModulePositions swerveModulePosition;

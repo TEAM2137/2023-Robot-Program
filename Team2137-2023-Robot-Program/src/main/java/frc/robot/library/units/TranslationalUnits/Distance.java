@@ -1,17 +1,16 @@
 package frc.robot.library.units.TranslationalUnits;
 
-import edu.wpi.first.math.geometry.Translation2d;
-import frc.robot.library.units.AngleUnits.Angle;
-import frc.robot.library.units.Unit;
+import frc.robot.functions.io.xmlreader.EntityImpl;
 import frc.robot.library.units.UnitEnum;
 import frc.robot.library.units.UnitUtil;
+import org.w3c.dom.Element;
 
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.METER;
 import static frc.robot.library.units.UnitUtil.System.Imperial;
 import static frc.robot.library.units.UnitUtil.System.Metric;
 import static frc.robot.library.units.UnitUtil.UnitType.Distance;
 
-public class Distance implements TranslationUnit<Distance, frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits> {
+public class Distance extends EntityImpl implements TranslationUnit<Distance, frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits> {
 
     public enum DistanceUnits implements UnitEnum {
         METER           (Distance, Metric,1.0,"M"),
@@ -45,7 +44,7 @@ public class Distance implements TranslationUnit<Distance, frc.robot.library.uni
         public UnitEnum getFromName(String name) {
             for (DistanceUnits a : DistanceUnits.values()) {
                 for (String val : a.names) {
-                    if (val.equals(name))
+                    if (val.equalsIgnoreCase(name))
                         return a;
                 }
             }
@@ -63,6 +62,14 @@ public class Distance implements TranslationUnit<Distance, frc.robot.library.uni
 
     public Distance(double val, UnitEnum unit) {
         value = val / unit.getUnitPerPrimaryUnit();
+    }
+
+    public Distance(Element element) {
+        super(element);
+
+        UnitEnum elementUnit = DistanceUnits.INCH.getFromName(getNodeOrAttribute(element, "unit", null));
+
+        value = Double.parseDouble(element.getTextContent()) / elementUnit.getUnitPerPrimaryUnit();
     }
 
     @Override
