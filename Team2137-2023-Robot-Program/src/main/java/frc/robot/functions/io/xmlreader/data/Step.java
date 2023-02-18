@@ -91,8 +91,8 @@ public class Step extends EntityImpl {
             if (genericElement.getNodeType() == Node.TEXT_NODE) {
                 this.values.put(tmp.getNodeName().toUpperCase(), new ValueEntry(genericElement.getTextContent()));
             } else if (genericElement.getNodeType() == Node.ELEMENT_NODE){
-//                this.values.put(tmp.getNodeName().toUpperCase(), new ValueEntry(genericElement.getNodeName(), true));
-                this.values.put(tmp.getNodeName().toUpperCase(), new ValueEntry(genericElement.getTextContent(), true));
+                this.values.put(tmp.getNodeName().toUpperCase(), new ValueEntry(genericElement.getNodeName(), true));
+//                this.values.put(tmp.getNodeName().toUpperCase(), new ValueEntry(genericElement.getTextContent(), true));
             }
         }
     }
@@ -120,8 +120,11 @@ public class Step extends EntityImpl {
 
     public void registerMappings(HashMap<String, Mapping> suppliedMappings) {
         values.forEach((a, b) -> {
-            if(b.genericType && suppliedMappings.containsKey(b.value)) {
-                b.mappings = suppliedMappings.get(b.value);
+            if(b.genericType) {
+                if(suppliedMappings.containsKey(b.value))
+                    b.mappings = suppliedMappings.get(b.value);
+                else
+                    System.out.println("Failed to register for genericType: (" + b.value + ")");
             }
         });
     }

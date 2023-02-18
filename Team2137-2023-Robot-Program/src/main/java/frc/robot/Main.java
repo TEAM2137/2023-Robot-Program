@@ -6,6 +6,7 @@
 package frc.robot;
 
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.XMLSettingReader;
@@ -39,27 +40,27 @@ public final class Main
     */
     public static void main(String... args)
     {
-//        RobotBase.startRobot(Robot::new);
-        DriveTrainSimulation sim = new DriveTrainSimulation();
-        Distance totalDist = new Distance(10, FOOT);
-        TrapezoidalVelocity trap = new TrapezoidalVelocity(totalDist);
+        RobotBase.startRobot(Robot::new);
+//        DriveTrainSimulation sim = new DriveTrainSimulation();
+//        Distance totalDist = new Distance(10, FOOT);
+//        TrapezoidalVelocity trap = new TrapezoidalVelocity(totalDist);
 
-        double pos = 0;
-
-        while(true) {
-            sim.run();
+//        double pos = 0;
+//
+//        while(true) {
+//            sim.run();
 
             //System.out.printf("(%.5f, %.9f)\n", sim.mLastRunTime, sim.mVoltage);
 //            System.out.println("(" + sim.mLastRunTime + ", " + sim.mVoltage + ")");
 
-            System.out.printf("(%.5f, %.5f)\n", pos, trap.targetVelocity(new Distance(pos, METER)).getValue(Velocity.VelocityUnits.FEET_PER_SECOND));
+//            System.out.printf("(%.5f, %.5f)\n", pos, trap.targetVelocity(new Distance(pos, METER)).getValue(Velocity.VelocityUnits.FEET_PER_SECOND));
 //            sim.mStopping = trap.braking(sim.mDistance);
 
-            pos += 0.1;
+//            pos += 0.1;
 
 //            if(sim.mLastRunTime > 5)
-            if(pos > totalDist.getValue(METER))
-                break;
-        }
+//            if(pos > totalDist.getValue(METER))
+//                break;
+//        }
     }
 }

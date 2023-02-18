@@ -15,6 +15,8 @@ public class ControllerMapping extends EntityImpl implements Mapping {
 
     private final XboxController[] controllers;
     private final int controllerNumber;
+    private final double deadband;
+    private boolean passedDeadband = false;
     private final String valueName;
     private XboxController.Axis controllerAxis;
     private XboxController.Button controllerButton;
@@ -36,6 +38,7 @@ public class ControllerMapping extends EntityImpl implements Mapping {
         controllerNumber = Integer.parseInt(getNodeOrAttribute(element, "controller", "0"));
         String id = getNodeOrAttribute(element, "id", "X");
         valueName = getNodeOrAttribute(element, "value", "value");
+        deadband = Double.parseDouble(getNodeOrAttribute(element, "deadband", "0"));
 
         for (XboxController.Axis axis : XboxController.Axis.values()) {
             if(axis.toString().contains(id)) {
@@ -53,7 +56,13 @@ public class ControllerMapping extends EntityImpl implements Mapping {
     @Override
     public double getValue() {
         if(controllerAxis != null) {
-            return controllers[controllerNumber].getRawAxis(controllerAxis.value);
+            double value = controllers[controllerNumber].getRawAxis(controllerAxis.value);
+
+            if(Math.abs(value) > deadband)
+                return value;
+            else
+                return 0;
+
         } else if (controllerButton != null) {
             return controllers[controllerNumber].getRawButton(controllerButton.value) ? 1 : 0;
         } else {

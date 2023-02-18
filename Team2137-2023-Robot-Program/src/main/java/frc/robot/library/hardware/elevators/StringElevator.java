@@ -1,5 +1,7 @@
 package frc.robot.library.hardware.elevators;
 
+import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.Entity;
 import frc.robot.functions.io.xmlreader.EntityGroup;
@@ -15,14 +17,16 @@ import javax.swing.*;
 import java.util.Collection;
 import java.util.concurrent.Callable;
 
-import static frc.robot.library.Constants.StepState.STATE_INIT;
-import static frc.robot.library.Constants.StepState.STATE_NOT_STARTED;
+import static frc.robot.library.Constants.StepState.*;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.INCH;
 
 public class StringElevator extends EntityGroup implements Elevator {
 
     private final SimpleMotorControl[] mLiftMotors;
+    private DoubleSolenoid mRatchet;
+
+    private boolean rawSpeedControl = false;
 
     private final FileLogger logger;
 
@@ -47,15 +51,17 @@ public class StringElevator extends EntityGroup implements Elevator {
 
         Collection<Entity> keys = getEntities();
 
-        int count = 0;
+        int countLift = 0;
         for (Entity a : keys) {
-            if(a.getName() != null && a.getName().contains("Lift Motor"))
-                count++;
+            if(a.getName() != null)
+                if(a.getName().contains("Lift Motor")) {
+                    countLift++;
+                }
         }
 
         fileLogger.writeEvent(4, "Found motor keys attempting to get control object");
+        mLiftMotors = new SimpleMotorControl[countLift];
 
-        mLiftMotors = new SimpleMotorControl[count];
         for(Entity a : keys) {
             String name = a.getName();
 
@@ -64,6 +70,9 @@ public class StringElevator extends EntityGroup implements Elevator {
                 String[] parts = name.split(" ");
                 int idx = Integer.parseInt(parts[parts.length - 1]) - 1;
                 mLiftMotors[idx] = (SimpleMotorControl) a;
+            } else if(name.contains("Ratchet")) {
+                fileLogger.writeEvent(0, "Found Double Solenoid Ratchet with name: " + name);
+                mRatchet = (DoubleSolenoid) a;
             }
         }
 
@@ -85,7 +94,7 @@ public class StringElevator extends EntityGroup implements Elevator {
         logger = fileLogger;
 
         this.addSubsystemCommand(getName() + "-SetRawPosition", this::setRawPosition);
-        this.addSubsystemCommand(getName() + "-SetSpeed", this::setSpeed);
+        this.addSubsystemCommand(getName() + "-SetRawSpeed", this::setSpeed);
         this.addSubsystemCommand(getName() + "-HomeElevator", this::homeElevator);
     }
 
@@ -115,12 +124,26 @@ public class StringElevator extends EntityGroup implements Elevator {
 
     @Override
     public void setSpeed(double speed) {
+        if(speed < 0) {
+            mRatchet.set(DoubleSolenoid.Value.kForward);
+        } else {
+            mRatchet.set(DoubleSolenoid.Value.kReverse);
+        }
+
         mLiftMotors[0].set(speed);
     }
 
     public void setSpeed(Step step) {
-        if(step.getStepState() == STATE_INIT && step.getParm(2) < Math.abs(step.getParm(1))) {
-            mLiftMotors[0].set(step.getParm(1));
+        if(step.getStepState() == STATE_INIT) {
+            if(step.getParm(1) != 0) {
+                rawSpeedControl = true;
+                setSpeed(step.getParm(1));
+                SmartDashboard.putNumber(getName() + "-Speed", step.getParm(1));
+            } else if (rawSpeedControl) {
+                rawSpeedControl = false;
+                setSpeed(0);
+                SmartDashboard.putNumber(getName() + "-Speed", 0);
+            }
         }
     }
 
@@ -146,6 +169,13 @@ public class StringElevator extends EntityGroup implements Elevator {
     @Override
     public void setPosition(Distance distance) {
         logger.writeEvent(2, FileLogger.EventType.Debug, "Setting " + getName() + " Position to " + distance.getValue(FOOT) + "ft");
+
+        if(distance.getValue(FOOT) < mLiftMotors[0].getPosition().getValue(FOOT)) {
+            mRatchet.set(DoubleSolenoid.Value.kForward);
+        } else {
+            mRatchet.set(DoubleSolenoid.Value.kReverse);
+        }
+
         mGoalPosition = distance;
         mLiftMotors[0].setPosition(distance);
     }

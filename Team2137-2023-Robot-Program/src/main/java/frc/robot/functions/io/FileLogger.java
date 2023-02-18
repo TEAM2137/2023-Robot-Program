@@ -221,6 +221,9 @@ public class FileLogger {
     private void cleanLogs(){
         File[] fileList = new File(logFileDirectory).listFiles();
 
+        if(fileList == null || fileList.length == 0)
+            return;
+
         Arrays.sort(fileList, Comparator.comparing(File::lastModified).reversed());
 
         if (fileList.length > maxLogFiles) {

@@ -11,6 +11,7 @@ public interface SimpleMotorControl extends SimpleMotorData {
     void set(double val);
     void setPosition(Distance distance);
     void setPosition(Angle angle);
+    Distance getPosition();
 
     void setVelocity(Velocity velocity);
 

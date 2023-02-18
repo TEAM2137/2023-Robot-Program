@@ -22,7 +22,8 @@ import frc.robot.functions.io.xmlreader.data.PID;
 import frc.robot.functions.io.xmlreader.data.mappings.CANifierMapping;
 import frc.robot.functions.io.xmlreader.data.mappings.ControllerMapping;
 import frc.robot.functions.io.xmlreader.data.Step;
-import frc.robot.functions.io.xmlreader.data.mappings.Mapping;
+import frc.robot.functions.io.xmlreader.data.mappings.DIOMapping;
+import frc.robot.functions.io.xmlreader.objects.canifier.DIO;
 import frc.robot.functions.io.xmlreader.objects.motor.FalconMotor;
 import frc.robot.functions.io.xmlreader.objects.motor.NeoMotor;
 import frc.robot.library.hardware.LazySusan;
@@ -98,6 +99,10 @@ public class EntityGroup extends EntityImpl {
         encoderImplements.put("DEFAULT", Encoder.class);
         entityClassMappings.put("ENCODER", encoderImplements);
 
+        HashMap<String, Class<? extends Entity>> dioImplements = new HashMap<>();
+        dioImplements.put("DEFAULT", DIO.class);
+        entityClassMappings.put("DIO", dioImplements);
+
         HashMap<String, Class<? extends Entity>> gyroImplements = new HashMap<>();
         gyroImplements.put("DEFAULT", Gyro.class);
         entityClassMappings.put("GYRO", gyroImplements);
@@ -123,6 +128,7 @@ public class EntityGroup extends EntityImpl {
         HashMap<String, Class<? extends Entity>> mapImplements = new HashMap<>();
         mapImplements.put("DEFAULT", ControllerMapping.class);
         mapImplements.put("CONTROLLER", ControllerMapping.class);
+        mapImplements.put("DIO", DIOMapping.class);
         mapImplements.put("CANIFIER", CANifierMapping.class);
         entityClassMappings.put("MAP", mapImplements);
 

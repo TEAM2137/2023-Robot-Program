@@ -78,13 +78,13 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
         //endregion
 
         this.mDriveMotorObj = (Motor) getEntity("Drive Motor");
-        this.mDriveMotor = new TalonFX(mDriveMotorObj.getID());
+        this.mDriveMotor = new TalonFX(mDriveMotorObj.getID(), mDriveMotorObj.getCANLoopName());
 
         this.mTurnMotorObj = (Motor) getEntity("Turn Motor");
-        this.mTurnMotor = new TalonFX(mTurnMotorObj.getID());
+        this.mTurnMotor = new TalonFX(mTurnMotorObj.getID(), mTurnMotorObj.getCANLoopName());
 
         this.mTurnCANEncoderObj = (Encoder) getEntity("Turn Encoder");
-        this.mTurnCANEncoder = new CANCoder(mTurnCANEncoderObj.getID());
+        this.mTurnCANEncoder = new CANCoder(mTurnCANEncoderObj.getID(), mTurnCANEncoderObj.getCANLoopName());
 
         Number dia = (Number) Robot.settingsEntityGroup.getEntity("DriveTrain-WheelDiameter");
         dblWheelDiameter = new Distance(dia.getValue(), INCH);

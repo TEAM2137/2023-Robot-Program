@@ -10,7 +10,6 @@ import edu.wpi.first.networktables.NetworkTableEvent;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.Entity;
@@ -21,9 +20,6 @@ import frc.robot.functions.io.xmlreader.data.Step;
 import frc.robot.library.Constants;
 import frc.robot.library.OpMode;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import java.io.Console;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;

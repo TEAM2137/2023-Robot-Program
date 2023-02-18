@@ -70,8 +70,6 @@ public class Teleop implements OpMode {
                 mKinematic = new SwerveKinematics<>(new Distance(1, INCH), new Distance(1, INCH));
                 break;
         }
-
-        Robot.currentActiveSteps.clear();
     }
 
     @Override
@@ -90,6 +88,8 @@ public class Teleop implements OpMode {
             } else {
                 if(Robot.subSystemCommandList.containsKey(tmpStep.getCommand())) {
                     Robot.subSystemCommandList.get(tmpStep.getCommand()).accept(tmpStep);
+                } else {
+                    logger.writeEvent(0, FileLogger.EventType.Error, "Missing Passive Step Command: " + tmpStep.getCommand());
                 }
             }
         }

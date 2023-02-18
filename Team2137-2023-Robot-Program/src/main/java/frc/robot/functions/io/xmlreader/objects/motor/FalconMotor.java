@@ -19,6 +19,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
+import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.INCH;
 import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.CTRE_VELOCITY;
 import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.FEET_PER_SECOND;
 
@@ -32,6 +33,7 @@ public class FalconMotor extends TalonFX implements Entity, SimpleMotorControl {
 
     public static final int NUMBEROFPIDSLOTS = 2;
 
+    private String canLoopName;
     private int id = 0;
     private final Motor.MotorTypes type = Motor.MotorTypes.NEO;
     private boolean inverted = false;
@@ -46,9 +48,10 @@ public class FalconMotor extends TalonFX implements Entity, SimpleMotorControl {
     private static final int CountsPerRevolution = 2048;
 
     public FalconMotor(Element element) {
-        super(Integer.parseInt(Entity.getOrDefault(element, "ID", "0")));
+        super(Integer.parseInt(Entity.getOrDefault(element, "ID", "0")), Entity.getOrDefault(element, "CANLoop", "rio"));
 
         name = getNodeOrAttribute(element, "Name", "none");
+        canLoopName = getNodeOrAttribute(element, "CANLoop", "rio");
 
         savedElement = element;
 
@@ -95,6 +98,10 @@ public class FalconMotor extends TalonFX implements Entity, SimpleMotorControl {
     @Override
     public void setPosition(Angle angle) {
         set(TalonFXControlMode.Position, (angle.getValue(Angle.AngleUnits.DEGREE) / 360.0) * getGearRatio() * getCountPerRevolution());
+    }
+    @Override
+    public Distance getPosition() {
+        return new Distance(super.getSelectedSensorPosition() / getGearRatio() / getCountPerRevolution() * distancePerRevolution.getValue(INCH), INCH);
     }
 
     @Override

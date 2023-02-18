@@ -1,5 +1,6 @@
 package frc.robot.library.hardware;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.data.Step;
@@ -11,11 +12,14 @@ import org.w3c.dom.Element;
 
 import java.util.function.Consumer;
 
+import static frc.robot.library.Constants.StepState.STATE_INIT;
 import static frc.robot.library.units.AngleUnits.Angle.AngleUnits.DEGREE;
 
 public class LazySusan extends EntityGroup {
 
     private final SimpleMotorControl simpleMotor;
+
+    private boolean rawSpeedControl = false;
 
     /**
      * Takes in a part of the xml file and parses it into variables and subtypes using recursion
@@ -48,8 +52,16 @@ public class LazySusan extends EntityGroup {
     }
 
     public void setSpeed(Step step) {
-        if(step.getStepState() == Constants.StepState.STATE_INIT && step.getParm(2) < Math.abs(step.getParm(1))) {
-            simpleMotor.set(step.getParm(1));
+        if(step.getStepState() == STATE_INIT) {
+            if(step.getParm(1) != 0) {
+                rawSpeedControl = true;
+                simpleMotor.set(step.getParm(1));
+                SmartDashboard.putNumber(getName() + "-Speed", step.getParm(1));
+            } else if (rawSpeedControl) {
+                rawSpeedControl = false;
+                simpleMotor.set(0);
+                SmartDashboard.putNumber(getName() + "-Speed", 0);
+            }
         }
     }
 

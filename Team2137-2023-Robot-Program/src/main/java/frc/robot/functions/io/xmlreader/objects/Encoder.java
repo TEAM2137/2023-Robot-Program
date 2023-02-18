@@ -40,6 +40,7 @@ public class Encoder extends EntityImpl {
     }
 
     EncoderTypes type;
+    String canLoopName;
     boolean inverted;
     double offset;
     int id;
@@ -50,6 +51,7 @@ public class Encoder extends EntityImpl {
         this.type = _type;
         this.inverted = _invert;
         this.offset = offset;
+        this.canLoopName = "rio";
     }
 
     public Encoder(Element element) {
@@ -59,6 +61,11 @@ public class Encoder extends EntityImpl {
         this.type = EncoderTypes.valueOf(Entity.getOrDefault(element, "Type", "CTRE_CAN_ABS").toUpperCase());
         this.inverted = Boolean.parseBoolean(Entity.getOrDefault(element, "Inverted", "false").toLowerCase());
         this.offset = Double.parseDouble(Entity.getOrDefault(element, "Offset", "0"));
+        this.canLoopName = Entity.getOrDefault(element, "CANLoop", "rio");
+    }
+
+    public String getCANLoopName() {
+        return canLoopName;
     }
 
     public EncoderTypes getEncoderType() {

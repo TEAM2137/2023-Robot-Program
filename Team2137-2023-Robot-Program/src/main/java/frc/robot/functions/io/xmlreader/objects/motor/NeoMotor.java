@@ -105,6 +105,10 @@ public class NeoMotor extends CANSparkMax implements Entity, SimpleMotorControl 
     public void setPosition(Angle angle) {
         pidController.setReference((angle.getValue(Angle.AngleUnits.DEGREE) / 360.0) * getGearRatio(), ControlType.kPosition);
     }
+    @Override
+    public Distance getPosition() {
+        return new Distance(relativeEncoder.getPosition() / getGearRatio() * distancePerRevolution.getValue(INCH), INCH);
+    }
 
     //------------------------------------------Velocity Control------------------------------------------------------//
     @Override

@@ -28,6 +28,7 @@ public class Motor extends EntityImpl implements SimpleMotorData {
 
     public static final int NUMBEROFPIDSLOTS = 2;
 
+    private String canLoopName;
     private MotorTypes type = MotorTypes.NEO;
     private boolean inverted = false;
     private int currentLimit = 0;
@@ -54,6 +55,7 @@ public class Motor extends EntityImpl implements SimpleMotorData {
         this.gearRatio = _gearRatio;
         this.rampRate = _ramp;
         this.id = _id;
+        canLoopName = "rio";
     }
 
     public Motor(String _name, int _id, MotorTypes _type, boolean _invert, int _currentLimit, double _gearRatio, double _ramp, PID[] pid) {
@@ -69,6 +71,7 @@ public class Motor extends EntityImpl implements SimpleMotorData {
         this.gearRatio = Double.parseDouble(Entity.getOrDefault(element, "GearRatio", "1"));
         this.rampRate = Double.parseDouble(Entity.getOrDefault(element, "RampRate", "0"));
         this.id = Integer.parseInt(Entity.getOrDefault(element, "ID", "0"));
+        this.canLoopName = Entity.getOrDefault(element, "CANLoop", "rio");
 
         NodeList tmpList = element.getElementsByTagName("PID");
 
@@ -89,6 +92,10 @@ public class Motor extends EntityImpl implements SimpleMotorData {
                 this.pidValues[slotNumber] = new PID((Element) tmpList.item(i));
             }
         }
+    }
+
+    public String getCANLoopName() {
+        return canLoopName;
     }
 
     public double getGearRatio() {

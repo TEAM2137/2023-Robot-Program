@@ -6,6 +6,7 @@ import frc.robot.Robot;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.Entity;
 import frc.robot.functions.io.xmlreader.EntityGroup;
+import frc.robot.functions.io.xmlreader.data.mappings.ControllerMapping;
 import frc.robot.functions.io.xmlreader.data.mappings.Mapping;
 import frc.robot.library.Constants;
 import org.w3c.dom.Element;
@@ -14,10 +15,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import static edu.wpi.first.wpilibj.DriverStation.isTeleop;
+import static edu.wpi.first.wpilibj.DriverStation.isTest;
+
 public class Binding extends EntityGroup {
 
     private final HashMap<String, Mapping> mappings = new HashMap<String, Mapping>();
     private final ArrayList<Mapping> booleanEntries = new ArrayList<>();
+    private final ArrayList<Mapping> numericEntries = new ArrayList<>();
     private final ArrayList<Step> steps = new ArrayList<>();
 
     /**
@@ -46,26 +51,35 @@ public class Binding extends EntityGroup {
             }
         }
 
-        boolean flag = true;
         for(Mapping entry : mappings.values()) {
             if(entry.isBooleanValue()) {
                 booleanEntries.add(entry);
-            } else if(flag) {
-                Robot.currentActiveSteps.addAll(steps);
-                flag = false;
+            } else {
+                numericEntries.add(entry);
+                break;
             }
+        }
+
+        if(numericEntries.size() > 0) {
+            for (Step step : steps)
+                step.changeStepState(Constants.StepState.STATE_INIT);
+
+            Robot.currentActiveSteps.addAll(steps);
         }
     }
 
     @Override
     public void periodic() {
-        for (Mapping button : booleanEntries) {
-            if(button.getBooleanValue()) {
-                for (Step step : steps)
-                    step.changeStepState(Constants.StepState.STATE_INIT);
-                Robot.currentActiveSteps.addAll(steps);
+            for (Mapping button : booleanEntries) {
+                if(button instanceof ControllerMapping && (!isTeleop() || !isTest()))
+                    continue;
+
+                if (button.getBooleanValue()) {
+                    for (Step step : steps)
+                        step.changeStepState(Constants.StepState.STATE_INIT);
+                    Robot.currentActiveSteps.addAll(steps);
+                }
             }
-        }
     }
 
     @Override
