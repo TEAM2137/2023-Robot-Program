@@ -21,6 +21,10 @@ public class ObjectTracker {
     private double[] cubeWidths;
     private double[] cubeHeights;
 
+    private NetworkTableInstance inst;
+    private NetworkTable coneTable;
+    private NetworkTable cubeTable;
+
     /**
      * @return a list of rectangles outlining the cones in the camera's vision.
      */
@@ -47,7 +51,7 @@ public class ObjectTracker {
      * @return the total number of objects in the camera's vision (cones or cubes).
      */
     public int getTotalObjectCount() {
-        return cubeXPositions.length + coneXPositions.length;
+        return cubeXPositions.length + cubeYPositions.length;
     }
 
     /**
@@ -68,14 +72,18 @@ public class ObjectTracker {
      * Gets the data from the networktables. Should be run every time camera data is needed.
      */
     public void update() {
-        NetworkTable table = NetworkTableInstance.getDefault().getTable("SmartDashboard");
-        coneXPositions = table.getEntry("conePositionsX").getDoubleArray(new double[10]);
-        coneYPositions = table.getEntry("conePositionsY").getDoubleArray(new double[10]);
-        cubeXPositions = table.getEntry("cubePositionsX").getDoubleArray(new double[10]);
-        cubeYPositions = table.getEntry("cubePositionsY").getDoubleArray(new double[10]);
-        coneWidths = table.getEntry("coneWidths").getDoubleArray(new double[10]);
-        coneHeights = table.getEntry("coneHeights").getDoubleArray(new double[10]);
-        cubeWidths = table.getEntry("cubeWidths").getDoubleArray(new double[10]);
-        cubeHeights = table.getEntry("cubeHeights").getDoubleArray(new double[10]);
+        inst = NetworkTableInstance.getDefault();
+        cubeTable = inst.getTable("RPI").getSubTable("vision").getSubTable("cubes");
+        cubeTable = inst.getTable("RPI").getSubTable("vision").getSubTable("cones");
+
+        cubeXPositions = cubeTable.getEntry("xPositions").getDoubleArray(new double[10]);
+        cubeYPositions = cubeTable.getEntry("yPositions").getDoubleArray(new double[10]);
+        cubeWidths = cubeTable.getEntry("widths").getDoubleArray(new double[10]);
+        cubeHeights = cubeTable.getEntry("heights").getDoubleArray(new double[10]);
+
+        coneXPositions = coneTable.getEntry("xPositions").getDoubleArray(new double[10]);
+        coneYPositions = coneTable.getEntry("yPositions").getDoubleArray(new double[10]);
+        coneWidths = coneTable.getEntry("widths").getDoubleArray(new double[10]);
+        coneHeights = coneTable.getEntry("heights").getDoubleArray(new double[10]);
     }
 }
