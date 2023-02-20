@@ -2,13 +2,15 @@ package frc.robot.camera.objects;
 
 import java.util.ArrayList;
 
+import org.opencv.core.Point;
 import org.opencv.core.Rect;
 
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 
 /**
- * Gets the data of objects in the camera's vision from the raspberry pi networktables. Call the update method to refresh the data.
+ * Gets the data of objects in the camera's vision from the raspberry pi networktables. 
+ * <p> The update method must be called often to refresh the data!
  */
 public class ObjectTracker {
 
@@ -16,56 +18,150 @@ public class ObjectTracker {
     private double[] coneYPositions;
     private double[] cubeXPositions;
     private double[] cubeYPositions;
+
     private double[] coneWidths;
     private double[] coneHeights;
     private double[] cubeWidths;
     private double[] cubeHeights;
+
+    private int amountOfCubes;
+    private int amountOfCones;
 
     private NetworkTableInstance inst;
     private NetworkTable coneTable;
     private NetworkTable cubeTable;
 
     /**
-     * @return a list of rectangles outlining the cones in the camera's vision.
+     * @return an <code>ArrayList</code> of rectangles outlining the cones in the camera's vision.
      */
     public ArrayList<Rect> getConeBounds() {
         ArrayList<Rect> positions = new ArrayList<>();
-        for (int i = 0; i < coneXPositions.length; i++) {
+        for (int i = 0; i < amountOfCones; i++) {
             positions.add(new Rect((int) coneXPositions[i], (int) coneYPositions[i], (int) coneWidths[i], (int) coneHeights[i]));
         }
         return positions;
     }
 
     /**
-     * @return a list of rectangles outlining the cubes in the camera's vision.
+     * @return an array of rectangles outlining the cones in the camera's vision.
+     */
+    public Rect[] getConeBoundsArray() {
+        return (Rect[]) getConeBounds().toArray();
+    }
+
+    /**
+     * @return an <code>ArrayList</code> of rectangles outlining the cubes in the camera's vision.
      */
     public ArrayList<Rect> getCubeBounds() {
         ArrayList<Rect> positions = new ArrayList<>();
-        for (int i = 0; i < cubeXPositions.length; i++) {
+        for (int i = 0; i < amountOfCubes; i++) {
             positions.add(new Rect((int) cubeXPositions[i], (int) cubeYPositions[i], (int) cubeWidths[i], (int) cubeHeights[i]));
         }
         return positions;
     }
 
     /**
+     * @return an array of rectangles outlining the cubes in the camera's vision.
+     */
+    public Rect[] getCubeBoundsArray() {
+        return (Rect[]) getCubeBounds().toArray();
+    }
+
+    /**
+     * @return an <code>ArrayList</code> of points at the center positions of the cones in the camera's vision.
+     */
+    public ArrayList<Point> getConePositions() {
+        ArrayList<Point> positions = new ArrayList<>();
+        for (int i = 0; i < amountOfCones; i++) {
+            positions.add(new Point((int) coneXPositions[i], (int) coneYPositions[i]));
+        }
+        return positions;
+    }
+
+    /**
+     * @return an array of points at the center positions of the cones in the camera's vision.
+     */
+    public Point[] getConePositionsArray() {
+        return (Point[]) getConePositions().toArray();
+    }
+
+    /**
+     * @return a list of points at the center positions of the cubes in the camera's vision.
+     */
+    public ArrayList<Point> getCubePositions() {
+        ArrayList<Point> positions = new ArrayList<>();
+        for (int i = 0; i < amountOfCubes; i++) {
+            positions.add(new Point((int) cubeXPositions[i], (int) cubeYPositions[i]));
+        }
+        return positions;
+    }
+
+    /**
+     * @return an array of points at the center positions of the cubes in the camera's vision.
+     */
+    public Point[] getCubePositionsArray() {
+        return (Point[]) getCubePositions().toArray();
+    }
+
+    /**
+     * @return an <code>ArrayList</code> of points for the sizes of cones in the camera's vision. 
+     * <p> The x positions are the widths, and the y positions are the heights.
+     */
+    public ArrayList<Point> getConeSizes() {
+        ArrayList<Point> positions = new ArrayList<>();
+        for (int i = 0; i < amountOfCones; i++) {
+            positions.add(new Point((int) coneWidths[i], (int) coneHeights[i]));
+        }
+        return positions;
+    }
+
+    /**
+     * @return an array of points for the sizes of cones in the camera's vision. 
+     * <p> The x positions are the widths, and the y positions are the heights.
+     */
+    public Point[] getConeSizesArray() {
+        return (Point[]) getConeSizes().toArray();
+    }
+
+    /**
+     * @return an <code>ArrayList</code> of points for the sizes of cubes in the camera's vision. 
+     * <p> The x positions are the widths, and the y positions are the heights.
+     */
+    public ArrayList<Point> getCubeSizes() {
+        ArrayList<Point> positions = new ArrayList<>();
+        for (int i = 0; i < amountOfCubes; i++) {
+            positions.add(new Point((int) cubeWidths[i], (int) cubeHeights[i]));
+        }
+        return positions;
+    }
+
+    /**
+     * @return an array of rectangles outlining the cones in the camera's vision.
+     * <p> The x positions are the widths, and the y positions are the heights.
+     */
+    public Point[] getCubeSizesArray() {
+        return (Point[]) getCubeSizes().toArray();
+    }
+
+    /**
      * @return the total number of objects in the camera's vision (cones or cubes).
      */
     public int getTotalObjectCount() {
-        return cubeXPositions.length + cubeYPositions.length;
+        return amountOfCones + amountOfCubes;
     }
 
     /**
      * @return the total number of cubes in the camera's vision
      */
     public int getCubeCount() {
-        return cubeXPositions.length;
+        return amountOfCubes;
     }
 
     /**
      * @return the total number of cubes in the camera's vision
      */
     public int getConeCount() {
-        return coneXPositions.length;
+        return amountOfCones;
     }
 
     /**
@@ -80,10 +176,12 @@ public class ObjectTracker {
         cubeYPositions = cubeTable.getEntry("yPositions").getDoubleArray(new double[10]);
         cubeWidths = cubeTable.getEntry("widths").getDoubleArray(new double[10]);
         cubeHeights = cubeTable.getEntry("heights").getDoubleArray(new double[10]);
+        amountOfCubes = (int) cubeTable.getEntry("amountDetected").getInteger((long)0);
 
         coneXPositions = coneTable.getEntry("xPositions").getDoubleArray(new double[10]);
         coneYPositions = coneTable.getEntry("yPositions").getDoubleArray(new double[10]);
         coneWidths = coneTable.getEntry("widths").getDoubleArray(new double[10]);
         coneHeights = coneTable.getEntry("heights").getDoubleArray(new double[10]);
+        amountOfCones = (int) coneTable.getEntry("amountDetected").getInteger((long)0);
     }
 }
