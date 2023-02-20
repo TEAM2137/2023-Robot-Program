@@ -26,6 +26,7 @@ import frc.robot.functions.io.xmlreader.data.mappings.DIOMapping;
 import frc.robot.functions.io.xmlreader.objects.canifier.DIO;
 import frc.robot.functions.io.xmlreader.objects.motor.FalconMotor;
 import frc.robot.functions.io.xmlreader.objects.motor.NeoMotor;
+import frc.robot.functions.io.xmlreader.objects.solenoid.DoubleSolenoid;
 import frc.robot.library.hardware.LazySusan;
 import frc.robot.library.hardware.elevators.StringElevator;
 import frc.robot.library.units.Number;
@@ -98,6 +99,10 @@ public class EntityGroup extends EntityImpl {
         HashMap<String, Class<? extends Entity>> encoderImplements = new HashMap<>();
         encoderImplements.put("DEFAULT", Encoder.class);
         entityClassMappings.put("ENCODER", encoderImplements);
+
+        HashMap<String, Class<? extends Entity>> solenoidImplements = new HashMap<>();
+        solenoidImplements.put("DEFAULT", DoubleSolenoid.class);
+        entityClassMappings.put("DOUBLESOLENOID", solenoidImplements);
 
         HashMap<String, Class<? extends Entity>> dioImplements = new HashMap<>();
         dioImplements.put("DEFAULT", DIO.class);

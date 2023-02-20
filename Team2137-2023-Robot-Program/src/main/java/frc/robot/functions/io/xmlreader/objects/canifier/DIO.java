@@ -10,7 +10,7 @@ import org.w3c.dom.Element;
 public class DIO extends DigitalInput implements Entity {
 
     private NetworkTable savedNetworkTableInstance;
-    private final org.w3c.dom.Element savedElement;
+    private org.w3c.dom.Element savedElement;
     private String name;
     private Runnable onImplement;
 
@@ -21,7 +21,14 @@ public class DIO extends DigitalInput implements Entity {
 
         savedElement = element;
 
+        this.name = getNodeOrAttribute(element, "Name", "default");
         this.id = super.getChannel();
+    }
+
+    public DIO(String _name, int _id) {
+        super(_id);
+        this.name = _name;
+        this.id = _id;
     }
 
     public int getID() { return id; }

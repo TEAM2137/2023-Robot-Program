@@ -87,10 +87,14 @@ public class FalconMotor extends TalonFX implements Entity, SimpleMotorControl {
     }
 
     @Override
+    public double get() {
+        return super.getMotorOutputPercent();
+    }
+
+    @Override
     public void set(double val) {
         set(ControlMode.PercentOutput, val);
     }
-
     @Override
     public void setPosition(Distance distance) {
         set(TalonFXControlMode.Position, (distance.getValue(Distance.DistanceUnits.INCH) / distancePerRevolution.getValue(Distance.DistanceUnits.INCH)) * getGearRatio() *  getCountPerRevolution());
@@ -102,6 +106,35 @@ public class FalconMotor extends TalonFX implements Entity, SimpleMotorControl {
     @Override
     public Distance getPosition() {
         return new Distance(super.getSelectedSensorPosition() / getGearRatio() / getCountPerRevolution() * distancePerRevolution.getValue(INCH), INCH);
+    }
+
+
+    @Override
+    public void configureForwardLimit(Distance d) {
+        super.configForwardSoftLimitThreshold((d.getValue(INCH) / distancePerRevolution.getValue(INCH)) * getGearRatio() * getCountPerRevolution());
+        super.configForwardSoftLimitEnable(true);
+    }
+    @Override
+    public void enableForwardLimit() {
+        super.configForwardSoftLimitEnable(true);
+    }
+    @Override
+    public void disableForwardLimit() {
+        super.configForwardSoftLimitEnable(false);
+    }
+
+    @Override
+    public void configureReverseLimit(Distance d) {
+        super.configReverseSoftLimitThreshold((d.getValue(INCH) / distancePerRevolution.getValue(INCH)) * getGearRatio() * getCountPerRevolution());
+        super.configReverseSoftLimitEnable(true);
+    }
+    @Override
+    public void enableReverseLimit() {
+        super.configReverseSoftLimitEnable(true);
+    }
+    @Override
+    public void disableReverseLimit() {
+        super.configReverseSoftLimitEnable(false);
     }
 
     @Override

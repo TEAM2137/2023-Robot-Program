@@ -1,6 +1,7 @@
 package frc.robot.functions.io.xmlreader.data;
 
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
 import frc.robot.functions.io.FileLogger;
@@ -71,13 +72,17 @@ public class Binding extends EntityGroup {
     @Override
     public void periodic() {
             for (Mapping button : booleanEntries) {
-                if(button instanceof ControllerMapping && (!isTeleop() || !isTest()))
-                    continue;
+//                SmartDashboard.putBoolean(getName() + "-" + button.getPseudoName(), button.getBooleanValue());
 
                 if (button.getBooleanValue()) {
-                    for (Step step : steps)
+                    if(button instanceof ControllerMapping && (!isTeleop() || !isTest()))
+                        continue;
+
+                    for (Step step : steps) {
                         step.changeStepState(Constants.StepState.STATE_INIT);
-                    Robot.currentActiveSteps.addAll(steps);
+
+                        Robot.currentActiveSteps.add(step);
+                    }
                 }
             }
     }

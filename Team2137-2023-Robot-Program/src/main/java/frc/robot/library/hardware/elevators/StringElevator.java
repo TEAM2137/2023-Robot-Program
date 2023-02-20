@@ -1,21 +1,19 @@
 package frc.robot.library.hardware.elevators;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.Entity;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.data.Step;
 import frc.robot.functions.io.xmlreader.data.mappings.Mapping;
-import frc.robot.library.Constants;
 import frc.robot.functions.io.xmlreader.objects.motor.SimpleMotorControl;
+import frc.robot.library.Constants;
 import frc.robot.library.units.TranslationalUnits.Distance;
-import frc.robot.library.units.Number;
 import org.w3c.dom.Element;
 
-import javax.swing.*;
 import java.util.Collection;
-import java.util.concurrent.Callable;
 
 import static frc.robot.library.Constants.StepState.*;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
@@ -31,7 +29,9 @@ public class StringElevator extends EntityGroup implements Elevator {
     private final FileLogger logger;
 
     private Distance mGoalPosition;
+    private final Distance mMaxTravel;
     private final Distance mSpoolDiameter;
+    private Distance mCurrentPosition;
 
     private Constants.StepState mHomingStepState = STATE_NOT_STARTED;
 
@@ -41,8 +41,8 @@ public class StringElevator extends EntityGroup implements Elevator {
      * Takes in a part of the xml file and parses it into variables and subtypes using recursion
      *
      * @param element    - Portion of the XML File
-     * @param parent
-     * @param fileLogger
+     * @param parent -
+     * @param fileLogger -
      */
     public StringElevator(Element element, EntityGroup parent, FileLogger fileLogger) {
         super(element, parent, fileLogger);
@@ -65,6 +65,9 @@ public class StringElevator extends EntityGroup implements Elevator {
         for(Entity a : keys) {
             String name = a.getName();
 
+            if(name == null)
+                continue;
+
             if(name.contains("Lift Motor")) {
                 fileLogger.writeEvent(0, "Found lift motor with name: " + name);
                 String[] parts = name.split(" ");
@@ -83,11 +86,22 @@ public class StringElevator extends EntityGroup implements Elevator {
         }
 
         if(this.getEntity("SpoolDiameter") != null) {
-            mSpoolDiameter = new Distance(((Number) getEntity("SpoolDiameter")).getValue(), INCH);
+            mSpoolDiameter = (Distance) getEntity("SpoolDiameter");
         } else {
             mSpoolDiameter = new Distance(1, INCH);
         }
+
+        if(this.getEntity("MaxTravel") != null) {
+            mMaxTravel = (Distance) getEntity("MaxTravel");
+        } else {
+            mMaxTravel = new Distance(19.75 * 2.0, INCH);
+        }
+
         mLiftMotors[0].setDistancePerRevolution(new Distance(mSpoolDiameter.getValue(INCH) * Math.PI, INCH));
+        mLiftMotors[0].setIntegratedSensorPosition(0);
+
+        mLiftMotors[0].configureForwardLimit(mMaxTravel);
+        mLiftMotors[0].configureReverseLimit(new Distance(0, INCH));
 
         mHomingSensorMap = (Mapping) this.getEntity("HomingMap");
         
@@ -100,37 +114,61 @@ public class StringElevator extends EntityGroup implements Elevator {
 
     @Override
     public void periodic() {
+        SmartDashboard.putBoolean(getName() + "-" + mHomingSensorMap.getPseudoName(), mHomingSensorMap.getBooleanValue());
+        mCurrentPosition = mLiftMotors[0].getPosition();
+        SmartDashboard.putNumber(getName() + "-CurrentPosition", mCurrentPosition.getValue(FOOT));
+
         switch (mHomingStepState) {
             case STATE_INIT:
                 if(mHomingSensorMap == null) {
                     mHomingStepState = Constants.StepState.STATE_FINISH;
                 } else {
-                    setSpeed(-0.5);
+                    mLiftMotors[0].disableForwardLimit();
+                    mLiftMotors[0].disableReverseLimit();
+                    setSpeed(-0.25);
+                    mHomingStepState = STATE_RUNNING;
                 }
                 break;
             case STATE_RUNNING:
-                try {
-                    if(mHomingSensorMap.getBooleanValue()) {
-                        setSpeed(0.0);
-                        mLiftMotors[0].setIntegratedSensorPosition(0);
-                        mHomingStepState = Constants.StepState.STATE_FINISH;
-                    }
-                } catch (Exception e) {
+                if(mHomingSensorMap.getBooleanValue()) {
                     setSpeed(0.0);
+                    mLiftMotors[0].setIntegratedSensorPosition(0);
+                    mLiftMotors[0].enableForwardLimit();
+                    mLiftMotors[0].enableReverseLimit();
+                    mHomingStepState = Constants.StepState.STATE_FINISH;
                 }
                 break;
+//            default:
+//                if(mHomingSensorMap.getBooleanValue() && mLiftMotors[0].get() < 0) {
+//                    mLiftMotors[0].set(0);
+//                }
+//                break;
         }
     }
 
+//    private boolean allowableGoal(double speed) {
+//        if((mHomingSensorMap.getBooleanValue() || mLiftMotors[0].getPosition().getValue(FOOT) <= 0) && speed < 0) {
+//            return false;
+//        } else if(mLiftMotors[0].getPosition().getValue(FOOT) >= mMaxTravel.getValue(FOOT) && speed > 0) {
+//            return false;
+//        } else {
+//            return false;
+//        }
+//    }
+
     @Override
     public void setSpeed(double speed) {
-        if(speed < 0) {
-            mRatchet.set(DoubleSolenoid.Value.kForward);
-        } else {
+        if(speed > 0) {
             mRatchet.set(DoubleSolenoid.Value.kReverse);
+        } else {
+            mRatchet.set(DoubleSolenoid.Value.kForward);
         }
 
         mLiftMotors[0].set(speed);
+//        if(speed > 0 || !mHomingSensorMap.getBooleanValue())
+//            mLiftMotors[0].set(speed);
+//        else
+//            mLiftMotors[0].set(0);
     }
 
     public void setSpeed(Step step) {
@@ -141,8 +179,8 @@ public class StringElevator extends EntityGroup implements Elevator {
                 SmartDashboard.putNumber(getName() + "-Speed", step.getParm(1));
             } else if (rawSpeedControl) {
                 rawSpeedControl = false;
-                setSpeed(0);
-                SmartDashboard.putNumber(getName() + "-Speed", 0);
+                setSpeed(0.0);
+                SmartDashboard.putNumber(getName() + "-Speed", 0.0);
             }
         }
     }
@@ -150,6 +188,10 @@ public class StringElevator extends EntityGroup implements Elevator {
     public void homeElevator(Step step) {
         if(step.getStepState() == STATE_INIT) {
             mHomingStepState = STATE_INIT;
+
+            DriverStation.reportWarning("Started Homing...", false);
+
+            step.changeStepState(STATE_FINISH);
         }
     }
 

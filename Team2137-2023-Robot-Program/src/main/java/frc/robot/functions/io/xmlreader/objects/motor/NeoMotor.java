@@ -92,8 +92,41 @@ public class NeoMotor extends CANSparkMax implements Entity, SimpleMotorControl 
     }
 
     @Override
+    public void configureForwardLimit(Distance d) {
+        super.setSoftLimit(SoftLimitDirection.kForward, (float) ((d.getValue(INCH) / distancePerRevolution.getValue(INCH)) * getGearRatio() * getCountPerRevolution()));
+        super.enableSoftLimit(SoftLimitDirection.kForward, true);
+    }
+    @Override
+    public void enableForwardLimit() {
+        super.enableSoftLimit(SoftLimitDirection.kForward, true);
+    }
+    @Override
+    public void disableForwardLimit() {
+        super.enableSoftLimit(SoftLimitDirection.kForward, false);
+    }
+
+    @Override
+    public void configureReverseLimit(Distance d) {
+        super.setSoftLimit(SoftLimitDirection.kReverse, (float) ((d.getValue(INCH) / distancePerRevolution.getValue(INCH)) * getGearRatio() * getCountPerRevolution()));
+        super.enableSoftLimit(SoftLimitDirection.kReverse, true);
+    }
+    @Override
+    public void enableReverseLimit() {
+        super.enableSoftLimit(SoftLimitDirection.kReverse, true);
+    }
+    @Override
+    public void disableReverseLimit() {
+        super.enableSoftLimit(SoftLimitDirection.kReverse, false);
+    }
+
+    @Override
     public void set(double val) {
         super.set(val);
+    }
+
+    @Override
+    public double get() {
+        return super.getAppliedOutput();
     }
 
     //------------------------------------------Position Control------------------------------------------------------//

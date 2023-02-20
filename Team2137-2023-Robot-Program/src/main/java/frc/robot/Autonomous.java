@@ -186,7 +186,6 @@ public class Autonomous implements OpMode {
     //endregion
 
     private List<PoseWithCurvature> mDrivePoseWithCurvatureList;
-    private List<Velocity> mDrivePoseVelocities;
     private PurePursuitGenerator mDrivePurePursuitGenerator;
     private VelocityGenerator velocityGenerator;
     private Distance mPurePursuitLookaheadDistance;
@@ -205,10 +204,10 @@ public class Autonomous implements OpMode {
                 mDrivePoseWithCurvatureList = spline.getSplinePoints();
 
                 velocityGenerator = new VelocityGenerator(mDrivePoseWithCurvatureList, new Velocity(4.06, METER_PER_SECOND), new Acceleration(4, METER_PER_SECOND2), 1);
-                mDrivePoseVelocities = velocityGenerator.getSpeeds();
+                List<Velocity> velocities = velocityGenerator.getSpeeds();
 
                 mPurePursuitLookaheadDistance = new Distance(((Number) Robot.settingsEntityGroup.getEntity("PurePursuitLookahead")).getValue(), FOOT);
-                mDrivePurePursuitGenerator = new PurePursuitGenerator(mPurePursuitLookaheadDistance, mDrivePoseWithCurvatureList);
+                mDrivePurePursuitGenerator = new PurePursuitGenerator(mPurePursuitLookaheadDistance, mDrivePoseWithCurvatureList, velocities);
 
                 mDriveStepState = StepState.STATE_RUNNING;
                 break;
@@ -216,12 +215,12 @@ public class Autonomous implements OpMode {
                 SwerveDrivetrain drivetrain = mDrivetrain;
                 frc.robot.library.units.UnitContainers.Pose2d<Distance> currentPosition = drivetrain.getCurrentOdometryPosition();
 
-                Map.Entry<Transform2d, Map.Entry<Integer, Integer>> results = mDrivePurePursuitGenerator.calculateGoalPose(new Translation2d(currentPosition.getX().getValue(FOOT), currentPosition.getY().getValue(FOOT)));
+                Map.Entry<Transform2d, Velocity> results = mDrivePurePursuitGenerator.calculateGoalPose(new Translation2d(currentPosition.getX().getValue(FOOT), currentPosition.getY().getValue(FOOT)));
 
-                Vector2d<Distance> goalVector = new Vector2d<Distance>(new Distance(results.getKey().getX(), FOOT), new Distance(results.getKey().getY(), FOOT));
-                Vector2d<Distance> normalizedVector = goalVector.normalize();
+                double xVel = (results.getKey().getX() - currentPosition.getX().getValue(FOOT)) * results.getValue().getValue(FEET_PER_SECOND);
+                double yVel = (results.getKey().getY() - currentPosition.getY().getValue(FOOT)) * results.getValue().getValue(FEET_PER_SECOND);
 
-                SwerveModuleState[] states = drivetrain.calculateSwerveMotorSpeedsFieldCentric(normalizedVector.getX(), normalizedVector.getY(), new Angle(0, RADIAN));
+                SwerveModuleState[] states = drivetrain.calculateSwerveMotorSpeedsFieldCentric(new Velocity(xVel, FEET_PER_SECOND), new Velocity(yVel, FEET_PER_SECOND), new Angle(0, RADIAN));
 
                 drivetrain.setSwerveModuleStates(states);
                 break;

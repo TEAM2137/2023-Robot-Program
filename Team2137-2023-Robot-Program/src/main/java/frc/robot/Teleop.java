@@ -74,13 +74,11 @@ public class Teleop implements OpMode {
 
     @Override
     public void periodic() {
-//        mCurrentDrivetrainPeriodRunnable.run();
-
-//        logger.writeEvent(0, "Current Action Step Count: " + Robot.currentActiveSteps.size());
+        logger.writeEvent(0, "Current Action Step Count: " + Robot.currentActiveSteps.size());
 
         for(int i = 0; i < Robot.currentActiveSteps.size(); i++) {
             Step tmpStep = Robot.currentActiveSteps.get(i);
-//            logger.writeEvent(0, "Running Command With Name: " + tmpStep.getCommand());
+            logger.writeEvent(0, "Running Command With Name: " + tmpStep.getCommand());
 
             if (tmpStep.getStepState() == Constants.StepState.STATE_FINISH) {
                 this.logger.writeEvent(3, FileLogger.EventType.Debug, tmpStep.getCommand() + " finished, now removing from operational stack");

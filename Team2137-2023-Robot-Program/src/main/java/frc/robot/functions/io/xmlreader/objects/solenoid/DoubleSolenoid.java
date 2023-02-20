@@ -3,6 +3,8 @@ package frc.robot.functions.io.xmlreader.objects.solenoid;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Robot;
 import frc.robot.functions.io.xmlreader.Entity;
 import org.w3c.dom.Element;
 
@@ -13,15 +15,22 @@ public class DoubleSolenoid extends edu.wpi.first.wpilibj.DoubleSolenoid impleme
     private Runnable onImplement;
 
     public DoubleSolenoid(org.w3c.dom.Element element) {
-        super(PneumaticsModuleType.REVPH, Integer.parseInt(Entity.getOrDefault(element, "IDF", element.getTagName())), Integer.parseInt(Entity.getOrDefault(element, "IDR", element.getTagName())));
+        super(Integer.parseInt(Entity.getOrDefault(element, "PCM-ID", "3")),
+                PneumaticsModuleType.REVPH,
+                Integer.parseInt(Entity.getOrDefault(element, "IDF", "0")),
+                Integer.parseInt(Entity.getOrDefault(element, "IDR", "1")));
 
         savedElement = element;
         this.name = getNodeOrAttribute(element, "Name", element.getTagName());
+
+        Robot.allEntities.add(this);
     }
 
     @Override
     public void set(edu.wpi.first.wpilibj.DoubleSolenoid.Value value) {
         super.set(value);
+
+        SmartDashboard.putBoolean(getName(), value == Value.kForward);
     }
 
     /**

@@ -13,6 +13,16 @@ public interface SimpleMotorControl extends SimpleMotorData {
     void setPosition(Angle angle);
     Distance getPosition();
 
+    double get();
+
+    void enableReverseLimit();
+    void disableReverseLimit();
+    void configureReverseLimit(Distance distance);
+
+    void enableForwardLimit();
+    void disableForwardLimit();
+    void configureForwardLimit(Distance distance);
+
     void setVelocity(Velocity velocity);
 
     int getCountPerRevolution();

@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.Robot;
 import frc.robot.functions.io.xmlreader.Entity;
+import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.EntityImpl;
 import frc.robot.functions.io.xmlreader.objects.canifier.DIO;
 import org.w3c.dom.Element;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 public class DIOMapping extends EntityImpl implements Mapping {
 
     private DIO digitalInput;
+    private final boolean inverted;
     private final String valueName;
 
     /**
@@ -27,26 +29,33 @@ public class DIOMapping extends EntityImpl implements Mapping {
     public DIOMapping(Element element) {
         super(element);
 
-        String id = getNodeOrAttribute(element, "id", "X");
+        String id = getNodeOrAttribute(element, "id", "9");
         valueName = getNodeOrAttribute(element, "value", "value");
+        inverted = Boolean.parseBoolean(getNodeOrAttribute(element, "inverted", "false"));
 
-        for(Entity a : Robot.allEntities) {
-            if(a instanceof DIO && a.getName().equalsIgnoreCase(id)) {
-                digitalInput = (DIO) a;
-            }
-        }
+        digitalInput = new DIO(valueName, Integer.parseInt(id));
+//        for(Entity a : Robot.allEntities) {
+//            if(a instanceof DIO && a.getName().equalsIgnoreCase(id)) {
+//                digitalInput = (DIO) a;
+//            }
+//        }
 
-        System.out.println("DIO not found");
     }
 
     @Override
     public double getValue() {
-        return digitalInput.get() ? 1 : 0;
+        if(inverted)
+            return digitalInput.get() ? 1 : 0;
+        else
+            return !digitalInput.get() ? 0 : 1;
     }
 
     @Override
     public boolean getBooleanValue() {
-        return digitalInput.get();
+        if(inverted)
+            return digitalInput.get();
+        else
+            return !digitalInput.get();
     }
 
     @Override

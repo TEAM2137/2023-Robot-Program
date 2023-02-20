@@ -15,6 +15,7 @@
 package frc.robot.library.hardware.swerve;
 
 import com.ctre.phoenix.sensors.PigeonIMU;
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
@@ -109,9 +110,24 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
     public void rawDrive(Step step) {
         if(step.getStepState() == Constants.StepState.STATE_INIT) {
-            SwerveModuleState[] states = calculateSwerveMotorSpeedsFieldCentric(step.getXDistance(), -step.getYDistance(), step.getParm(1));
+            Pair<Double, Double> xy = Pair.of(step.getXDistance(), -step.getYDistance());
 
-            this.setSwerveModuleStates(states);
+            //double rMag = Math.sin(Constants.deadband(mDriverController.getRightX(), 0.08)); //TODO must fix TrackWidth
+            double rMag = Constants.deadband(step.getParm(1), 0.08);
+
+//            SwerveModuleState[] states = swerveKinematics.getSwerveModuleState(new Numxy.getFirst(), xy.getSecond(), rMag);
+//            for(SwerveModuleState state : states) {
+//                System.out.println(state.toString());
+//            }
+
+//            SwerveModuleState[] states = calculateSwerveMotorSpeedsFieldCentric(xy.getFirst(), xy.getSecond(), rMag, 1, 1, Constants.DriveControlType.RAW);
+            SwerveModuleState[] states = calculateSwerveMotorSpeeds(xy.getFirst(), xy.getSecond(), rMag, 1, 1, Constants.DriveControlType.RAW);
+
+            setSwerveModuleStates(states);
+
+            //SwerveModuleState[] states = calculateSwerveMotorSpeedsFieldCentric(step.getXDistance(), -step.getYDistance(), step.getParm(1));
+
+            //this.setSwerveModuleStates(states);
         }
     }
 

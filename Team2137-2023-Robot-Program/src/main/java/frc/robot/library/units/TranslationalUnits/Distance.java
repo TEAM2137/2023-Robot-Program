@@ -5,6 +5,7 @@ import frc.robot.library.units.UnitEnum;
 import frc.robot.library.units.UnitUtil;
 import org.w3c.dom.Element;
 
+import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.METER;
 import static frc.robot.library.units.UnitUtil.System.Imperial;
 import static frc.robot.library.units.UnitUtil.System.Metric;
@@ -131,5 +132,9 @@ public class Distance extends EntityImpl implements TranslationUnit<Distance, fr
     @Override
     public DistanceUnits getPrimaryUnit() {
         return METER;
+    }
+
+    public boolean greaterThan(Distance other) {
+        return getValue(FOOT) > other.getValue(FOOT);
     }
 }
