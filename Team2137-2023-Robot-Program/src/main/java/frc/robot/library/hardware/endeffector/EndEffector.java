@@ -44,7 +44,8 @@ public class EndEffector extends EntityGroup {
     private Rotation2d pitchTarget = new Rotation2d();
     private double pitchSpeed = 0;
 
-    private final Solenoid jaw;
+    private final Solenoid jaw1;
+    private final Solenoid jaw2;
 
     private final CANSparkMax pitchMotor;
     private final AbsoluteEncoder pitchEncoder;
@@ -63,7 +64,8 @@ public class EndEffector extends EntityGroup {
 
         logger = fileLogger;
 
-        jaw = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
+        jaw1 = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
+        jaw2 = new Solenoid(PneumaticsModuleType.CTREPCM, 2);
 
         logger.writeLine("ENDEFFECTOR: Jaw Solenoid Initialized");
 
@@ -110,7 +112,7 @@ public class EndEffector extends EntityGroup {
      * @return Returns true if closed, and false if open.
      */
     public boolean isJawClosed() {
-        return jaw.get();
+        return jaw1.get() && jaw2.get();
     }
 
     /**
@@ -125,7 +127,8 @@ public class EndEffector extends EntityGroup {
      * @param isClosed New state of the end effector. True is closed and false is open.
      */
     public void setEffectorState(boolean isClosed){
-        jaw.set(isClosed);
+        jaw1.set(isClosed);
+        jaw2.set(isClosed);
     }
 
     /**
