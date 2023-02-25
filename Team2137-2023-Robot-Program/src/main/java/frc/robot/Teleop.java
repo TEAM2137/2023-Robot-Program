@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.camera.limelight.AprilTags;
+import frc.robot.camera.limelight.ReflectiveTape;
 import frc.robot.camera.objects.ObjectTracker;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
@@ -70,6 +71,7 @@ public class Teleop implements OpMode {
 
         objectTracker = new ObjectTracker();
         AprilTags.init();
+        ReflectiveTape.init();
     }
 
     @Override

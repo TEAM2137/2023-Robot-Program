@@ -15,7 +15,7 @@ public class AreaDetection {
     ArrayList<Point> leftSideTags = new ArrayList<>(3);
     ArrayList<Point> rightSideTags = new ArrayList<>(3);
 
-    public void init() {
+    public AreaDetection() {
         // Adds the coordinates of the apriltags
         leftSideTags.add(new Point(40.45, 42.19));
         leftSideTags.add(new Point(40.45, 108.19));

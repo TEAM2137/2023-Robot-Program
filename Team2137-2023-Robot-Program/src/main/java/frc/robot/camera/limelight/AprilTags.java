@@ -26,7 +26,7 @@ public class AprilTags {
     private static double rotation;
 
     public static void init() {
-        table = NetworkTableInstance.getDefault().getTable("limelight");
+        table = NetworkTableInstance.getDefault().getTable("limelight-atag");
         botpose = table.getEntry("botpose");
     }
 
