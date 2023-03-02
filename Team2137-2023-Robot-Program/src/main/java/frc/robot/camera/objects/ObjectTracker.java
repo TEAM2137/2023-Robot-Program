@@ -30,6 +30,11 @@ public class ObjectTracker {
     private NetworkTableInstance inst;
     private NetworkTable coneTable;
     private NetworkTable cubeTable;
+    
+    // TODO calculate conversion values
+    private double CONE_UP_DST_INCHES = 0.1;
+    private double CONE_DOWN_DST_INCHES = 0.1;
+    private double CUBE_DST_INCHES = 0.1;
 
     /**
      * @return an <code>ArrayList</code> of rectangles outlining the cones in the camera's vision.
@@ -165,10 +170,36 @@ public class ObjectTracker {
     }
 
     /**
+     * @param index the cone to distance check
+     * @return the distance of the specified cone, in inches.
+     */
+    public double getConeDistance(int index) {
+        double dst = 0;
+        if (isConeUpright(index)) {
+            dst = coneWidths[index] * CONE_UP_DST_INCHES;
+        } else {
+            dst = coneHeights[index] * CONE_DOWN_DST_INCHES;
+        }
+        return dst;
+    }
+
+    /**
+     * @param index the cube to distance check
+     * @return the distance of the specified cube, in inches.
+     */
+    public double getCubeDistance(int index) {
+        double area = 0;
+        double dst = 0;
+        area = cubeWidths[index] * cubeHeights[index];
+        dst = area * CUBE_DST_INCHES;
+        return dst;
+    }
+
+    /**
      * @return true if the cone at the index is standing up (w > h) and false if it is on its side.
      * @param index which cone to check
      */
-    public boolean isConeUpright(int index){
+    public boolean isConeUpright(int index) {
         Point cone = new Point(coneWidths[index], coneHeights[index]);
         if (cone.x > cone.y){
             return false;
