@@ -165,6 +165,18 @@ public class ObjectTracker {
     }
 
     /**
+     * @return true if the cone at the index is standing up (w > h) and false if it is on its side.
+     * @param index which cone to check
+     */
+    public boolean isConeUpright(int index){
+        Point cone = new Point(coneWidths[index], coneHeights[index]);
+        if (cone.x > cone.y){
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Gets the data from the networktables. Should be run every time camera data is needed.
      */
     public void update() {
