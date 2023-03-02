@@ -17,15 +17,12 @@ package frc.robot.library.hardware.swerve.module;
 import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.revrobotics.*;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.*;
 import frc.robot.functions.io.xmlreader.data.PID;
 import frc.robot.functions.io.xmlreader.objects.Encoder;
-import frc.robot.functions.io.xmlreader.objects.motor.Motor;
 import frc.robot.functions.io.xmlreader.objects.motor.NeoMotor;
-import frc.robot.functions.io.xmlreader.objects.motor.SimpleMotorControl;
 import frc.robot.library.Constants.DriveControlType;
 import frc.robot.library.units.AngleUnits.Angle;
 import frc.robot.library.units.TranslationalUnits.Distance;
@@ -36,7 +33,6 @@ import static frc.robot.library.units.AngleUnits.Angle.AngleUnits.DEGREE;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.INCH;
 import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.FEET_PER_SECOND;
-import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.METER_PER_SECOND;
 
 //@SuppressWarnings("All")
 public class SwerveNEODriveModule extends EntityGroup implements SwerveModule {

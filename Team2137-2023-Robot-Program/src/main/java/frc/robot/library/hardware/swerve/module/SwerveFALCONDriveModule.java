@@ -104,7 +104,7 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
         this.mDriveMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, mDriveMotorObj.getCurrentLimit(), mDriveMotorObj.getCurrentLimit(), 1));
         this.mDriveMotor.setNeutralMode(NeutralMode.Brake);
         this.mDriveMotor.configOpenloopRamp(mDriveMotorObj.getRampRate());
-        this.mDriveMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor, 0, 10);
+//        this.mDriveMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor, 0, 10);
 
         logger.writeEvent(4, FileLogger.EventType.Debug, "Initializing Falcon Turn Motor...");
         this.mTurnMotor.configFactoryDefault();
@@ -138,6 +138,7 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
         NetworkTableInstance table = NetworkTableInstance.getDefault();
 
         table.getEntry(getEntityPath() + "Speed").setDouble(getRawDrivePower());
+        table.getEntry(getEntityPath() + "Velocity").setDouble(getDriveVelocity().getValue(FEET_PER_SECOND));
         table.getEntry(getEntityPath() + "AngleTarget").setDouble(goalModuleAngle.getDegrees());
         table.getEntry(getEntityPath() + "Angle").setDouble(getModuleAngle().getDegrees());
         table.getEntry(getEntityPath() + "RawAngleCounts").setDouble(this.mTurnMotor.getSelectedSensorPosition());
@@ -221,7 +222,7 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
 
     @Override
     public double getCurrentDriveRPM() {
-        return (mDriveMotor.getSensorCollection().getIntegratedSensorVelocity() * 10 / 2048) / 60.0;
+        return (mDriveMotor.getSelectedSensorVelocity() * 10 / 2048) / 60.0;
     }
 
     @Override
@@ -238,7 +239,7 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
      */
     @Override
     public Velocity getDriveVelocity() {
-        return new Velocity((mDriveMotor.getSensorCollection().getIntegratedSensorVelocity() * 10 / 2048) * dblDriveWheelRotationPerFoot.getValue(FOOT), FEET_PER_SECOND);
+        return new Velocity((mDriveMotor.getSelectedSensorVelocity() * 10 / 2048) * dblDriveWheelRotationPerFoot.getValue(FOOT), FEET_PER_SECOND);
     }
 
     /**

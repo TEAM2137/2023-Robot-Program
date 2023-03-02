@@ -49,7 +49,7 @@ public class CANifierMapping extends EntityImpl implements Mapping {
     }
 
     @Override
-    public boolean isBooleanValue() {
+    public Boolean isBooleanValue() {
         return true;
     }
 

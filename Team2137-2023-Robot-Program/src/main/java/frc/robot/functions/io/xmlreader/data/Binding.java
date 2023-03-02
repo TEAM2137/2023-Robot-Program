@@ -15,6 +15,7 @@ import org.w3c.dom.Element;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static edu.wpi.first.wpilibj.DriverStation.isTeleop;
 import static edu.wpi.first.wpilibj.DriverStation.isTest;
@@ -36,15 +37,15 @@ public class Binding extends EntityGroup {
     public Binding(Element element, EntityGroup parent, FileLogger fileLogger) {
         super(element, parent, fileLogger);
 
-        for(Entity entry : getEntities()) {
-            if(entry.getName().equalsIgnoreCase("Map")) {
+        for (Entity entry : getEntities()) {
+            if (entry.getName().equalsIgnoreCase("Map")) {
                 Mapping map = (Mapping) entry;
                 mappings.put(map.getPseudoName(), map);
             }
         }
 
-        for(Entity entry : getEntities()) {
-            if(entry.getName().equalsIgnoreCase("Step")) {
+        for (Entity entry : getEntities()) {
+            if (entry.getName().equalsIgnoreCase("Step")) {
                 Step step = (Step) entry;
                 step.registerMappings(mappings);
 
@@ -52,39 +53,38 @@ public class Binding extends EntityGroup {
             }
         }
 
-        for(Mapping entry : mappings.values()) {
-            if(entry.isBooleanValue()) {
+        for (Mapping entry : mappings.values()) {
+            if (entry.isBooleanValue()) {
                 booleanEntries.add(entry);
+            } else if (entry instanceof ControllerMapping) {
+                Robot.persistenceTeleopSteps.addAll(steps);
             } else {
                 numericEntries.add(entry);
-                break;
             }
         }
 
-        if(numericEntries.size() > 0) {
+        if (numericEntries.size() > 0) {
             for (Step step : steps)
                 step.changeStepState(Constants.StepState.STATE_INIT);
 
-            Robot.currentActiveSteps.addAll(steps);
+            Robot.currentActiveTeleopSteps.addAll(steps);
         }
     }
 
     @Override
     public void periodic() {
-            for (Mapping button : booleanEntries) {
-//                SmartDashboard.putBoolean(getName() + "-" + button.getPseudoName(), button.getBooleanValue());
+        for (Mapping button : booleanEntries) {
+            if (button.getBooleanValue()) {
+                 if(button instanceof ControllerMapping && !isTeleop())
+                     continue;
 
-                if (button.getBooleanValue()) {
-                    if(button instanceof ControllerMapping && (!isTeleop() || !isTest()))
-                        continue;
+                 for (Step step : steps) {
+                     step.changeStepState(Constants.StepState.STATE_INIT);
 
-                    for (Step step : steps) {
-                        step.changeStepState(Constants.StepState.STATE_INIT);
-
-                        Robot.currentActiveSteps.add(step);
-                    }
-                }
+                     Robot.currentActiveTeleopSteps.add(step);
+                 }
             }
+        }
     }
 
     @Override

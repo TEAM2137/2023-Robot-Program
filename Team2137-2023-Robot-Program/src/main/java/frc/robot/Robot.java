@@ -34,16 +34,22 @@ public class Robot extends TimedRobot {
   private static OpMode disabledClass;
 
   private static Constants.RobotState lastRobotState;
+  public static ArrayList<Consumer<Constants.RobotState>> robotStateSubscribers = new ArrayList<>();
 
   public static List<EntityGroup> subSystemCallList = new ArrayList<>();
   public static HashMap<String, Consumer<Step>> subSystemCommandList = new HashMap<>();
-  public static ArrayList<Step> currentActiveSteps = new ArrayList<>();
+
+  public static ArrayList<Step> currentActiveTeleopSteps = new ArrayList<>();
+  public static ArrayList<Step> currentActiveAutonomousSteps = new ArrayList<>();
+  public static ArrayList<Step> persistenceTeleopSteps = new ArrayList<>();
+  public static ArrayList<Step> persistenceAutonomousSteps = new ArrayList<>();
+
   public static ArrayList<Entity> allEntities = new ArrayList<>();
+
   public static EntityGroup robotEntityGroup;
   public static EntityGroup settingsEntityGroup;
 
   public static XMLSettingReader settingReader;
-  public static XMLStepReader stepReader;
   public static FileLogger fileLogger;
 
   public static NetworkTable configurationNetworkTable;
@@ -71,9 +77,6 @@ public class Robot extends TimedRobot {
 
     fileLogger.writeEvent(0, FileLogger.EventType.Status, "Opening Settings XML File...");
     settingReader = new XMLSettingReader(Constants.StandardFileAndDirectoryLocations.GenericSettings.getFileLocation(isSimulation),  fileLogger);
-    fileLogger.writeEvent(0, FileLogger.EventType.Status, "Opening Step XML File...");
-    stepReader = new XMLStepReader(Constants.StandardFileAndDirectoryLocations.GenericStepList.getFileLocation(isSimulation), fileLogger);
-    fileLogger.writeEvent(0, "Steps" + stepReader.getSteps().size());
 
     configurationNetworkTable = NetworkTableInstance.getDefault().getTable("XMLConfiguration");
     NetworkTable smartDashboardTable = NetworkTableInstance.getDefault().getTable("SmartDashboard");
@@ -147,10 +150,12 @@ public class Robot extends TimedRobot {
       if(lastRobotState != null) callEndFunction();
       clearOpModes();
 
+      callStateSubscribers(Constants.RobotState.DISABLED);
+
       lastRobotState = Constants.RobotState.DISABLED;
 
       disabledClass = new Disabled();
-      disabledClass.init(settingReader, stepReader, fileLogger);
+      disabledClass.init(settingReader, fileLogger);
 
   }
 
@@ -165,10 +170,14 @@ public class Robot extends TimedRobot {
       callEndFunction();
       clearOpModes();
 
+      callStateSubscribers(Constants.RobotState.AUTONOMOUS);
+      currentActiveAutonomousSteps.clear();
+
+
       lastRobotState = Constants.RobotState.AUTONOMOUS;
 
       autonomousClass = new Autonomous();
-      autonomousClass.init(settingReader, stepReader, fileLogger);
+      autonomousClass.init(settingReader, fileLogger);
 
   }
 
@@ -183,10 +192,17 @@ public class Robot extends TimedRobot {
       callEndFunction();
       clearOpModes();
 
+      for(Step step : persistenceTeleopSteps) {
+        step.changeStepState(Constants.StepState.STATE_INIT);
+      }
+      currentActiveTeleopSteps.clear();
+
+      callStateSubscribers(Constants.RobotState.TELEOP);
+
       lastRobotState = Constants.RobotState.TELEOP;
 
       teleopClass = new Teleop();
-      teleopClass.init(settingReader, stepReader, fileLogger);
+      teleopClass.init(settingReader, fileLogger);
 
   }
 
@@ -201,13 +217,21 @@ public class Robot extends TimedRobot {
       callEndFunction();
       clearOpModes();
 
+      callStateSubscribers(Constants.RobotState.TEST);
+
       lastRobotState = Constants.RobotState.TEST;
       // Cancels all running commands at the start of test mode.
       CommandScheduler.getInstance().cancelAll();
 
       testClass = new Test();
-      testClass.init(settingReader, stepReader, fileLogger);
+      testClass.init(settingReader, fileLogger);
 
+  }
+
+  private void callStateSubscribers(Constants.RobotState newState) {
+    for (Consumer<Constants.RobotState> consumer : robotStateSubscribers) {
+      consumer.accept(newState);
+    }
   }
 
   /** This function is called periodically during test mode. */

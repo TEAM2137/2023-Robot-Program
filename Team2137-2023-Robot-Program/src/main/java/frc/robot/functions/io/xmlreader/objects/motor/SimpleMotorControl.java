@@ -12,6 +12,7 @@ public interface SimpleMotorControl extends SimpleMotorData {
     void setPosition(Distance distance);
     void setPosition(Angle angle);
     Distance getPosition();
+    Angle getAnglePosition();
 
     double get();
 
@@ -33,6 +34,8 @@ public interface SimpleMotorControl extends SimpleMotorData {
     void follow(SimpleMotorControl other);
 
     void setIntegratedSensorPosition(double val);
+
+    void setIntegratedSensorDistance(Distance dis);
 
     int getID();
 

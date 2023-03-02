@@ -116,6 +116,7 @@ public class Spline {
 
             if (index >= kMaxIterations) {
                 System.out.println("Could Not parameterize a malformed spline");
+                break;
             }
         }
 
@@ -123,6 +124,7 @@ public class Spline {
     }
 
     public static List<PoseWithCurvature> parameterizeSpline(Spline spline) {
-        return parameterizeSpline(spline, 0.0, 1.0, 0.00127, 0.127, 0.0872, 5000);
+        //return parameterizeSpline(spline, 0.0, 1.0, 0.00127, 0.127, 0.0872, 5000);
+        return parameterizeSpline(spline, 0.0, 1.0, 0.00127, 0.0127, 0.0872, 8000);
     }
 }

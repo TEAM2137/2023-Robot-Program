@@ -201,7 +201,7 @@ public class Motor extends EntityImpl implements SimpleMotorData {
 
         //TODO read PID
         for (PID pid : pidValues) {
-            if(pid != null) pid.addToNetworkTable(getCurrentNetworkInstance());
+            if(pid != null) pid.addToNetworkTable(table);
         }
 
         NetworkTableEntry entryGearRatio = table.getEntry("GearRatio");

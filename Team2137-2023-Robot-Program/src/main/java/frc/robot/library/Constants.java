@@ -274,6 +274,10 @@ public final class Constants {
     public static Pair<Double, Double> joyStickSlopedDeadband(double x1, double y1, double deadband) {
         double newX = 0;
         double newY = 0;
+
+        if(Math.sqrt(Math.pow(x1, 2) + Math.pow(y1, 2)) > deadband)
+            return new Pair<>(x1, y1);
+
         if(Math.abs(x1) > deadband) {
             newX = (x1 - deadband) / (1 - deadband);
         }

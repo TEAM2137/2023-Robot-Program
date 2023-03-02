@@ -2,13 +2,21 @@ package frc.robot.library.hardware.endeffector;
 
 import com.revrobotics.*;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.data.PID;
+import frc.robot.functions.io.xmlreader.data.Step;
+import frc.robot.functions.io.xmlreader.objects.motor.SimpleMotorControl;
+import frc.robot.functions.io.xmlreader.objects.solenoid.DoubleSolenoid;
+import frc.robot.library.Constants;
+import frc.robot.library.units.AngleUnits.Angle;
 import org.w3c.dom.Element;
+
+import static frc.robot.library.units.AngleUnits.Angle.AngleUnits.DEGREE;
 
 /**
  * Comments by Wyatt 2.7.2023 (Sorry it is a lot)
@@ -41,70 +49,91 @@ public class EndEffector extends EntityGroup {
 
     private final FileLogger logger;
 
-    private Rotation2d pitchTarget = new Rotation2d();
-    private double pitchSpeed = 0;
+    private Angle pitchTarget = new Angle(0, DEGREE);
+    private boolean rawPitchControl = true;
+    //private double pitchSpeed = 0;
 
-    private final Solenoid jaw1;
-    private final Solenoid jaw2;
+    private DoubleSolenoid jaw1;
 
-    private final CANSparkMax pitchMotor;
-    private final AbsoluteEncoder pitchEncoder;
+    private final SimpleMotorControl pitchMotor;
+    //private final AbsoluteEncoder pitchEncoder;
     private final double pitchAllowedErr = 0.5;
 
-    private final SparkMaxPIDController pitchPIDController;
-    private PID pid = new PID(0.5, 0.5, 0.5, 0.00015, 0d, "Jaw Pitch PID"); // PID values
+    private PID pid;// = new PID(0.5, 0.5, 0.5, 0.00015, 0d, "Jaw Pitch PID"); // PID values
 
     private final double maxVel, maxAccel;
 
-    public EndEffector(Element element, int depth, boolean printProcess, FileLogger fileLogger){
-        super(element, depth, printProcess, fileLogger);
+    public EndEffector(Element element, EntityGroup parent, FileLogger fileLogger){
+        super(element, parent, fileLogger);
 
         maxVel = 60;
         maxAccel = 45;
 
         logger = fileLogger;
 
-        jaw1 = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
-        jaw2 = new Solenoid(PneumaticsModuleType.CTREPCM, 2);
+        jaw1 = (DoubleSolenoid) getEntity("JawSolenoid");
 
         logger.writeLine("ENDEFFECTOR: Jaw Solenoid Initialized");
 
-        pitchMotor = new CANSparkMax(3, CANSparkMaxLowLevel.MotorType.kBrushless);
-        pitchEncoder = pitchMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.fromId(3));
-        pitchPIDController = pitchMotor.getPIDController();
+        pitchMotor = (SimpleMotorControl) getEntity("WristMotor");
 
         logger.writeLine("ENDEFFECTOR: Pitch Motor Initialized");
 
-        // PID for pitchMotor
-        pitchPIDController.setP(pid.getP());
-        pitchPIDController.setI(pid.getI());
-        pitchPIDController.setD(pid.getD());
-        pitchPIDController.setFF(pid.getFF());
-        pitchPIDController.setOutputRange(-1.0, 1.0);
-
-        int smartMotionSlot = 0;
-        pitchPIDController.setSmartMotionMaxAccel(maxAccel, smartMotionSlot);
-        pitchPIDController.setSmartMotionMinOutputVelocity(0, smartMotionSlot);
-        pitchPIDController.setSmartMotionMaxVelocity(maxVel, smartMotionSlot);
-        pitchPIDController.setSmartMotionAllowedClosedLoopError(pitchAllowedErr, smartMotionSlot);
+//        int smartMotionSlot = 0;
+//        pitchPIDController.setSmartMotionMaxAccel(maxAccel, smartMotionSlot);
+//        pitchPIDController.setSmartMotionMinOutputVelocity(0, smartMotionSlot);
+//        pitchPIDController.setSmartMotionMaxVelocity(maxVel, smartMotionSlot);
+//        pitchPIDController.setSmartMotionAllowedClosedLoopError(pitchAllowedErr, smartMotionSlot);
 
         logger.writeLine("ENDEFFECTOR: PID Initialized");
+
+        this.addSubsystemCommand(getName() + "-SetRawClaw", this::setRawClaw);
+        this.addSubsystemCommand(getName() + "-RawWristPosition", this::setWristPosition);
+        this.addSubsystemCommand(getName() + "-RawWristSpeed", this::setWristSpeed);
+    }
+
+    public void setWristSpeed(Step step) {
+        if(step.getStepState() == Constants.StepState.STATE_INIT) {
+            if(step.getParm(1) != 0) {
+                rawPitchControl = true;
+                pitchMotor.set(step.getParm(1));
+//                setTargetPitch(new Angle(step.getParm(1) * 180.0, DEGREE));
+            } else if (rawPitchControl) {
+                rawPitchControl = false;
+                pitchMotor.set(0.0);
+            }
+        }
+    }
+
+    public void setWristPosition(Step step) {
+        if(step.getStepState() == Constants.StepState.STATE_INIT) {
+            setTargetPitch(new Angle(step.getParm(1), DEGREE));
+
+            step.changeStepState(Constants.StepState.STATE_FINISH);
+        }
+    }
+
+    public void setRawClaw(Step step) {
+        if(step.getStepState() == Constants.StepState.STATE_INIT) {
+            setEffectorState(step.getParm(1) > 0);
+
+            step.changeStepState(Constants.StepState.STATE_FINISH);
+        }
     }
 
     @Override
     public void periodic(){
         // Update dashboard stats
         SmartDashboard.putBoolean("End Effector Closed", isJawClosed());
-        SmartDashboard.putNumber("Pitch (Degrees)", getPitchDegrees());
-        SmartDashboard.putNumber("Pitch (Ticks)", getPitch());
-        SmartDashboard.putNumber("Target Pitch (Degrees)", pitchTarget.getDegrees());
+        SmartDashboard.putNumber("Pitch (Degrees)", getPitch().getValue(DEGREE));
+        SmartDashboard.putNumber("Target Pitch (Degrees)", pitchTarget.getValue(DEGREE));
         SmartDashboard.putNumber("Pitch Allowed Error", pitchAllowedErr);
 
-        // PID stats
-        SmartDashboard.putNumber("P Gain", pid.getP());
-        SmartDashboard.putNumber("I Gain", pid.getI());
-        SmartDashboard.putNumber("D Gain", pid.getD());
-        SmartDashboard.putNumber("Feed Forward", pid.getFF());
+        // PID stats Built in
+//        SmartDashboard.putNumber("P Gain", pid.getP());
+//        SmartDashboard.putNumber("I Gain", pid.getI());
+//        SmartDashboard.putNumber("D Gain", pid.getD());
+//        SmartDashboard.putNumber("Feed Forward", pid.getFF());
     }
 
     /**
@@ -112,7 +141,7 @@ public class EndEffector extends EntityGroup {
      * @return Returns true if closed, and false if open.
      */
     public boolean isJawClosed() {
-        return jaw1.get() && jaw2.get();
+        return jaw1.get() == edu.wpi.first.wpilibj.DoubleSolenoid.Value.kForward;
     }
 
     /**
@@ -127,87 +156,87 @@ public class EndEffector extends EntityGroup {
      * @param isClosed New state of the end effector. True is closed and false is open.
      */
     public void setEffectorState(boolean isClosed){
-        jaw1.set(isClosed);
-        jaw2.set(isClosed);
+        jaw1.set(isClosed ? edu.wpi.first.wpilibj.DoubleSolenoid.Value.kForward : edu.wpi.first.wpilibj.DoubleSolenoid.Value.kReverse);
     }
 
     /**
      * Sets the speed of the pitch motor
      * @param speed Speed of the motor in range from -1 to 1
      */
-    public void setPitchMotorSpeed(double speed) {
-        pitchSpeed = speed;
-        pitchPIDController.setReference(pitchSpeed, CANSparkMax.ControlType.kVelocity);
-    }
+//    public void setPitchMotorSpeed(double speed) {
+//        pitchSpeed = speed;
+//        pitchPIDController.setReference(pitchSpeed, CANSparkMax.ControlType.kVelocity);
+//    }
 
     /**
      * Sets the speed of the pitch motor in RPM
      * @param rpm Speed of the motor in RPM
      */
-    public void setPitchMotorRPM(double rpm){
-        setPitchMotorSpeed(rpm / 60.0 * 2048 / 10.0);
-    }
+//    public void setPitchMotorRPM(double rpm){
+//        setPitchMotorSpeed(rpm / 60.0 * 2048 / 10.0);
+//    }
 
     /**
      * Uses PID to move to the target pitch
      * @param degrees Position in degrees to set the pitch
      */
-    public void setTargetPitch(double degrees){
-        pitchTarget = new Rotation2d(Math.toRadians(degrees));
-        pitchPIDController.setReference(pitchTarget.getDegrees() * 360 / 4096, CANSparkMax.ControlType.kSmartMotion);
+    public void setTargetPitch(Angle degrees){
+        pitchTarget = degrees;
+        pitchMotor.setPosition(pitchTarget);
+        //pitchPIDController.setReference(pitchTarget.getDegrees() * 360 / 4096, CANSparkMax.ControlType.kSmartMotion);
     }
 
     /**
      * Gets the current pitch in encoder units of the pitch motor
      * @return Pitch in encoder counts
      */
-    public double getPitch(){
-        return pitchEncoder.getPosition();
+    public Angle getPitch(){
+        return pitchMotor.getAnglePosition();
     }
 
     /**
      * Gets the current pitch in degrees
      * @return Pitch in degrees
      */
-    public double getPitchDegrees(){
-        return getPitch() / 4096 * 360;
-    }
+//    public double getPitchDegrees(){
+//        return getPitch() / 4096 * 360;
+//    }
 
     /**
      * Logs the state of the end effector and writes it to file
      */
-    public void logEndEffectorState(){
-        StringBuilder builder = new StringBuilder();
-
-        builder.append("Q~EES~"); // Starting string mirroring Q~SWDSE
-        builder.append(isJawClosed()).append(" ");
-
-        logger.writeLine(builder.toString());
-    }
+//    public void logEndEffectorState(){
+//        StringBuilder builder = new StringBuilder();
+//
+//        builder.append("Q~EES~"); // Starting string mirroring Q~SWDSE
+//        builder.append(isJawClosed()).append(" ");
+//
+//        logger.writeLine(builder.toString());
+//    }
 
     /*
     Slows down the CAN Frame periods for optimization
      */
     public void limitCANFrames(){
-        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus4, 255);
-        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus1, 255);
-        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus2, 255);
-        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus3, 255);
-        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus4, 255);
-        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus5, 255);
-        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus6, 255);
+//        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus4, 255);
+//        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus1, 255);
+//        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus2, 255);
+//        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus3, 255);
+//        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus4, 255);
+//        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus5, 255);
+//        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus6, 255);
     }
 
     /*
     Sets the CAN Frame periods back to default values
      */
     public void resetCANFrames(){
-        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus0, 10);
-        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus1, 20);
-        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus2, 20);
-        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus3, 50);
-        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus4, 20);
-        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus5, 200);
-        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus6, 200);
+//        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus0, 10);
+//        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus1, 20);
+//        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus2, 20);
+//        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus3, 50);
+//        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus4, 20);
+//        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus5, 200);
+//        pitchMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus6, 200);
     }
 }

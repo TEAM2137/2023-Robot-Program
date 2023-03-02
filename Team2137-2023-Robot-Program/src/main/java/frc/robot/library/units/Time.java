@@ -10,10 +10,10 @@ public class Time implements Unit<Time, frc.robot.library.units.Time.TimeUnits> 
 
     public enum TimeUnits implements UnitEnum {        
         SECONDS          (Time, Generic, 1.0,"s"),
-        MINUTE          (Time, Generic, 0.01666667,"m"),
-        MILLISECONDS     (Time, Generic, 1_000,"ms"),
-        MICROSECONDS     (Time, Generic, 1_000_000, "Ms"),
-        NANOSECONDS      (Time, Generic, 1_000_000_000,"ns");
+        MINUTE           (Time, Generic, 0.01666667,"m"),
+        MILLISECONDS     (Time, Generic, 1_000.0,"ms"),
+        MICROSECONDS     (Time, Generic, 1_000_000.0, "Ms"),
+        NANOSECONDS      (Time, Generic, 1_000_000_000.0,"ns");
 
         UnitUtil.UnitType unitType;
         double unitsPerPrimary;

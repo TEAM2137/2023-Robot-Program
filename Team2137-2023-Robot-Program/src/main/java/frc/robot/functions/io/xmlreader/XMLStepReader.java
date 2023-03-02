@@ -116,7 +116,7 @@ public class XMLStepReader {
         if(size - 1 == currentStepCounter)
             return returnList;
 
-        for (int i = currentStepCounter; i < size; i++) {
+        for (int i = Math.max(currentStepCounter, 0); i < size; i++) {
             if(steps.get(i).getParm(7) > 0.0) {
                 break;
             } else {

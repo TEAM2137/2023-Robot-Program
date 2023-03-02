@@ -23,7 +23,7 @@ public interface OpMode {
     /**
      * Runs once when the robot state changed.
      */
-    void init(XMLSettingReader xmlSettingReader, XMLStepReader xmlStepReader, FileLogger fileLogger);
+    void init(XMLSettingReader xmlSettingReader, FileLogger fileLogger);
 
     /**
      * Repeats until robot state is changed.

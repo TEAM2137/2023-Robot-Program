@@ -31,7 +31,7 @@ public class Disabled implements OpMode {
     private final int mintDebug = 0;
 
     @Override
-    public void init(XMLSettingReader xmlSettingReader, XMLStepReader xmlStepReader, FileLogger fileLogger) {
+    public void init(XMLSettingReader xmlSettingReader, FileLogger fileLogger) {
 //        this.logger = new FileLogger(mintDebug, Constants.RobotState.DISABLED);
     }
 

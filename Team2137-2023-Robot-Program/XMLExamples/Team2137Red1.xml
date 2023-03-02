@@ -4,8 +4,8 @@
 		<command>drive</command>
 		<timeout>10</timeout>
 		<speed>0.5</speed>
-		<xdistance>20</xdistance>
-		<ydistance>8</ydistance>
+		<xdistance>0</xdistance>
+		<ydistance>0</ydistance>
 		<parallel>False</parallel>
 		<parm1>0</parm1>
 		<parm2>0</parm2>
@@ -19,38 +19,8 @@
 		<command>drive</command>
 		<timeout>10</timeout>
 		<speed>0.5</speed>
-		<xdistance>11.75</xdistance>
-		<ydistance>7</ydistance>
-		<parallel>False</parallel>
-		<parm1>0</parm1>
-		<parm2>0</parm2>
-		<parm3>0</parm3>
-		<parm4>0</parm4>
-		<parm5>0</parm5>
-		<parm6>0</parm6>
-		<parm7>0</parm7>
-	</Step>
-	<Step>
-		<command>drive</command>
-		<timeout>10</timeout>
-		<speed>0.5</speed>
-		<xdistance>8.5</xdistance>
-		<ydistance>13</ydistance>
-		<parallel>False</parallel>
-		<parm1>0</parm1>
-		<parm2>0</parm2>
-		<parm3>0</parm3>
-		<parm4>0</parm4>
-		<parm5>0</parm5>
-		<parm6>0</parm6>
-		<parm7>0</parm7>
-	</Step>
-	<Step>
-		<command>drive</command>
-		<timeout>10</timeout>
-		<speed>0.5</speed>
-		<xdistance>16.75</xdistance>
-		<ydistance>17.75</ydistance>
+		<xdistance>4</xdistance>
+		<ydistance>4</ydistance>
 		<parallel>False</parallel>
 		<parm1>0</parm1>
 		<parm2>0</parm2>

@@ -17,11 +17,9 @@ package frc.robot.functions.io.xmlreader;
 import edu.wpi.first.networktables.NetworkTable;
 import frc.robot.Robot;
 import frc.robot.functions.io.FileLogger;
-import frc.robot.functions.io.xmlreader.data.Binding;
-import frc.robot.functions.io.xmlreader.data.PID;
+import frc.robot.functions.io.xmlreader.data.*;
 import frc.robot.functions.io.xmlreader.data.mappings.CANifierMapping;
 import frc.robot.functions.io.xmlreader.data.mappings.ControllerMapping;
-import frc.robot.functions.io.xmlreader.data.Step;
 import frc.robot.functions.io.xmlreader.data.mappings.DIOMapping;
 import frc.robot.functions.io.xmlreader.objects.canifier.DIO;
 import frc.robot.functions.io.xmlreader.objects.motor.FalconMotor;
@@ -29,8 +27,8 @@ import frc.robot.functions.io.xmlreader.objects.motor.NeoMotor;
 import frc.robot.functions.io.xmlreader.objects.solenoid.DoubleSolenoid;
 import frc.robot.library.hardware.LazySusan;
 import frc.robot.library.hardware.elevators.StringElevator;
+import frc.robot.library.hardware.endeffector.EndEffector;
 import frc.robot.library.units.Number;
-import frc.robot.functions.io.xmlreader.data.Threshold;
 import frc.robot.functions.io.xmlreader.objects.Camera;
 import frc.robot.functions.io.xmlreader.objects.Encoder;
 import frc.robot.functions.io.xmlreader.objects.Gyro;
@@ -81,10 +79,15 @@ public class EntityGroup extends EntityImpl {
 
         HashMap<String, Class<? extends EntityGroup>> lazySusanImplements = new HashMap<>();
         lazySusanImplements.put("DEFAULT", LazySusan.class);
-        entityGroupClassMappings.put("LazySusan", lazySusanImplements);
+        entityGroupClassMappings.put("LAZYSUSAN", lazySusanImplements);
+
+        HashMap<String, Class<? extends EntityGroup>> clawImplements = new HashMap<>();
+        clawImplements.put("DEFAULT", EndEffector.class);
+        entityGroupClassMappings.put("CLAW", clawImplements);
 
         HashMap<String, Class<? extends EntityGroup>> bindingGroup = new HashMap<>();
         bindingGroup.put("DEFAULT", Binding.class);
+        bindingGroup.put("TELEOP", TeleopBinding.class);
         entityGroupClassMappings.put("BINDING", bindingGroup);
 
         HashMap<String, Class<? extends EntityGroup>> driveTrainImplements = new HashMap<>();
@@ -165,7 +168,7 @@ public class EntityGroup extends EntityImpl {
         findEntities(element, logger);
     }
 
-    public Class<? extends EntityGroup> createEntityGroup(Element tmp) {
+    public static Class<? extends EntityGroup> createEntityGroup(Element tmp) {
         if(tmp.hasAttribute("type"))
             return entityGroupClassMappings.get(tmp.getTagName().toUpperCase()).get(tmp.getAttribute("type").toUpperCase());
         else if (entityGroupClassMappings.containsKey(tmp.getTagName().toUpperCase()))
@@ -174,7 +177,7 @@ public class EntityGroup extends EntityImpl {
             return EntityGroup.class;
     }
 
-    public Class<? extends Entity> createEntity(Element tmp) {
+    public static Class<? extends Entity> createEntity(Element tmp) {
         if(tmp.hasAttribute("type"))
             return entityClassMappings.get(tmp.getTagName().toUpperCase()).get(tmp.getAttribute("type").toUpperCase());
         else if (entityClassMappings.containsKey(tmp.getTagName().toUpperCase()))

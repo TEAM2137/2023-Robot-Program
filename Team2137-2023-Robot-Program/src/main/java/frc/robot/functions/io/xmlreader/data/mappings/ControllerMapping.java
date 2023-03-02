@@ -2,6 +2,7 @@ package frc.robot.functions.io.xmlreader.data.mappings;
 
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import frc.robot.Robot;
@@ -9,9 +10,34 @@ import frc.robot.functions.io.xmlreader.Entity;
 import frc.robot.functions.io.xmlreader.EntityImpl;
 import org.w3c.dom.Element;
 
+import java.sql.Driver;
 import java.util.ArrayList;
 
 public class ControllerMapping extends EntityImpl implements Mapping {
+
+    public enum DPADValues {
+        DPAD_UP ("DPAD-UP", 0),
+        DPAD_DOWN ("DPAD-DOWN", 2),
+        DPAD_LEFT ("DPAD-LEFT", 3),
+        DPAD_RIGHT ("DPAD-RIGHT", 1);
+
+        final String val;
+        final int dir;
+
+        DPADValues(String value, int pos) {
+            val = value;
+            dir = pos;
+        }
+
+        @Override
+        public String toString() {
+            return val;
+        }
+
+        public int getDirection() {
+            return dir;
+        }
+    }
 
     private final XboxController[] controllers;
     private final int controllerNumber;
@@ -20,6 +46,7 @@ public class ControllerMapping extends EntityImpl implements Mapping {
     private final String valueName;
     private XboxController.Axis controllerAxis;
     private XboxController.Button controllerButton;
+    private DPADValues controllerDPAD;
 
     /**
      * Constructs a new Entity with Element linkage
@@ -51,12 +78,21 @@ public class ControllerMapping extends EntityImpl implements Mapping {
                 controllerButton = button;
             }
         }
+
+        for (DPADValues dpad : DPADValues.values()) {
+            if(dpad.toString().equalsIgnoreCase(id)) {
+                controllerDPAD = dpad;
+            }
+        }
     }
 
     @Override
     public double getValue() {
         if(controllerAxis != null) {
             double value = controllers[controllerNumber].getRawAxis(controllerAxis.value);
+
+            if(controllerAxis == XboxController.Axis.kLeftY || controllerAxis == XboxController.Axis.kRightY)
+                value *= -1;
 
             if(Math.abs(value) > deadband)
                 return value;
@@ -65,7 +101,9 @@ public class ControllerMapping extends EntityImpl implements Mapping {
 
         } else if (controllerButton != null) {
             return controllers[controllerNumber].getRawButton(controllerButton.value) ? 1 : 0;
-        } else {
+        } else if (controllerDPAD != null) {
+            return controllers[controllerNumber].getPOV();
+        }else {
             return 0;
         }
     }
@@ -76,6 +114,8 @@ public class ControllerMapping extends EntityImpl implements Mapping {
             return controllers[controllerNumber].getAxisType(controllerAxis.value) == 1;
         } else if (controllerButton != null) {
             return controllers[controllerNumber].getRawButtonPressed(controllerButton.value);
+        } else if (controllerDPAD != null) {
+            return getDPADValues(controllers[controllerNumber].getPOV())[controllerDPAD.getDirection()];
         } else {
             return false;
         }
@@ -87,8 +127,8 @@ public class ControllerMapping extends EntityImpl implements Mapping {
     }
 
     @Override
-    public boolean isBooleanValue() {
-        return controllerButton != null;
+    public Boolean isBooleanValue() {
+        return controllerButton != null || controllerDPAD != null;
     }
 
     @Override
@@ -102,6 +142,30 @@ public class ControllerMapping extends EntityImpl implements Mapping {
             Entity.buildStringTabbedData(builder, depth, "Button", controllerButton.toString());
 
         Entity.buildStringTabbedData(builder, depth, "ValueName", valueName);
+    }
+
+    //Up, Right, Down, Left
+    public boolean[] getDPADValues(double angle) {
+        if(angle >= 0 && angle <= 22.5)
+            return new boolean[] { true,    false,  false,  false };
+        else if(angle > 22.5 && angle <= 67.5)
+            return new boolean[] { true,    true,   false,  false };
+        else if(angle > 67.5 && angle <= 112.5)
+            return new boolean[] { false,   true,   false,  false };
+        else if(angle > 112.5 && angle <= 157.5)
+            return new boolean[] { false,   true,   true,   false };
+        else if(angle > 157.5 && angle <= 202.5)
+            return new boolean[] { false,   false,  true,   false };
+        else if(angle > 202.5 && angle <= 247.5)
+            return new boolean[] { false,   false,  true,   true  };
+        else if(angle > 247.5 && angle <= 292.5)
+            return new boolean[] { false,   false,  false,  true  };
+        else if(angle > 292.5 && angle <= 337.5)
+            return new boolean[] { true,    false,  false,  true  };
+        else if(angle > 337.5 && angle <= 360)
+            return new boolean[] { true,    false,  false,  false };
+        else
+            return new boolean[] { false,   false,  false,  false };
     }
 
     @Override

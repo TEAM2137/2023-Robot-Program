@@ -1,11 +1,15 @@
 package frc.robot.library.hardware.elevators;
 
+import com.revrobotics.CANSparkMax;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.Entity;
 import frc.robot.functions.io.xmlreader.EntityGroup;
+import frc.robot.functions.io.xmlreader.data.PID;
 import frc.robot.functions.io.xmlreader.data.Step;
 import frc.robot.functions.io.xmlreader.data.mappings.Mapping;
 import frc.robot.functions.io.xmlreader.objects.motor.SimpleMotorControl;
@@ -14,6 +18,8 @@ import frc.robot.library.units.TranslationalUnits.Distance;
 import org.w3c.dom.Element;
 
 import java.util.Collection;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import static frc.robot.library.Constants.StepState.*;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
@@ -31,11 +37,16 @@ public class StringElevator extends EntityGroup implements Elevator {
     private Distance mGoalPosition;
     private final Distance mMaxTravel;
     private final Distance mSpoolDiameter;
+    private final Distance mZeroPosition;
     private Distance mCurrentPosition;
 
-    private Constants.StepState mHomingStepState = STATE_NOT_STARTED;
+    private ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(1);
+
+    private Constants.StepState mHomingStepState = STATE_FINISH;
 
     private final Mapping mHomingSensorMap;
+
+    private final PIDController pidController;
 
     /**
      * Takes in a part of the xml file and parses it into variables and subtypes using recursion
@@ -85,6 +96,12 @@ public class StringElevator extends EntityGroup implements Elevator {
                 mLiftMotors[i].follow(mLiftMotors[0]);
         }
 
+        if(this.getEntity("ZeroPosition") != null) {
+            mZeroPosition = (Distance) getEntity("ZeroPosition");
+        } else {
+            mZeroPosition = new Distance(0, INCH);
+        }
+
         if(this.getEntity("SpoolDiameter") != null) {
             mSpoolDiameter = (Distance) getEntity("SpoolDiameter");
         } else {
@@ -94,14 +111,23 @@ public class StringElevator extends EntityGroup implements Elevator {
         if(this.getEntity("MaxTravel") != null) {
             mMaxTravel = (Distance) getEntity("MaxTravel");
         } else {
-            mMaxTravel = new Distance(19.75 * 2.0, INCH);
+            mMaxTravel = new Distance(38.875, INCH);
         }
 
         mLiftMotors[0].setDistancePerRevolution(new Distance(mSpoolDiameter.getValue(INCH) * Math.PI, INCH));
-        mLiftMotors[0].setIntegratedSensorPosition(0);
+        mLiftMotors[0].setIntegratedSensorDistance(mZeroPosition);
+
+        mLiftMotors[0].enableReverseLimit();
+        mLiftMotors[0].enableForwardLimit();
 
         mLiftMotors[0].configureForwardLimit(mMaxTravel);
         mLiftMotors[0].configureReverseLimit(new Distance(0, INCH));
+
+        setSpeed(0.0);
+
+        PID pid = mLiftMotors[0].getPID();
+        pidController = new PIDController(pid.getP(), pid.getI(), pid.getD());
+        pidController.setTolerance(0.1);
 
         mHomingSensorMap = (Mapping) this.getEntity("HomingMap");
         
@@ -117,6 +143,7 @@ public class StringElevator extends EntityGroup implements Elevator {
         SmartDashboard.putBoolean(getName() + "-" + mHomingSensorMap.getPseudoName(), mHomingSensorMap.getBooleanValue());
         mCurrentPosition = mLiftMotors[0].getPosition();
         SmartDashboard.putNumber(getName() + "-CurrentPosition", mCurrentPosition.getValue(FOOT));
+        SmartDashboard.putNumber(getName() + "-RawOutput", mLiftMotors[0].get());
 
         switch (mHomingStepState) {
             case STATE_INIT:
@@ -125,61 +152,69 @@ public class StringElevator extends EntityGroup implements Elevator {
                 } else {
                     mLiftMotors[0].disableForwardLimit();
                     mLiftMotors[0].disableReverseLimit();
-                    setSpeed(-0.25);
+                    DriverStation.reportError("Starting the Home seqence for " + getName(), false);
+                    setSpeed(-0.25, false);
+                    mGoalPosition = null;
                     mHomingStepState = STATE_RUNNING;
                 }
                 break;
             case STATE_RUNNING:
                 if(mHomingSensorMap.getBooleanValue()) {
                     setSpeed(0.0);
-                    mLiftMotors[0].setIntegratedSensorPosition(0);
+
                     mLiftMotors[0].enableForwardLimit();
                     mLiftMotors[0].enableReverseLimit();
+                    mLiftMotors[0].setIntegratedSensorDistance(mZeroPosition);
+
                     mHomingStepState = Constants.StepState.STATE_FINISH;
                 }
                 break;
-//            default:
-//                if(mHomingSensorMap.getBooleanValue() && mLiftMotors[0].get() < 0) {
-//                    mLiftMotors[0].set(0);
-//                }
-//                break;
+
+            default:
+                if(!rawSpeedControl && mGoalPosition != null) {
+                    setSpeed(pidController.calculate(mCurrentPosition.getValue(INCH)));
+                }
+                break;
         }
     }
 
-//    private boolean allowableGoal(double speed) {
-//        if((mHomingSensorMap.getBooleanValue() || mLiftMotors[0].getPosition().getValue(FOOT) <= 0) && speed < 0) {
-//            return false;
-//        } else if(mLiftMotors[0].getPosition().getValue(FOOT) >= mMaxTravel.getValue(FOOT) && speed > 0) {
-//            return false;
-//        } else {
-//            return false;
-//        }
-//    }
-
     @Override
     public void setSpeed(double speed) {
+        setSpeed(speed, true);
+    }
+
+    public void setSpeed(final double speed, boolean limit) {
+//        if(limit)
+//            if(mCurrentPosition.greaterThan(mMaxTravel) && speed > 0) {
+//                setSpeed(0, false);
+//                return;
+//            } else if(0 > mCurrentPosition.getValue(FOOT) && speed < 0) {
+//                setSpeed(speed, false);
+//                return;
+//            }
+
         if(speed > 0) {
             mRatchet.set(DoubleSolenoid.Value.kReverse);
         } else {
             mRatchet.set(DoubleSolenoid.Value.kForward);
         }
 
-        mLiftMotors[0].set(speed);
-//        if(speed > 0 || !mHomingSensorMap.getBooleanValue())
-//            mLiftMotors[0].set(speed);
-//        else
-//            mLiftMotors[0].set(0);
+        threadPoolExecutor.schedule(() -> {
+            mLiftMotors[0].set(speed);
+        }, 100, TimeUnit.MILLISECONDS);
     }
 
     public void setSpeed(Step step) {
         if(step.getStepState() == STATE_INIT) {
-            if(step.getParm(1) != 0) {
+            if(step.getSpeed() != 0) {
                 rawSpeedControl = true;
-                setSpeed(step.getParm(1));
-                SmartDashboard.putNumber(getName() + "-Speed", step.getParm(1));
+                setSpeed(step.getSpeed());
+                mGoalPosition = null;
+                SmartDashboard.putNumber(getName() + "-Speed", step.getSpeed());
             } else if (rawSpeedControl) {
                 rawSpeedControl = false;
                 setSpeed(0.0);
+                mGoalPosition = null;
                 SmartDashboard.putNumber(getName() + "-Speed", 0.0);
             }
         }
@@ -210,6 +245,7 @@ public class StringElevator extends EntityGroup implements Elevator {
 
     @Override
     public void setPosition(Distance distance) {
+        DriverStation.reportWarning(getName() + "-SetPosition to " + distance.getValue(FOOT), false);
         logger.writeEvent(2, FileLogger.EventType.Debug, "Setting " + getName() + " Position to " + distance.getValue(FOOT) + "ft");
 
         if(distance.getValue(FOOT) < mLiftMotors[0].getPosition().getValue(FOOT)) {
@@ -219,6 +255,7 @@ public class StringElevator extends EntityGroup implements Elevator {
         }
 
         mGoalPosition = distance;
-        mLiftMotors[0].setPosition(distance);
+        pidController.setSetpoint(mGoalPosition.getValue(INCH));
+        //mLiftMotors[0].setPosition(distance);
     }
 }

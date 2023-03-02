@@ -1,6 +1,5 @@
 package frc.robot.library.hardware;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -11,6 +10,7 @@ import frc.robot.library.units.TranslationalUnits.Acceleration;
 import frc.robot.library.units.TranslationalUnits.Distance;
 import frc.robot.library.units.TranslationalUnits.Velocity;
 import frc.robot.library.units.UnitContainers.CartesianValue;
+import frc.robot.library.units.UnitContainers.Pose2d;
 
 import java.util.LinkedList;
 import java.util.function.Consumer;
@@ -21,48 +21,25 @@ import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.
 
 public class FusedTrackingAlgorithm {
 
-    private class Reading {
-        public CartesianValue<Rotation2d> gyroAngleReading;
-        public CartesianValue<Velocity> gyroSpeedReading;
-        public CartesianValue<Acceleration> gyroAccelReading;
-        public CartesianValue<Velocity> desiredVelocities;
-        public CartesianValue<Distance> robotCenterOfGravity;
-        public SwerveModuleState[] swerveModuleStates;
-        public Pose2d visionReading;
-
-        public Reading(CartesianValue<Rotation2d> _GyroAngleReading, CartesianValue<Velocity> _GyroSpeedReading, CartesianValue<Acceleration> _GyroAcceleration, CartesianValue<Velocity> _DesiredVelocities, CartesianValue<Distance> _RobotCenterOfGravity, SwerveModuleState[] _SwerveModuleStates, Pose2d _VisionReadings) {
-            gyroAngleReading = _GyroAngleReading;
-            gyroSpeedReading = _GyroSpeedReading;
-            gyroAccelReading = _GyroAcceleration;
-            desiredVelocities = _DesiredVelocities;
-            robotCenterOfGravity = _RobotCenterOfGravity;
-            swerveModuleStates = _SwerveModuleStates;
-            visionReading = _VisionReadings;
-        }
-    }
+    private Pose2d<Distance> currentEstimatedRobotPosition;
 
     private static final int sizeOfPastReadings = 10;
     CartesianValue<Distance> robotDimensions;
-    private static double robotMass = 45.0;
-    private static final double dblMaxRobotAccelerationCoast = -3;
-    private static final double dblMaxRobotAccelerationBreak = -10;
-    LinkedList<Reading> pastReadings = new LinkedList<>();
-
-    private double currentX;
-    private double currentY;
+    CartesianValue<Distance> staticCenterOfGravity;
 
     private final Consumer<Acceleration> tipEvent;
 
-    public FusedTrackingAlgorithm(double _robotMass, Consumer<Acceleration> _tipEvent) {
-        robotMass = _robotMass;
+    public FusedTrackingAlgorithm(CartesianValue<Distance> dimensions, CartesianValue<Distance> cog, Consumer<Acceleration> _tipEvent) {
+        robotDimensions = dimensions;
+        staticCenterOfGravity = cog;
         tipEvent = _tipEvent;
     }
 
     public void update(DeadWheelActiveTracking deadWheelActiveTracking, CartesianValue<Rotation2d> gyroAngleReading, CartesianValue<Velocity> gyroSpeedReading, CartesianValue<Acceleration> gyroAccelerationReading, CartesianValue<Velocity> desiredVelocities, CartesianValue<Velocity> currentVelocity, CartesianValue<Distance> centerOfGravity, SwerveModuleState[] moduleStates, Pose2d visionReading) {
-        if(pastReadings.size() == sizeOfPastReadings)
-            pastReadings.remove(); //If full remove the first item
-
-        pastReadings.add(new Reading(gyroAngleReading, gyroSpeedReading, gyroAccelerationReading, desiredVelocities, centerOfGravity, moduleStates, visionReading)); //Add the new item
+//        if(pastReadings.size() == sizeOfPastReadings)
+//            pastReadings.remove(); //If full remove the first item
+//
+//        pastReadings.add(new Reading(gyroAngleReading, gyroSpeedReading, gyroAccelerationReading, desiredVelocities, centerOfGravity, moduleStates, visionReading)); //Add the new item
     }
 
     /**
@@ -80,6 +57,15 @@ public class FusedTrackingAlgorithm {
         return returner;
     }
 
+//    public void integrateVisionReading(Pose2d<Distance> )
+
+    //-------------------------------------------------Tip Detection--------------------------------------------------//
+
+//    private CartesianValue<Distance> calculateCenterOfGravityPosition() {
+//        Reading latest = getLatestReading();
+//        return Constants.rotate3DInertialFrame(latest.robotCenterOfGravity, latest.gyroAngleReading);
+//    }
+
     public static double calculateTipAcceleration(Translation2d cog, Translation2d tipPoint, Rotation2d gyroDirectionalAngle) {
         double horizontalDistance = cog.getX() - tipPoint.getX();
         double verticalDistance = cog.getY() - tipPoint.getY();
@@ -90,12 +76,7 @@ public class FusedTrackingAlgorithm {
         return top / bottom;
     }
 
-    private CartesianValue<Distance> calculateCenterOfGravityPosition() {
-        Reading latest = getLatestReading();
-        return Constants.rotate3DInertialFrame(latest.robotCenterOfGravity, latest.gyroAngleReading);
-    }
-
-    public static void tipDetection(CartesianValue<Velocity> desiredVelocities, CartesianValue<Velocity> currentVelocity, CartesianValue<Rotation2d> gyroAngleReading, CartesianValue<Distance> staticCenterOfGravity, CartesianValue<Distance> robotDimensions) {
+    public void tipDetection(CartesianValue<Velocity> desiredVelocities, CartesianValue<Velocity> currentVelocity, CartesianValue<Rotation2d> gyroAngleReading) {
         CartesianValue<Distance> centerOfGravity = Constants.rotate3DInertialFrame(staticCenterOfGravity, gyroAngleReading);
         //Can only tip straight directions
         Rotation2d gyroDirectionAngle;
@@ -137,11 +118,7 @@ public class FusedTrackingAlgorithm {
         //}
     }
 
-    private void bumpDetection() {
-
-    }
-
-    private Reading getLatestReading() {
-        return pastReadings.getLast();
-    }
+//    private Reading getLatestReading() {
+//        return pastReadings.getLast();
+//    }
 }

@@ -14,13 +14,18 @@
 
 package frc.robot.library.hardware.swerve;
 
+import com.ctre.phoenix.sensors.Pigeon2;
 import com.ctre.phoenix.sensors.PigeonIMU;
+import edu.wpi.first.math.Num;
 import edu.wpi.first.math.Pair;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
+import frc.robot.functions.io.xmlreader.data.PID;
 import frc.robot.functions.io.xmlreader.data.Step;
 import frc.robot.functions.io.xmlreader.objects.Gyro;
 import frc.robot.functions.io.xmlreader.objects.motor.Motor;
@@ -36,6 +41,7 @@ import frc.robot.library.units.TranslationalUnits.Distance;
 import frc.robot.library.units.TranslationalUnits.Velocity;
 import frc.robot.library.units.Unit;
 import frc.robot.library.units.UnitContainers.CartesianValue;
+import frc.robot.library.units.UnitContainers.Point2d;
 import frc.robot.library.units.UnitContainers.Pose2d;
 import frc.robot.library.units.UnitContainers.Vector2d;
 import frc.robot.library.units.UnitEnum;
@@ -58,14 +64,17 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
     private Distance robotLength;
     private Distance robotWidth;
 
-    public SwerveKinematics<Number> swerveKinematics;
-    private DeadWheelActiveTracking mDeadWheelActiveTracking;
+    public SwerveKinematics swerveKinematics;
+    public Step mCurrentAutoDriveStep;
+    public PIDController mAutoLevelPIDController;
+//    private DeadWheelActiveTracking mDeadWheelActiveTracking;
 
     public Motor.MotorTypes driveTrainType;
 
     private final FileLogger logger;
 
-    private final PigeonIMU pigeonIMU;
+    private final Pigeon2 pigeonIMU;
+    private Gyro gyroObj;
 
     public SwerveDrivetrain(Element element, EntityGroup parent, FileLogger fileLogger) {
         super(element, parent, fileLogger);
@@ -85,8 +94,10 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
             robotWidth = new Distance(28, INCH);
         }
 
+        //PID autoLevelValues = (PID) getEntity()
+
         logger.writeEvent(6, FileLogger.EventType.Debug, "Creating Swerve Kinematics class...");
-        swerveKinematics = new SwerveKinematics<>(robotWidth, robotLength);
+        swerveKinematics = new SwerveKinematics(robotWidth, robotLength);
 
         logger.writeEvent(6, FileLogger.EventType.Debug, "Finding swerve modules from EntityGroup");
         try {
@@ -100,28 +111,39 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         }
 
         logger.writeEvent(6, FileLogger.EventType.Debug, "Creating Pigeon Gyro...");
-        Gyro gyro = (Gyro) getEntity("Pigeon");
-        pigeonIMU = new PigeonIMU(gyro.getID());
+        gyroObj = (Gyro) getEntity("Pigeon");
+        pigeonIMU = new Pigeon2(gyroObj.getID());
         pigeonIMU.configFactoryDefault();
-        pigeonIMU.setFusedHeading(gyro.getOffset());
+        pigeonIMU.configMountPose(gyroObj.getOffset(), 0, 0);
 
         this.addSubsystemCommand("rawDrive", this::rawDrive);
+        this.addSubsystemCommand("GyroReset", this::gyroReset);
+    }
+
+    public void gyroReset(Step step) {
+        if(step.getStepState() == Constants.StepState.STATE_INIT) {
+            pigeonIMU.configMountPoseYaw(gyroObj.getOffset());
+
+            step.changeStepState(Constants.StepState.STATE_FINISH);
+        }
     }
 
     public void rawDrive(Step step) {
         if(step.getStepState() == Constants.StepState.STATE_INIT) {
-            Pair<Double, Double> xy = Pair.of(step.getXDistance(), -step.getYDistance());
+            Pair<Double, Double> xy = Pair.of(step.getXDistance(), step.getYDistance());
+            xy = Constants.joyStickSlopedDeadband(xy.getFirst(), xy.getSecond(), 0.1);
 
             //double rMag = Math.sin(Constants.deadband(mDriverController.getRightX(), 0.08)); //TODO must fix TrackWidth
             double rMag = Constants.deadband(step.getParm(1), 0.08);
 
-//            SwerveModuleState[] states = swerveKinematics.getSwerveModuleState(new Numxy.getFirst(), xy.getSecond(), rMag);
+            //SwerveModuleState[] states = swerveKinematics.getSwerveModuleState(new Number(xy.getFirst()), new Number(xy.getSecond()), new Number(rMag));
 //            for(SwerveModuleState state : states) {
 //                System.out.println(state.toString());
 //            }
 
 //            SwerveModuleState[] states = calculateSwerveMotorSpeedsFieldCentric(xy.getFirst(), xy.getSecond(), rMag, 1, 1, Constants.DriveControlType.RAW);
-            SwerveModuleState[] states = calculateSwerveMotorSpeeds(xy.getFirst(), xy.getSecond(), rMag, 1, 1, Constants.DriveControlType.RAW);
+            SwerveModuleState[] states = calculateSwerveMotorSpeedsFieldCentric(new Number(xy.getFirst()), new Number(xy.getSecond()), new Number(rMag));
+//            SwerveModuleState[] states = calculateSwerveMotorSpeeds(xy.getFirst(), xy.getSecond(), rMag, 1, 1, Constants.DriveControlType.RAW);
 
             setSwerveModuleStates(states);
 
@@ -131,6 +153,10 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         }
     }
 
+    public void resetOdometry() {
+        swerveKinematics.resetSwerveKinematics();
+    }
+
     @Override
     public void periodic() {
         SwerveModuleState lfVelState = leftFrontModule.getSwerveModuleState();
@@ -138,15 +164,15 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         SwerveModuleState rfVelState = rightFrontModule.getSwerveModuleState();
         SwerveModuleState rbVelState = rightBackModule.getSwerveModuleState();
 
-        Vector2d<Distance> dist = swerveKinematics.updateSwerveKinematics(new SwerveModuleState[] { lfVelState, lbVelState, rfVelState, rbVelState });
+        Point2d<Distance> dist = swerveKinematics.updateSwerveKinematics(new SwerveModuleState[] { lfVelState, lbVelState, rfVelState, rbVelState });
 
         SmartDashboard.putNumber("Dist X", dist.getX().getValue(FOOT));
-        SmartDashboard.putNumber("Dist Y", dist.getX().getValue(FOOT));
+        SmartDashboard.putNumber("Dist Y", dist.getY().getValue(FOOT));
     }
 
     @Override
     public Pose2d<Distance> getCurrentOdometryPosition() {
-        Vector2d<Distance> pos = swerveKinematics.getCurrentRobotPosition();
+        Point2d<Distance> pos = swerveKinematics.getCurrentRobotPosition();
 
         return new Pose2d<>(pos.getX(), pos.getY(), getAngle());
     }
@@ -308,7 +334,7 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
     @Override
     public void setAngleOffset(Rotation2d offset) {
-        this.pigeonIMU.setFusedHeading(offset.getDegrees());
+        this.pigeonIMU.configMountPoseYaw(offset.getDegrees());
     }
 
     @Override

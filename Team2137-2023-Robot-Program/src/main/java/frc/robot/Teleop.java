@@ -45,44 +45,43 @@ public class Teleop implements OpMode {
     private XMLSettingReader mSettingReader;
     private SwerveDrivetrain mDrivetrain;
     private FusedTrackingAlgorithm mTrackingAlgorithm;
-    private SwerveKinematics<Number> mKinematic;
 
     private Runnable mCurrentDrivetrainPeriodRunnable;
 
     @Override
-    public void init(XMLSettingReader xmlSettingReader, XMLStepReader xmlStepReader, FileLogger fileLogger) {
+    public void init(XMLSettingReader xmlSettingReader, FileLogger fileLogger) {
         this.logger = fileLogger;
 
         logger.writeEvent(0, "Controller Connect: " + Robot.primaryController.isConnected());
 
         this.mSettingReader = xmlSettingReader;
         this.mRobotSubsystem = this.mSettingReader.getRobot();
-        mTrackingAlgorithm = new FusedTrackingAlgorithm(60, (a) -> {});
+//        mTrackingAlgorithm = new FusedTrackingAlgorithm(60, (a) -> {});
 
         switch(mRobotSubsystem.getEntityGroupByType("DriveTrain").getName()) {
             case "Swerve Falcon":
             case "Swerve NEO":
             case "Swerve Simulation":
                 logger.writeEvent(0, mRobotSubsystem.getEntityGroupByType("DriveTrain").getName());
-                mCurrentDrivetrainPeriodRunnable = this::SwerveDrivetrainPeriodic;
+                //mCurrentDrivetrainPeriodRunnable = this::SwerveDrivetrainPeriodic;
                 this.mDrivetrain = (SwerveDrivetrain) mRobotSubsystem.getEntityGroupByType("DriveTrain");
                 this.mDrivetrain.configDrivetrainControlType(Constants.DriveControlType.VELOCITY);
-                mKinematic = new SwerveKinematics<>(new Distance(1, INCH), new Distance(1, INCH));
+                this.mDrivetrain.resetOdometry();
                 break;
         }
     }
 
     @Override
     public void periodic() {
-        logger.writeEvent(0, "Current Action Step Count: " + Robot.currentActiveSteps.size());
+        logger.writeEvent(0, "Current Action Step Count: " + Robot.currentActiveTeleopSteps.size());
 
-        for(int i = 0; i < Robot.currentActiveSteps.size(); i++) {
-            Step tmpStep = Robot.currentActiveSteps.get(i);
+        for(int i = 0; i < Robot.currentActiveTeleopSteps.size(); i++) {
+            Step tmpStep = Robot.currentActiveTeleopSteps.get(i);
             logger.writeEvent(0, "Running Command With Name: " + tmpStep.getCommand());
 
             if (tmpStep.getStepState() == Constants.StepState.STATE_FINISH) {
                 this.logger.writeEvent(3, FileLogger.EventType.Debug, tmpStep.getCommand() + " finished, now removing from operational stack");
-                Robot.currentActiveSteps.remove(tmpStep);
+                Robot.currentActiveTeleopSteps.remove(tmpStep);
             } else {
                 if(Robot.subSystemCommandList.containsKey(tmpStep.getCommand())) {
                     Robot.subSystemCommandList.get(tmpStep.getCommand()).accept(tmpStep);
@@ -91,14 +90,26 @@ public class Teleop implements OpMode {
                 }
             }
         }
+
+        for(int i = 0; i < Robot.persistenceTeleopSteps.size(); i++) {
+            Step tmpStep = Robot.persistenceTeleopSteps.get(i);
+            logger.writeEvent(0, "Running Command With Name: " + tmpStep.getCommand());
+
+            if(Robot.subSystemCommandList.containsKey(tmpStep.getCommand())) {
+                Robot.subSystemCommandList.get(tmpStep.getCommand()).accept(tmpStep);
+            } else {
+                logger.writeEvent(0, FileLogger.EventType.Error, "Missing Passive Step Command: " + tmpStep.getCommand());
+            }
+        }
     }
 
     @Override
     public void end() {
         logger.writeEvent(0, FileLogger.EventType.Status, "TELEOP Ending");
+        Robot.currentActiveTeleopSteps.clear();
     }
 
-    private void SwerveDrivetrainPeriodic() {
+    /*private void SwerveDrivetrainPeriodic() {
         logger.setTag("SwerveDrivetrainPeriodic()");
         Pair<Double, Double> xy = Constants.joyStickSlopedDeadband(Robot.primaryController.getLeftX(), -Robot.primaryController.getLeftY(), 0.08);
         //double rMag = Constants.deadband(mDriverController.getRightX(), 0.08) * 35; //TODO must fix TrackWidth
@@ -112,5 +123,5 @@ public class Teleop implements OpMode {
 //        SwerveModuleState[] states = mDrivetrain.calculateSwerveMotorSpeedsFieldCentric(xy.getFirst(), xy.getSecond(), rMag * 2, 1, 1, Constants.DriveControlType.RAW);
 
         mDrivetrain.setSwerveModuleStates(states);
-    }
+    }*/
 }

@@ -14,6 +14,9 @@
 
 package frc.robot.functions.io.xmlreader.objects;
 
+import com.ctre.phoenix.sensors.CANCoder;
+import com.revrobotics.SparkMaxAbsoluteEncoder;
+import com.revrobotics.SparkMaxRelativeEncoder;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import frc.robot.Robot;
@@ -25,33 +28,52 @@ import org.w3c.dom.Element;
 public class Encoder extends EntityImpl {
 
     public enum EncoderTypes {
-        CTRE_CAN_ABS ("CTRE_CAN_ABS");
+        CTRE_CAN_ABS ("CTRE_CAN_ABS", 2048, null),
+        REV_INTEGRATED ("REV_INTEGRATED", 2048, SparkMaxRelativeEncoder.Type.kHallSensor),
+        REV_BORE_ABS ("REV_BORE_ABS", 4096, null),
+        REV_BORE_REL ("REV_BORE_REL", 4096, SparkMaxRelativeEncoder.Type.kHallSensor);
 
         final String name;
+        final int cpr;
+        final SparkMaxRelativeEncoder.Type type;
 
-        EncoderTypes (String value) {
+        EncoderTypes (String value, int _cpr, SparkMaxRelativeEncoder.Type _type) {
             name = value;
+            cpr = _cpr;
+            type = _type;
         }
 
         @Override
         public String toString() {
             return name;
         }
+
+        public int getCPR() {
+            return cpr;
+        }
+
+        public SparkMaxRelativeEncoder.Type getType() {
+            return type;
+        }
     }
 
     EncoderTypes type;
     String canLoopName;
     boolean inverted;
+    boolean absolute;
     double offset;
+    int cpr;
     int id;
 
-    public Encoder(String _name, int _id, EncoderTypes _type, boolean _invert, double offset) {
+    public Encoder(String _name, int _id, EncoderTypes _type, boolean _invert, double offset, boolean _absoluteMode) {
         super(_name);
         this.id = _id;
         this.type = _type;
         this.inverted = _invert;
         this.offset = offset;
         this.canLoopName = "rio";
+        this.cpr = _type.getCPR();
+        this.absolute = _absoluteMode;
     }
 
     public Encoder(Element element) {
@@ -62,6 +84,8 @@ public class Encoder extends EntityImpl {
         this.inverted = Boolean.parseBoolean(Entity.getOrDefault(element, "Inverted", "false").toLowerCase());
         this.offset = Double.parseDouble(Entity.getOrDefault(element, "Offset", "0"));
         this.canLoopName = Entity.getOrDefault(element, "CANLoop", "rio");
+        this.cpr = Integer.parseInt(Entity.getOrDefault(element, "CPR", String.valueOf(type.cpr)));
+        this.absolute = Boolean.parseBoolean(Entity.getOrDefault(element, "Absolute", "false"));
     }
 
     public String getCANLoopName() {
@@ -90,6 +114,22 @@ public class Encoder extends EntityImpl {
 
     public void setID(int _id) { id = _id;}
 
+    public void setCPR(int _cpr) {
+        cpr = _cpr;
+    }
+
+    public int getCPR() {
+        return cpr;
+    }
+
+    public boolean isAbsolute() {
+        return absolute;
+    }
+
+    public void setAbsolute(boolean ab) {
+        absolute = ab;
+    }
+
     @Override
     public Element updateElement() {
         super.updateElement();
@@ -98,6 +138,7 @@ public class Encoder extends EntityImpl {
         getSavedElement().getElementsByTagName("Inverted").item(0).setTextContent(String.valueOf(inverted));
         getSavedElement().getElementsByTagName("Offset").item(0).setTextContent(String.valueOf(offset));
         getSavedElement().getElementsByTagName("ID").item(0).setTextContent(String.valueOf(id));
+        getSavedElement().getElementsByTagName("CPR").item(0).setTextContent(String.valueOf(cpr));
 
         return getSavedElement();
     }
@@ -119,6 +160,9 @@ public class Encoder extends EntityImpl {
         NetworkTableEntry entryOffset = table.getEntry("Offset");
         entryOffset.setDouble(offset);
 
+        NetworkTableEntry entryCPR = table.getEntry("CPR");
+        entryCPR.setInteger(cpr);
+
         return table;
     }
 
@@ -132,6 +176,7 @@ public class Encoder extends EntityImpl {
         setID((int) table.getEntry("ID").getDouble(id));
         //setOffset(table.getEntry("Offset").getDouble(getOffset()));
         setOffset(table.getEntry("Offset").getDouble(offset));
+        setCPR((int) table.getEntry("CPR").getInteger(cpr));
 
         return table;
     }
@@ -143,6 +188,7 @@ public class Encoder extends EntityImpl {
         table.getEntry("ID").unpublish();
         table.getEntry("Offset").unpublish();
         table.getEntry("Type").unpublish();
+        table.getEntry("CPR").unpublish();
 
         return table;
     }
@@ -154,5 +200,6 @@ public class Encoder extends EntityImpl {
         Entity.buildStringTabbedData(builder, depth, "Type", type.toString());
         Entity.buildStringTabbedData(builder, depth, "Inverted", String.valueOf(inverted));
         Entity.buildStringTabbedData(builder, depth, "Offset", String.valueOf(offset));
+        Entity.buildStringTabbedData(builder, depth, "CPR", String.valueOf(cpr));
     }
 }

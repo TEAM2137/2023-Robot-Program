@@ -11,7 +11,8 @@ public class Angle implements AngleUnit<Angle, Angle.AngleUnits> {
 
     public enum AngleUnits implements UnitEnum {
         RADIAN          (Angle, Generic, 1.0,"Rad"),
-        DEGREE          (Angle, Generic,57.2957795, "Deg");
+        DEGREE          (Angle, Generic,57.2957795, "Deg"),
+        REVOLUTIONS     (Angle, Generic, 0.159155, "Rev");
 
         UnitUtil.UnitType unitType;
         double unitsPerPrimary;

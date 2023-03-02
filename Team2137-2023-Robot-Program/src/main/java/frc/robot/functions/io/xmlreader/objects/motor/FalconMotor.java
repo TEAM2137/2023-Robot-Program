@@ -18,6 +18,7 @@ import frc.robot.library.units.TranslationalUnits.Velocity;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import static frc.robot.library.units.AngleUnits.Angle.AngleUnits.REVOLUTIONS;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.INCH;
 import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.CTRE_VELOCITY;
@@ -107,6 +108,10 @@ public class FalconMotor extends TalonFX implements Entity, SimpleMotorControl {
     public Distance getPosition() {
         return new Distance(super.getSelectedSensorPosition() / getGearRatio() / getCountPerRevolution() * distancePerRevolution.getValue(INCH), INCH);
     }
+    @Override
+    public Angle getAnglePosition() {
+        return new Angle(super.getSelectedSensorPosition() / getGearRatio() / getCountPerRevolution(), REVOLUTIONS);
+    }
 
 
     @Override
@@ -161,6 +166,11 @@ public class FalconMotor extends TalonFX implements Entity, SimpleMotorControl {
     @Override
     public void setIntegratedSensorPosition(double val) {
         setSelectedSensorPosition(val);
+    }
+
+    @Override
+    public void setIntegratedSensorDistance(Distance val) {
+        setSelectedSensorPosition(val.getValue(INCH) * distancePerRevolution.getValue(INCH) * getGearRatio() * getCountPerRevolution());
     }
 
     @Override
@@ -357,7 +367,7 @@ public class FalconMotor extends TalonFX implements Entity, SimpleMotorControl {
 
         //TODO read PID
         for (PID pid : pidValues) {
-            if(pid != null) pid.addToNetworkTable(getCurrentNetworkInstance());
+            if(pid != null) pid.addToNetworkTable(table);
         }
 
         NetworkTableEntry entryGearRatio = table.getEntry("GearRatio");

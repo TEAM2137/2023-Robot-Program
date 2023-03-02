@@ -5,7 +5,7 @@ import edu.wpi.first.networktables.NetworkTable;
 public interface Mapping {
     double getValue();
     boolean getBooleanValue();
-    boolean isBooleanValue();
+    Boolean isBooleanValue();
 
     String getPseudoName();
 

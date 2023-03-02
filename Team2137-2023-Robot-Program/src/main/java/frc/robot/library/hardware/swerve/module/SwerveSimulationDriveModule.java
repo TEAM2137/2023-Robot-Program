@@ -19,9 +19,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
-import frc.robot.library.hardware.DriveTrainSimulation;
 import frc.robot.library.units.AngleUnits.AngularAcceleration;
-import frc.robot.library.units.Time;
 import frc.robot.library.units.TranslationalUnits.Acceleration;
 import frc.robot.library.units.TranslationalUnits.Distance;
 import frc.robot.functions.io.xmlreader.objects.Encoder;
@@ -30,12 +28,11 @@ import frc.robot.library.Constants;
 import frc.robot.library.units.TranslationalUnits.Velocity;
 import org.w3c.dom.Element;
 
+import static frc.robot.library.Constants.DriveControlType.*;
 import static frc.robot.library.units.AngleUnits.AngularAcceleration.AngularAccelerationUnits.RADIAN_PER_SECOND2;
-import static frc.robot.library.units.Time.TimeUnits.MILLISECONDS;
 import static frc.robot.library.units.TranslationalUnits.Acceleration.AccelerationUnits.METER_PER_SECOND2;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.*;
 import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.FEET_PER_SECOND;
-import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.METER_PER_SECOND;
 
 public class SwerveSimulationDriveModule extends EntityGroup implements SwerveModule {
 
@@ -51,14 +48,14 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
     private Rotation2d turningSetPoint = Rotation2d.fromDegrees(0);
 
     private Acceleration mDriveAccelerationCurrent = new Acceleration(0, METER_PER_SECOND2);
-    private final Velocity mDriveVelocityCurrent = new Velocity(0, FEET_PER_SECOND);
-    private final Distance mDriveDistanceCurrent = new Distance(0, FOOT);
+    private Velocity mDriveVelocityCurrent = new Velocity(0, FEET_PER_SECOND);
+    private Distance mDriveDistanceCurrent = new Distance(0, FOOT);
     private final double mDriveRawPercent = 0;
     private double mCurrentDriveRPM = 0;
-    private final Rotation2d turningCurrent = Rotation2d.fromDegrees(0);
+    private Rotation2d turningCurrent = Rotation2d.fromDegrees(0);
     private final Distance dblWheelDiameter = new Distance(4, INCH);
 
-    private Constants.DriveControlType mDriveControlType = Constants.DriveControlType.RAW;
+    private Constants.DriveControlType mDriveControlType = RAW;
     //private SwerveModuleState.SwerveModulePositions swerveModulePosition;
 
     private final FileLogger logger;
@@ -77,7 +74,7 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
 //        dblWheelDiameter = (Number) XMLSettingReader.settingsEntityGroup.getEntity("DriveTrain-WheelDiameter");
 //        logger.writeEvent(0, FileLogger.EventType.Debug, "WheelDiameter: " + dblWheelDiameter.getValue());
 
-        configDrivetrainControlType(Constants.DriveControlType.RAW);
+        configDrivetrainControlType(RAW);
 
         lastLoopTime = System.currentTimeMillis();
     }
@@ -109,6 +106,7 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
     @Override
     public void setModuleAngle(Rotation2d angle) {
         turningSetPoint = angle;
+        turningCurrent = angle;
     }
 
     @Override
@@ -141,6 +139,7 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
     public void setVelocityDriveSpeed(Velocity speed) {
         mDriveVelocityGoal = speed;
         mDriveRawGoal = speed.getValue(FEET_PER_SECOND) / 16.5;
+        mDriveVelocityCurrent = speed;
     }
 
     @Override
@@ -181,6 +180,22 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
     @Override
     public Constants.DriveControlType getDriveControlType() {
         return mDriveControlType;
+    }
+
+    @Override
+    public void setSwerveModuleState(SwerveModuleState states) {
+        setModuleAngle(states.getRotation2d());
+        switch(states.getControlType()) {
+            case VELOCITY:
+                setVelocityDriveSpeed(states.getSpeed2d());
+                break;
+            case DISTANCE:
+                setDriveDistanceTarget(states.getDistance2d());
+                break;
+            case RAW:
+                setRawDriveSpeed(states.getRawPowerValue());
+                break;
+        }
     }
 
     public SwerveModuleState getSwerveModuleState() {
