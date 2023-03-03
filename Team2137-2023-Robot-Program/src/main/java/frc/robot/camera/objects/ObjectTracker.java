@@ -27,6 +27,8 @@ public class ObjectTracker {
     private int amountOfCubes;
     private int amountOfCones;
 
+    private String subTable;
+
     private NetworkTableInstance inst;
     private NetworkTable coneTable;
     private NetworkTable cubeTable;
@@ -35,6 +37,20 @@ public class ObjectTracker {
     private double CONE_UP_DST_INCHES = 0.1;
     private double CONE_DOWN_DST_INCHES = 0.1;
     private double CUBE_DST_INCHES = 0.1;
+
+    /**
+     * Creates a new instance of the object tracker with a default sub table of "vision"
+     */
+    public ObjectTracker() {
+        this("vision");
+    }
+
+    /**
+     * @param subTable the name of the network table inside of the "RPI" table to get data from.
+     */
+    public ObjectTracker(String subTable) {
+        this.subTable = subTable;
+    }
 
     /**
      * @return an <code>ArrayList</code> of rectangles outlining the cones in the camera's vision.
@@ -196,6 +212,27 @@ public class ObjectTracker {
     }
 
     /**
+     * @return the index closest clone to the camera.
+     * <p> The index can be used to get distance or determine if the cone is upright.
+     */
+    public int getClosestCone() {
+        if (coneWidths.length > 0) {
+            double closest = 0;
+            int index = 0;
+            for (int i = 0; i < coneWidths.length; i++){
+                double area = coneWidths[i] * coneHeights[i];
+                if (area > closest) {
+                    closest = area;
+                    index = i;
+                }
+            }
+            return index;
+        } else {
+            return 0;
+        }
+    }
+
+    /**
      * @return true if the cone at the index is standing up (w > h) and false if it is on its side.
      * @param index which cone to check
      */
@@ -212,8 +249,8 @@ public class ObjectTracker {
      */
     public void update() {
         inst = NetworkTableInstance.getDefault();
-        cubeTable = inst.getTable("RPI").getSubTable("vision").getSubTable("cubes");
-        cubeTable = inst.getTable("RPI").getSubTable("vision").getSubTable("cones");
+        cubeTable = inst.getTable("RPI").getSubTable(subTable).getSubTable("cubes");
+        cubeTable = inst.getTable("RPI").getSubTable(subTable).getSubTable("cones");
 
         cubeXPositions = cubeTable.getEntry("xPositions").getDoubleArray(new double[10]);
         cubeYPositions = cubeTable.getEntry("yPositions").getDoubleArray(new double[10]);
