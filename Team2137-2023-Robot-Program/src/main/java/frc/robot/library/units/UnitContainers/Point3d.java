@@ -29,7 +29,19 @@ public class Point3d <T extends Unit<T, ? extends UnitEnum>> {
         return y;
     }
 
-    public void setZ(T z) {
-        this.z = z;
+    public T getZ() {
+        return z;
+    }
+
+    public double getXPrimary() {
+        return x.getValueInPrimaryUnit();
+    }
+
+    public double getYPrimary() {
+        return y.getValueInPrimaryUnit();
+    }
+
+    public double getZPrimary() {
+        return z.getValueInPrimaryUnit();
     }
 }
