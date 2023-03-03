@@ -20,4 +20,16 @@ public class Point3d <T extends Unit<T, ? extends UnitEnum>> {
         y = (T) UnitUtil.create(_y, unit);
         z = (T) UnitUtil.create(_z, unit);
     }
+
+    public T getX() {
+        return x;
+    }
+
+    public T getY() {
+        return y;
+    }
+
+    public void setZ(T z) {
+        this.z = z;
+    }
 }
