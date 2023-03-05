@@ -11,14 +11,28 @@ public class Collision {
      */
     public List<Rectangle3d> colliders;
 
-    public void addCollision(Rectangle3d collider) {
+    /**
+     * Adds a collider defined by the Rectangle3d passed.
+     * @param collider Rectangle3d defining the collider.
+     */
+    public void addCollider(Rectangle3d collider) {
         colliders.add(collider);
     }
 
-    public void removeCollision(int index) {
+    /**
+     * Removes the collider at the given index.
+     * @param index Index of the collider to remove.
+     */
+    public void removeCollider(int index) {
         colliders.remove(index);
     }
 
+    /**
+     * Checks if the passed collider collides with the collider at colliderIndex.
+     * @param body Rectangle3d defining the collider to be checked.
+     * @param colliderIndex Index of the collider that is to be checked against.
+     * @return Returns true if a collision is detected, false if no collisions detected.
+     */
     public boolean checkCollision(Rectangle3d body, int colliderIndex) {
         Point3d[] bodyPoints = body.getPoints();
         Point3d[] colliderPoints = colliders.get(colliderIndex).getPoints();

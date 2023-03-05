@@ -33,14 +33,26 @@ public class Point3d <T extends Unit<T, ? extends UnitEnum>> {
         return z;
     }
 
+    /**
+     * Gets the X value in the primary unit.
+     * @return Returns the X value in the dimension's primary unit.
+     */
     public double getXPrimary() {
         return x.getValueInPrimaryUnit();
     }
 
+    /**
+     * Gets the Y value in the primary unit.
+     * @return Returns the Y value in the dimension's primary unit.
+     */
     public double getYPrimary() {
         return y.getValueInPrimaryUnit();
     }
 
+    /**
+     * Gets the Z value in the primary unit.
+     * @return Returns the Z value in the dimension's primary unit.
+     */
     public double getZPrimary() {
         return z.getValueInPrimaryUnit();
     }
