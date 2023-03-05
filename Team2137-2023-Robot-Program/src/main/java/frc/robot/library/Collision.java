@@ -54,6 +54,24 @@ public class Collision {
                 }
             }
 
+            // SECONDARY CHECK FOR IF COLLIDER IS SMALLER THAN BODY
+            for(int i = 0; i < 4; i++){ // Iterate through each point on the base of the collider
+                double px = colliderPoints[i].getXPrimary();
+                double pz = colliderPoints[i].getZPrimary();
+
+                for (int s = 0; s < 4; s++) { // Check each side of the rectangle
+                    double x1 = bodyPoints[s].getXPrimary();
+                    double x2 = bodyPoints[s > 2 ? 0 : s + 1].getXPrimary();
+
+                    double z1 = bodyPoints[s].getZPrimary();
+                    double z2 = bodyPoints[s > 2 ? 0 : s + 1].getZPrimary();
+
+                    if((x2 - x1) * (pz - z1) - (px - x1) * (z2 - z1) >= 0){
+                        return true; // Point is touching the body, collision detected
+                    }
+                }
+            }
+
             return false; // No points collided.
 
         }else{
