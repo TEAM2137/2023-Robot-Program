@@ -238,7 +238,7 @@ public class ObjectTracker {
      */
     public boolean isConeUpright(int index) {
         Point cone = new Point(coneWidths[index], coneHeights[index]);
-        if (cone.x > cone.y){
+        if (cone.x + 10 > cone.y){
             return false;
         }
         return true;
