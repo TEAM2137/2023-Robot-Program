@@ -27,6 +27,11 @@ public class ObjectTracker {
     private int amountOfCubes;
     private int amountOfCones;
 
+    private boolean wasFlippedLastUpdate;
+    // 10 updates of timeout, might need to change this
+    private int maxFlipTimeout = 10;
+    private int flipTimeout = maxFlipTimeout;
+
     private String subTable;
 
     private NetworkTableInstance inst;
@@ -235,13 +240,27 @@ public class ObjectTracker {
     /**
      * @return true if the cone at the index is standing up (w > h) and false if it is on its side.
      * @param index which cone to check
+     * <p>Should be run once every update
      */
     public boolean isConeUpright(int index) {
+        boolean output = true;
         Point cone = new Point(coneWidths[index], coneHeights[index]);
         if (cone.x + 10 > cone.y){
-            return false;
+            output = false;
         }
-        return true;
+        if (wasFlippedLastUpdate && !output) {
+            if (flipTimeout > 0) {
+                flipTimeout--;
+                output = true;
+                wasFlippedLastUpdate = true;
+            } else {
+                flipTimeout = 10;
+            }
+        } else {
+            flipTimeout = 10;
+        }
+        wasFlippedLastUpdate = output;
+        return output;
     }
 
     /**
