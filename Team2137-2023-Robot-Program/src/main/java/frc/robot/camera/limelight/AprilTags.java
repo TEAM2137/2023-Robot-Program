@@ -41,14 +41,16 @@ public class AprilTags {
 
         rotation = pose[5];
 
-        posX = (pose[0] * 39.37) + (fieldSizeX / 2);
-        posY = (pose[1] * 39.37) + (fieldSizeY / 2);
+        if (!(poseX == 0.0 && poseY == 0.0)) {
+            posX = (poseX * 39.37) + (fieldSizeX / 2);
+            posY = (poseY * 39.37) + (fieldSizeY / 2);
 
-        velocityX = posX - lastPosX;
-        velocityY = posY - lastPosY;
+            velocityX = posX - lastPosX;
+            velocityY = posY - lastPosY;
 
-        lastPosX = posX;
-        lastPosY = posY;
+            lastPosX = posX;
+            lastPosY = posY;
+        }
     
         // Post botpose to smart dashboard
         SmartDashboard.putNumber("Field Position X", poseX);
