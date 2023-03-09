@@ -144,8 +144,7 @@ public class FalconMotor extends TalonFX implements Entity, SimpleMotorControl {
 
     @Override
     public void setVelocity(Velocity velocity) {
-        Velocity vel = velocity.getCTREVelocityUnit(new Distance(1.0 / distancePerRevolution.getValue(FOOT), FOOT));
-        set(TalonFXControlMode.Velocity, vel.getValue(CTRE_VELOCITY));
+        set(TalonFXControlMode.Velocity, velocity.getCTREVelocityUnit(new Distance(1.0 / distancePerRevolution.getValue(FOOT), FOOT)));
     }
 
     @Override

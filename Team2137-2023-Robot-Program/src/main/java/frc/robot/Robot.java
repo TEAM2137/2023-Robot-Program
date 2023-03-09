@@ -8,6 +8,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableEvent;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -18,12 +19,14 @@ import frc.robot.functions.io.xmlreader.XMLSettingReader;
 import frc.robot.functions.io.xmlreader.XMLStepReader;
 import frc.robot.functions.io.xmlreader.data.Step;
 import frc.robot.library.Constants;
+import frc.robot.library.Gamepad;
 import frc.robot.library.OpMode;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.function.Consumer;
 
 public class Robot extends TimedRobot {
@@ -46,6 +49,8 @@ public class Robot extends TimedRobot {
 
   public static ArrayList<Entity> allEntities = new ArrayList<>();
 
+  public static ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(2);
+
   public static EntityGroup robotEntityGroup;
   public static EntityGroup settingsEntityGroup;
 
@@ -54,8 +59,8 @@ public class Robot extends TimedRobot {
 
   public static NetworkTable configurationNetworkTable;
 
-  public static XboxController primaryController = new XboxController(0);
-  public static XboxController secondaryController = new XboxController(1);
+  public static Gamepad primaryController = new Gamepad(0);
+  public static Gamepad secondaryController = new Gamepad(1);
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -65,12 +70,14 @@ public class Robot extends TimedRobot {
   public void robotInit() {
     boolean isSimulation = isSimulation();
 
-    System.out.println(System.getProperty("user.home"));
+//    System.out.println(System.getProperty("user.home"));
 //    if(Constants.StandardFileAndDirectoryLocations.GenerateAllStandardDirectories(isSimulation)) { //@TODO replace with driver station value
 //      System.out.println("Created new Standard Directories for FRC Robot");
 //    } else {
 //      System.out.println("Using existing Standard Directories");
 //    }
+
+    DriverStation.silenceJoystickConnectionWarning(true);
 
     fileLogger = new FileLogger(10, Constants.RobotState.MAIN, Constants.StandardFileAndDirectoryLocations.GenericFileLoggerDir.getFileLocation(isSimulation), isSimulation);
     fileLogger.writeEvent(0, FileLogger.EventType.Status, "Started FileLogger Continuing with code...");

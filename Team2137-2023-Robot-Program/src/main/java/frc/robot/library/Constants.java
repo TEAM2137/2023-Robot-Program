@@ -271,7 +271,7 @@ public final class Constants {
             return value;
         }
     }
-    public static Pair<Double, Double> joyStickSlopedDeadband(double x1, double y1, double deadband) {
+    public static Pair<Double, Double> joyStickSlopedDeadband(double x1, double y1, boolean enableSin, double deadband) {
         double newX = 0;
         double newY = 0;
 
@@ -286,7 +286,11 @@ public final class Constants {
             newY = (y1 - deadband) / (1 - deadband);
         }
 
-        return new Pair<Double, Double>(newX, newY);
+        if(enableSin) {
+            return new Pair<Double, Double>(Math.pow(Math.sin(newX * (Math.PI / 2)), 3), Math.pow(Math.sin(newY * (Math.PI / 2)), 3));
+        } else {
+            return new Pair<Double, Double>(newX, newY);
+        }
     }
 
     //////Exception Classes//////

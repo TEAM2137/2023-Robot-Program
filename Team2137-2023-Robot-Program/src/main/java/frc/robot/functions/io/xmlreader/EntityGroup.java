@@ -37,6 +37,7 @@ import frc.robot.library.hardware.swerve.SwerveDrivetrain;
 import frc.robot.library.hardware.swerve.module.SwerveFALCONDriveModule;
 import frc.robot.library.hardware.swerve.module.SwerveNEODriveModule;
 import frc.robot.library.hardware.swerve.module.SwerveSimulationDriveModule;
+import frc.robot.library.units.TranslationalUnits.Distance;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -128,6 +129,10 @@ public class EntityGroup extends EntityImpl {
         HashMap<String, Class<? extends Entity>> numberImplements = new HashMap<>();
         numberImplements.put("DEFAULT", Number.class);
         entityClassMappings.put("NUMBER", numberImplements);
+
+        HashMap<String, Class<? extends Entity>> distanceImpl = new HashMap<>();
+        distanceImpl.put("DEFAULT", Distance.class);
+        entityClassMappings.put("DISTANCE", distanceImpl);
 
         HashMap<String, Class<? extends Entity>> pidImplements = new HashMap<>();
         pidImplements.put("DEFAULT", PID.class);

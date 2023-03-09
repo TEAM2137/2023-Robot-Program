@@ -7,11 +7,11 @@ import frc.robot.library.units.UnitEnum;
 import frc.robot.library.units.UnitUtil;
 
 import static frc.robot.library.units.AngleUnits.AngularVelocity.AngularVelocityUnits.RADIAN_PER_SECOND;
+import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.METER;
 import static frc.robot.library.units.Time.TimeUnits.SECONDS;
+import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.*;
 import static frc.robot.library.units.UnitUtil.UnitType.Velocity;
-import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.CTRE_VELOCITY;
-import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.METER_PER_SECOND;
 
 public class Velocity implements TranslationUnit<Velocity, Velocity.VelocityUnits> {
 
@@ -149,12 +149,12 @@ public class Velocity implements TranslationUnit<Velocity, Velocity.VelocityUnit
         return METER_PER_SECOND;
     }
 
-    public Velocity getCTREVelocityUnit(Distance wheelConversionFactor) {
+    public double getCTREVelocityUnit(Distance wheelConversionFactor) {
         return getCTREVelocityUnit(wheelConversionFactor, 2048);
     }
 
-    public Velocity getCTREVelocityUnit(Distance wheelConversionFactor, double countsPerRev) {
-        double rotationPerSec = (wheelConversionFactor.getValue(METER) * getValue(METER_PER_SECOND));
-        return new Velocity((rotationPerSec * countsPerRev) / 10, CTRE_VELOCITY); //Return counts per 100ms
+    public double getCTREVelocityUnit(Distance wheelConversionFactor, double countsPerRev) {
+        double rotationPerSec = ((1 / wheelConversionFactor.getValue(FOOT)) * getValue(FEET_PER_SECOND));
+        return (rotationPerSec * countsPerRev) / 10.0; //Return counts per 100ms
     }
 }

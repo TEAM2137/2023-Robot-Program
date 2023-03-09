@@ -1,22 +1,23 @@
 package frc.robot.library.hardware.endeffector;
 
-import com.revrobotics.*;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.PneumaticsModuleType;
-import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Robot;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
-import frc.robot.functions.io.xmlreader.data.PID;
 import frc.robot.functions.io.xmlreader.data.Step;
-import frc.robot.functions.io.xmlreader.objects.motor.SimpleMotorControl;
+import frc.robot.functions.io.xmlreader.data.mappings.InstantCommand;
+import frc.robot.functions.io.xmlreader.data.mappings.PersistentCommand;
+import frc.robot.functions.io.xmlreader.objects.motor.NeoMotor;
 import frc.robot.functions.io.xmlreader.objects.solenoid.DoubleSolenoid;
 import frc.robot.library.Constants;
 import frc.robot.library.units.AngleUnits.Angle;
+import frc.robot.library.units.Number;
 import org.w3c.dom.Element;
 
+import java.util.concurrent.TimeUnit;
+
 import static frc.robot.library.units.AngleUnits.Angle.AngleUnits.DEGREE;
+import static frc.robot.library.units.AngleUnits.Angle.AngleUnits.RADIAN;
 
 /**
  * Comments by Wyatt 2.7.2023 (Sorry it is a lot)
@@ -49,70 +50,76 @@ public class EndEffector extends EntityGroup {
 
     private final FileLogger logger;
 
-    private Angle pitchTarget = new Angle(0, DEGREE);
+    private Angle pitchTarget = new Angle(180, DEGREE);
     private boolean rawPitchControl = true;
     //private double pitchSpeed = 0;
 
     private DoubleSolenoid jaw1;
 
-    private final SimpleMotorControl pitchMotor;
-    //private final AbsoluteEncoder pitchEncoder;
+    private final NeoMotor pitchMotor;
+    private Number mTolerance;
     private final double pitchAllowedErr = 0.5;
-
-    private PID pid;// = new PID(0.5, 0.5, 0.5, 0.00015, 0d, "Jaw Pitch PID"); // PID values
-
-    private final double maxVel, maxAccel;
+    private final double feedforward;
 
     public EndEffector(Element element, EntityGroup parent, FileLogger fileLogger){
         super(element, parent, fileLogger);
 
-        maxVel = 60;
-        maxAccel = 45;
-
         logger = fileLogger;
 
         jaw1 = (DoubleSolenoid) getEntity("JawSolenoid");
-
         logger.writeLine("ENDEFFECTOR: Jaw Solenoid Initialized");
 
-        pitchMotor = (SimpleMotorControl) getEntity("WristMotor");
-
+        pitchMotor = (NeoMotor) getEntity("WristMotor");
+        feedforward = pitchMotor.getPID().getFF();
         logger.writeLine("ENDEFFECTOR: Pitch Motor Initialized");
 
-//        int smartMotionSlot = 0;
-//        pitchPIDController.setSmartMotionMaxAccel(maxAccel, smartMotionSlot);
-//        pitchPIDController.setSmartMotionMinOutputVelocity(0, smartMotionSlot);
-//        pitchPIDController.setSmartMotionMaxVelocity(maxVel, smartMotionSlot);
-//        pitchPIDController.setSmartMotionAllowedClosedLoopError(pitchAllowedErr, smartMotionSlot);
-
-        logger.writeLine("ENDEFFECTOR: PID Initialized");
+        if(this.getEntity("Tolerance") != null) {
+            mTolerance = (Number) getEntity("Tolerance");
+        } else {
+            mTolerance = new Number(4);
+        }
 
         this.addSubsystemCommand(getName() + "-SetRawClaw", this::setRawClaw);
         this.addSubsystemCommand(getName() + "-RawWristPosition", this::setWristPosition);
         this.addSubsystemCommand(getName() + "-RawWristSpeed", this::setWristSpeed);
     }
 
+    @PersistentCommand
     public void setWristSpeed(Step step) {
         if(step.getStepState() == Constants.StepState.STATE_INIT) {
             if(step.getParm(1) != 0) {
                 rawPitchControl = true;
-                pitchMotor.set(step.getParm(1));
-//                setTargetPitch(new Angle(step.getParm(1) * 180.0, DEGREE));
+                pitchMotor.set(Math.pow(Math.sin(step.getParm(1) * (Math.PI / 2)), 3));
             } else if (rawPitchControl) {
                 rawPitchControl = false;
                 pitchMotor.set(0.0);
+                setTargetPitch(getPitch());
             }
         }
     }
 
+    @InstantCommand
     public void setWristPosition(Step step) {
-        if(step.getStepState() == Constants.StepState.STATE_INIT) {
-            setTargetPitch(new Angle(step.getParm(1), DEGREE));
+        switch (step.getStepState()) {
+            case STATE_INIT:
+                if(step.hasValue("delay")) {
+                    Robot.threadPoolExecutor.schedule(() -> {
+                        setTargetPitch(new Angle(step.getParm(1), DEGREE));
+                    }, Integer.parseInt(step.getValue("delay")), TimeUnit.MILLISECONDS);
+                } else {
+                    setTargetPitch(new Angle(step.getParm(1), DEGREE));
+                }
 
-            step.changeStepState(Constants.StepState.STATE_FINISH);
+                step.changeStepState(Constants.StepState.STATE_RUNNING);
+                break;
+            case STATE_RUNNING:
+                if(atTargetPitch())
+                    step.changeStepState(Constants.StepState.STATE_FINISH);
+                break;
         }
     }
 
+    @InstantCommand
     public void setRawClaw(Step step) {
         if(step.getStepState() == Constants.StepState.STATE_INIT) {
             setEffectorState(step.getParm(1) > 0);
@@ -123,17 +130,14 @@ public class EndEffector extends EntityGroup {
 
     @Override
     public void periodic(){
+
+        SmartDashboard.putNumber("Test Claw Feed", -Math.sin((Math.PI) - getPitch().getValue(RADIAN)) * feedforward);
+
         // Update dashboard stats
         SmartDashboard.putBoolean("End Effector Closed", isJawClosed());
         SmartDashboard.putNumber("Pitch (Degrees)", getPitch().getValue(DEGREE));
         SmartDashboard.putNumber("Target Pitch (Degrees)", pitchTarget.getValue(DEGREE));
         SmartDashboard.putNumber("Pitch Allowed Error", pitchAllowedErr);
-
-        // PID stats Built in
-//        SmartDashboard.putNumber("P Gain", pid.getP());
-//        SmartDashboard.putNumber("I Gain", pid.getI());
-//        SmartDashboard.putNumber("D Gain", pid.getD());
-//        SmartDashboard.putNumber("Feed Forward", pid.getFF());
     }
 
     /**
@@ -182,7 +186,7 @@ public class EndEffector extends EntityGroup {
      */
     public void setTargetPitch(Angle degrees){
         pitchTarget = degrees;
-        pitchMotor.setPosition(pitchTarget);
+        pitchMotor.setPosition(pitchTarget, -Math.sin((Math.PI) - getPitch().getValue(RADIAN)) * feedforward);
         //pitchPIDController.setReference(pitchTarget.getDegrees() * 360 / 4096, CANSparkMax.ControlType.kSmartMotion);
     }
 
@@ -190,8 +194,12 @@ public class EndEffector extends EntityGroup {
      * Gets the current pitch in encoder units of the pitch motor
      * @return Pitch in encoder counts
      */
-    public Angle getPitch(){
+    public Angle  getPitch(){
         return pitchMotor.getAnglePosition();
+    }
+
+    public boolean atTargetPitch() {
+        return pitchTarget.minus(getPitch()).getValue(DEGREE) <= mTolerance.getValue();
     }
 
     /**

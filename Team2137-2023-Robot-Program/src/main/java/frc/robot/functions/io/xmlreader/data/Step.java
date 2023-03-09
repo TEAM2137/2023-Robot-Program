@@ -72,6 +72,7 @@ public class Step extends EntityImpl {
 
     private final HashMap<String, ValueEntry> values = new HashMap<String, ValueEntry>();
     private Constants.StepState mCurrentStepState = Constants.StepState.STATE_INIT;
+    private Constants.StepState mDriveSpecificState = null;
 
     private double startTime;
 
@@ -138,27 +139,23 @@ public class Step extends EntityImpl {
     }
 
     public String getValue(String key) {
+        key = key.toUpperCase();
+
         if(values.containsKey(key)) {
             ValueEntry entry = values.get(key);
 
             if(entry.genericType) {
-//                String workingString = entry.value;
-//                for(Mapping map : entry.mappings) {
-//                    workingString = workingString.replace("<" + map.getPseudoName() + "/>", String.valueOf(map.getValue()));
-//                }
                 return String.valueOf(entry.mappings.getValue());
-//                try {
-//                    return mJavaScriptEngine.eval(workingString).toString();
-//                } catch (ScriptException e) {
-//                    e.printStackTrace();
-//                    return "0";
-//                }
             } else {
                 return entry.value;
             }
         } else {
             return "0";
         }
+    }
+
+    public boolean hasValue(String key) {
+        return values.containsKey(key.toUpperCase());
     }
 
     public String getCommand() {

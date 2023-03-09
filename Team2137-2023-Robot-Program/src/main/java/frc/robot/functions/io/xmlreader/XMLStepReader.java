@@ -42,6 +42,7 @@ public class XMLStepReader {
     private final FileLogger logger;
     private final List<Step> steps = new ArrayList<>();
     private int currentStepCounter = -1;
+    //private int currentSplinePrePullCounter = -1;
 
     public XMLStepReader(String dir, FileLogger _logger) {
         this.stepFile = new File(dir);
@@ -102,31 +103,129 @@ public class XMLStepReader {
 
         returnList.add(pullNextStep());
 
-        while(size > currentStepCounter + 1 && steps.get(currentStepCounter + 1).isParallel()) {
+        while(size > currentStepCounter + 1) {
+            if(!steps.get(currentStepCounter + 1).isParallel()) {//&& !steps.get(currentStepCounter).getCommand().equalsIgnoreCase("drive")) {
+                break;
+            }
             returnList.add((pullNextStep()));
         }
 
         return returnList;
     }
 
-    public List<Step> prePullSplineSteps() {
-        List<Step> returnList = new ArrayList<>();
-        int size = steps.size();
+    public boolean isLastStep() {
+        return currentStepCounter == steps.size() - 1;
+    }
 
-        if(size - 1 == currentStepCounter)
-            return returnList;
+    public boolean isFirstStep() {
+        return currentStepCounter == 0;
+    }
 
-        for (int i = Math.max(currentStepCounter, 0); i < size; i++) {
-            if(steps.get(i).getParm(7) > 0.0) {
+    public Step getLastDriveStep() {
+        for(int i = getIndexLastSteps(); i >= 0; i--) {
+
+            if(isDriveStep(steps.get(i).getCommand()))
+                return steps.get(i);
+        }
+
+        return null;
+    }
+
+    public boolean lastStepsContainsDrive() {
+        for(int i = getIndexLastSteps(); i >= 0; i--) {
+            Step currentStep = steps.get(i);
+
+            if(isDriveStep(currentStep.getCommand())) {
+                return true;
+            }
+
+            if(!currentStep.isParallel()) {
                 break;
-            } else {
-                Step step = steps.get(i);
-                returnList.add(step);
             }
         }
 
-        return returnList;
+        return false;
     }
+
+    public boolean hasFutureDriveStep() {
+        for(int i = currentStepCounter + 1; i < steps.size(); i++) {
+            if(isDriveStep(steps.get(i).getCommand()))
+                return true;
+        }
+
+        return false;
+    }
+
+    public boolean hasPastDriveStep() {
+        for(int i = getIndexLastSteps(); i >= 0; i--) {
+            if(isDriveStep(steps.get(i).getCommand()))
+                return true;
+        }
+
+        return false;
+    }
+
+    public Step prePullNextDriveStep() {
+        for(int i = currentStepCounter + 1; i < steps.size(); i++) {
+            if(isDriveStep(steps.get(i).getCommand()))
+                return steps.get(i);
+        }
+
+        return null;
+    }
+
+    private int getIndexLastSteps() {
+        boolean flag = false;
+        for(int i = currentStepCounter; i >= 0; i--) {
+            if(!steps.get(i).isParallel()) {
+                if(!flag)
+                    flag = true;
+                else
+                    return i;
+            }
+        }
+
+        return 0;
+    }
+
+    public boolean hasSteps() {
+        return !(currentStepCounter == steps.size() - 1);
+    }
+
+    public static boolean isDriveStep(String name) {
+        return name.equalsIgnoreCase("Drive") || name.equalsIgnoreCase("SetPosition");
+    }
+
+    public void resetCounter() {
+        currentStepCounter = -1;
+    }
+
+//    public List<Step> prePullSplineSteps() {
+//        List<Step> returnList = new ArrayList<>();
+//        int size = steps.size();
+//
+//        if(size - 1 == currentSplinePrePullCounter)
+//            return null;
+//
+//        int i;
+//        for (i = Math.max(currentSplinePrePullCounter, 0); i < size; i++) {
+//            if (steps.get(i).getCommand().toUpperCase().contains("RAW")) {
+//                continue;
+//            } else if (steps.get(i).isParallel() || steps.get(i).getCommand().equalsIgnoreCase("drive")) {
+//                Step step = steps.get(i);
+//                returnList.add(step);
+//            } else {
+//                break;
+//            }
+//        }
+//
+//        currentSplinePrePullCounter += i;
+//
+//        if(returnList.size() == 0)
+//            return null;
+//
+//        return returnList;
+//    }
 
     public Step parseSteps(Node stepNode) {
         Step returner = new Step();

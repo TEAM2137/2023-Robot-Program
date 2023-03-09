@@ -39,14 +39,10 @@ import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.
 public class Teleop implements OpMode {
 
     private FileLogger logger;
-    private final int mintDebug = 8;
 
     private EntityGroup mRobotSubsystem;
     private XMLSettingReader mSettingReader;
     private SwerveDrivetrain mDrivetrain;
-    private FusedTrackingAlgorithm mTrackingAlgorithm;
-
-    private Runnable mCurrentDrivetrainPeriodRunnable;
 
     @Override
     public void init(XMLSettingReader xmlSettingReader, FileLogger fileLogger) {
@@ -56,14 +52,12 @@ public class Teleop implements OpMode {
 
         this.mSettingReader = xmlSettingReader;
         this.mRobotSubsystem = this.mSettingReader.getRobot();
-//        mTrackingAlgorithm = new FusedTrackingAlgorithm(60, (a) -> {});
 
         switch(mRobotSubsystem.getEntityGroupByType("DriveTrain").getName()) {
             case "Swerve Falcon":
             case "Swerve NEO":
             case "Swerve Simulation":
                 logger.writeEvent(0, mRobotSubsystem.getEntityGroupByType("DriveTrain").getName());
-                //mCurrentDrivetrainPeriodRunnable = this::SwerveDrivetrainPeriodic;
                 this.mDrivetrain = (SwerveDrivetrain) mRobotSubsystem.getEntityGroupByType("DriveTrain");
                 this.mDrivetrain.configDrivetrainControlType(Constants.DriveControlType.VELOCITY);
                 this.mDrivetrain.resetOdometry();
@@ -108,20 +102,4 @@ public class Teleop implements OpMode {
         logger.writeEvent(0, FileLogger.EventType.Status, "TELEOP Ending");
         Robot.currentActiveTeleopSteps.clear();
     }
-
-    /*private void SwerveDrivetrainPeriodic() {
-        logger.setTag("SwerveDrivetrainPeriodic()");
-        Pair<Double, Double> xy = Constants.joyStickSlopedDeadband(Robot.primaryController.getLeftX(), -Robot.primaryController.getLeftY(), 0.08);
-        //double rMag = Constants.deadband(mDriverController.getRightX(), 0.08) * 35; //TODO must fix TrackWidth
-        double rMag = Constants.deadband(Robot.primaryController.getRightX(), 0.08); //TODO must fix TrackWidth
-
-        Velocity x = new Velocity(xy.getFirst() * 16.5, FEET_PER_SECOND);
-        Velocity y = new Velocity(xy.getSecond() * 16.5, FEET_PER_SECOND);
-        AngularVelocity r = new AngularVelocity(rMag * 10.0, RADIAN_PER_SECOND);
-
-        SwerveModuleState[] states = mDrivetrain.calculateSwerveMotorSpeedsFieldCentric(x, y, r);
-//        SwerveModuleState[] states = mDrivetrain.calculateSwerveMotorSpeedsFieldCentric(xy.getFirst(), xy.getSecond(), rMag * 2, 1, 1, Constants.DriveControlType.RAW);
-
-        mDrivetrain.setSwerveModuleStates(states);
-    }*/
 }

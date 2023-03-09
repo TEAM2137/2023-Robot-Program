@@ -4,6 +4,7 @@ import frc.robot.library.units.Unit;
 import frc.robot.library.units.UnitEnum;
 import frc.robot.library.units.UnitUtil;
 
+import static frc.robot.library.units.AngleUnits.Angle.AngleUnits.RADIAN;
 import static frc.robot.library.units.UnitUtil.System.Generic;
 import static frc.robot.library.units.UnitUtil.UnitType.Angle;
 
@@ -58,48 +59,48 @@ public class Angle implements AngleUnit<Angle, Angle.AngleUnits> {
         value = val / unit.getUnitPerPrimaryUnit();
     }
 
-    public Angle(double x, double y, AngleUnits unit) {
-        this(Math.atan2(y, x), unit);
+    public Angle(double y, double x) {
+        this(Math.atan2(y, x), RADIAN);
     }
 
     @Override
     public Angle times(double scalar) {
-        return new Angle(getValue(AngleUnits.RADIAN) * scalar, AngleUnits.RADIAN);
+        return new Angle(getValue(RADIAN) * scalar, RADIAN);
     }
 
     @Override
     public frc.robot.library.units.AngleUnits.Angle times(frc.robot.library.units.AngleUnits.Angle other) {
-        return new Angle(getValue(AngleUnits.RADIAN) * other.getValue(AngleUnits.RADIAN), AngleUnits.RADIAN);
+        return new Angle(getValue(RADIAN) * other.getValue(RADIAN), RADIAN);
     }
 
     @Override
     public Angle divide(double scalar) {
-        return new Angle(getValue(AngleUnits.RADIAN) / scalar, AngleUnits.RADIAN);
+        return new Angle(getValue(RADIAN) / scalar, RADIAN);
     }
 
     @Override
     public frc.robot.library.units.AngleUnits.Angle divide(frc.robot.library.units.AngleUnits.Angle other) {
-        return new Angle(getValue(AngleUnits.RADIAN) / other.getValue(AngleUnits.RADIAN), AngleUnits.RADIAN);
+        return new Angle(getValue(RADIAN) / other.getValue(RADIAN), RADIAN);
     }
 
     @Override
     public Angle add(double scalar) {
-        return new Angle(getValue(AngleUnits.RADIAN) + scalar, AngleUnits.RADIAN);
+        return new Angle(getValue(RADIAN) + scalar, RADIAN);
     }
 
     @Override
     public Angle add(Angle other) {
-        return new Angle(getValue(AngleUnits.RADIAN) + other.getValue(AngleUnits.RADIAN), AngleUnits.RADIAN);
+        return new Angle(getValue(RADIAN) + other.getValue(RADIAN), RADIAN);
     }
 
     @Override
     public Angle minus(double scalar) {
-        return new Angle(getValue(AngleUnits.RADIAN) - scalar, AngleUnits.RADIAN);
+        return new Angle(getValue(RADIAN) - scalar, RADIAN);
     }
 
     @Override
     public frc.robot.library.units.AngleUnits.Angle minus(frc.robot.library.units.AngleUnits.Angle other) {
-        return new Angle(getValue(AngleUnits.RADIAN) - other.getValue(AngleUnits.RADIAN), AngleUnits.RADIAN);
+        return new Angle(getValue(RADIAN) - other.getValue(RADIAN), RADIAN);
     }
 
     @Override
@@ -114,11 +115,11 @@ public class Angle implements AngleUnit<Angle, Angle.AngleUnits> {
 
     @Override
     public double getValueInPrimaryUnit() {
-        return getValue(AngleUnits.RADIAN);
+        return getValue(RADIAN);
     }
 
     @Override
     public AngleUnits getPrimaryUnit() {
-        return AngleUnits.RADIAN;
+        return RADIAN;
     }
 }

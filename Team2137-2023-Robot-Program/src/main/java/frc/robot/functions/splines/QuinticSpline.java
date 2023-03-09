@@ -22,6 +22,8 @@ import edu.wpi.first.math.spline.PoseWithCurvature;
 import frc.robot.functions.splines.Spline;
 import org.ejml.simple.SimpleMatrix;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,12 +50,12 @@ public class QuinticSpline {
             tmp.setRow(1, 0, matrixRowToArray(yCoeffs.rows(0, 1)));
 
             for (int i = 0; i < 6; i++) {
-                tmp.set(2, i, tmp.get(0, i) *(5 - i));
-                tmp.set(3, i, tmp.get(1, i) *(5 - i));
+                tmp.set(2, i, tmp.get(0, i) * (5 - i));
+                tmp.set(3, i, tmp.get(1, i) * (5 - i));
             }
             for (int i = 0; i < 6; i++) {
-                tmp.set(4, i, tmp.get(2, i) *(4 - i));
-                tmp.set(5, i, tmp.get(3, i) *(4 - i));
+                tmp.set(4, i, tmp.get(2, i) * (4 - i));
+                tmp.set(5, i, tmp.get(3, i) * (4 - i));
             }
 
             splines.add(new Spline(tmp));
@@ -71,7 +73,7 @@ public class QuinticSpline {
             //pose.Add(new Pose2d(c.getX(), c.getY(), Rotation2d.fromDegrees((c.getRotation().getDegrees() + d.getRotation().getDegrees()) / 2)));
             Rotation2d angleToNextWayPoint = new Rotation2d(
                     Math.atan2(waypoints.get(a + 1).getY() - waypoints.get(a).getY(),
-                    waypoints.get(a + 1).getX() - waypoints.get(a).getX()));
+                            waypoints.get(a + 1).getX() - waypoints.get(a).getX()));
 
             pose.add(new Pose2d(waypoints.get(a), angleToNextWayPoint));
         }
@@ -86,7 +88,7 @@ public class QuinticSpline {
         assert matrix.numRows() == 1;
         double[] returner = new double[matrix.numCols()];
 
-        for(int i = 0; i < matrix.numCols(); i++) {
+        for (int i = 0; i < matrix.numCols(); i++) {
             returner[i] = matrix.get(0, i);
         }
 
@@ -95,14 +97,14 @@ public class QuinticSpline {
 
     public static SimpleMatrix getHermiteBasis() {
         SimpleMatrix matrix = new SimpleMatrix(new double[][]
-        {
-            new double[] {-06.0, -03.0, -00.5, +06.0, -03.0, +00.5},
-            new double[] {+15.0, +08.0, +01.5, -15.0, +07.0, +01.0},
-            new double[] {-10.0, -06.0, -01.5, +10.0, -04.0, +00.5},
-            new double[] {+00.0, +00.0, +00.5, +00.0, +00.0, +00.0},
-            new double[] {+00.0, +01.0, +00.0, +00.0, +00.0, +00.0},
-            new double[] {+01.0, +00.0, +00.0, +00.0, +00.0, +00.0},
-        });
+                {
+                        new double[]{-06.0, -03.0, -00.5, +06.0, -03.0, +00.5},
+                        new double[]{+15.0, +08.0, +01.5, -15.0, +07.0, +01.0},
+                        new double[]{-10.0, -06.0, -01.5, +10.0, -04.0, +00.5},
+                        new double[]{+00.0, +00.0, +00.5, +00.0, +00.0, +00.0},
+                        new double[]{+00.0, +01.0, +00.0, +00.0, +00.0, +00.0},
+                        new double[]{+01.0, +00.0, +00.0, +00.0, +00.0, +00.0},
+                });
         return matrix;
     }
 
@@ -123,6 +125,22 @@ public class QuinticSpline {
 
         return splinePoints;
     }
+
+    public void logSplineToFile(String pathAndName) {
+        List<PoseWithCurvature> splinePoints = getSplinePoints();
+        try {
+            PrintWriter writer = new PrintWriter(pathAndName);
+
+            for (PoseWithCurvature pose : splinePoints) {
+                writer.printf("(%.4f, %.4f)\n", pose.poseMeters.getX(), pose.poseMeters.getY());
+            }
+
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
 
 class ControlVectorPair {
@@ -138,17 +156,17 @@ class ControlVectorPair {
 
     public SimpleMatrix getXControlMatrix() {
         return new SimpleMatrix(new double[][]
-        {
-            {poseInitial.getX()}, {poseInitial.getRotation().getCos() * scalar}, {0.0},
-            {poseFinal.getX()}, {poseFinal.getRotation().getCos() * scalar}, {0.0}
-        });
+                {
+                        {poseInitial.getX()}, {poseInitial.getRotation().getCos() * scalar}, {0.0},
+                        {poseFinal.getX()}, {poseFinal.getRotation().getCos() * scalar}, {0.0}
+                });
     }
 
     public SimpleMatrix getYControlMatrix() {
         return new SimpleMatrix(new double[][]
-        {
-            {poseInitial.getY()}, {poseInitial.getRotation().getSin() * scalar}, {0.0},
-            {poseFinal.getY()}, {poseFinal.getRotation().getSin() * scalar}, {0.0}
-        });
+                {
+                        {poseInitial.getY()}, {poseInitial.getRotation().getSin() * scalar}, {0.0},
+                        {poseFinal.getY()}, {poseFinal.getRotation().getSin() * scalar}, {0.0}
+                });
     }
 }

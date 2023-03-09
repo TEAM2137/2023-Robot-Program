@@ -5,10 +5,16 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.event.EventLoop;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
 import frc.robot.functions.io.xmlreader.Entity;
 import frc.robot.functions.io.xmlreader.EntityImpl;
+import frc.robot.library.Gamepad;
 import org.w3c.dom.Element;
+
+import frc.robot.library.Gamepad.Axis;
+import frc.robot.library.Gamepad.Button;
+import frc.robot.library.Gamepad;
 
 import java.sql.Driver;
 import java.util.ArrayList;
@@ -39,13 +45,12 @@ public class ControllerMapping extends EntityImpl implements Mapping {
         }
     }
 
-    private final XboxController[] controllers;
+    private final Gamepad[] controllers;
     private final int controllerNumber;
     private final double deadband;
-    private boolean passedDeadband = false;
     private final String valueName;
-    private XboxController.Axis controllerAxis;
-    private XboxController.Button controllerButton;
+    private Axis controllerAxis;
+    private Button controllerButton;
     private DPADValues controllerDPAD;
 
     /**
@@ -58,7 +63,7 @@ public class ControllerMapping extends EntityImpl implements Mapping {
     public ControllerMapping(Element element) {
         super(element);
 
-        controllers = new XboxController[2];
+        controllers = new Gamepad[2];
         controllers[0] = Robot.primaryController;
         controllers[1] = Robot.secondaryController;
 
@@ -67,13 +72,13 @@ public class ControllerMapping extends EntityImpl implements Mapping {
         valueName = getNodeOrAttribute(element, "value", "value");
         deadband = Double.parseDouble(getNodeOrAttribute(element, "deadband", "0"));
 
-        for (XboxController.Axis axis : XboxController.Axis.values()) {
-            if(axis.toString().contains(id)) {
+        for (Axis axis : Axis.values()) {
+            if(axis.toString().equalsIgnoreCase(id)) {
                 controllerAxis = axis;
             }
         }
 
-        for (XboxController.Button button : XboxController.Button.values()) {
+        for (Button button : Button.values()) {
             if(button.toString().equalsIgnoreCase(id)) {
                 controllerButton = button;
             }
@@ -91,7 +96,7 @@ public class ControllerMapping extends EntityImpl implements Mapping {
         if(controllerAxis != null) {
             double value = controllers[controllerNumber].getRawAxis(controllerAxis.value);
 
-            if(controllerAxis == XboxController.Axis.kLeftY || controllerAxis == XboxController.Axis.kRightY)
+            if(controllerAxis == Axis.kLeftY || controllerAxis == Axis.kRightY)
                 value *= -1;
 
             if(Math.abs(value) > deadband)

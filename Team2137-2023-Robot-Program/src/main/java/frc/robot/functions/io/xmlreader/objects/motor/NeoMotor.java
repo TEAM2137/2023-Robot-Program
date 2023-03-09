@@ -1,6 +1,7 @@
 package frc.robot.functions.io.xmlreader.objects.motor;
 
 import com.revrobotics.*;
+import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -14,6 +15,8 @@ import frc.robot.library.units.TranslationalUnits.Distance;
 import frc.robot.library.units.TranslationalUnits.Velocity;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+
+import java.sql.Driver;
 
 import static com.revrobotics.CANSparkMax.ControlType.kVelocity;
 import static frc.robot.library.units.AngleUnits.Angle.AngleUnits.REVOLUTIONS;
@@ -63,8 +66,9 @@ public class NeoMotor extends CANSparkMax implements Entity, SimpleMotorControl 
             setGearRatio(1);
 
             if(coder.isAbsolute()) {
-                DriverStation.reportError("Created an Absolute Enocder!!!", false);
+                DriverStation.reportWarning("Created Coder for Neo Motor ABS", false);
                 absoluteEncoder = getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle);
+                absoluteEncoder.setInverted(coder.inverted());
                 absoluteEncoder.setZeroOffset(coder.getOffset() / 360.0);
             } else {
                 relativeEncoder = getEncoder(coder.getEncoderType().getType(), coder.getCPR());
@@ -109,6 +113,8 @@ public class NeoMotor extends CANSparkMax implements Entity, SimpleMotorControl 
             pidController.setPositionPIDWrappingMinInput(0);
             pidController.setPositionPIDWrappingMaxInput(360);
             pidController.setFeedbackDevice(absoluteEncoder);
+
+            super.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 100);
         } else {
             pidController.setFeedbackDevice(relativeEncoder);
         }
@@ -172,6 +178,9 @@ public class NeoMotor extends CANSparkMax implements Entity, SimpleMotorControl 
     @Override
     public void setPosition(Distance distance) {
         pidController.setReference((distance.getValue(INCH) / distancePerRevolution.getValue(INCH)) * getGearRatio(), CANSparkMax.ControlType.kPosition);
+    }
+    public void setPosition(Angle angle, double feedforward) {
+        pidController.setReference((angle.getValue(Angle.AngleUnits.DEGREE) / 360.0) * getGearRatio(), ControlType.kPosition, 0, feedforward, SparkMaxPIDController.ArbFFUnits.kPercentOut);
     }
     @Override
     public void setPosition(Angle angle) {
@@ -248,7 +257,7 @@ public class NeoMotor extends CANSparkMax implements Entity, SimpleMotorControl 
     @Override
     public void follow(SimpleMotorControl other) {
         if(other instanceof NeoMotor) {
-            DriverStation.reportWarning("Successfully made follow relationship NEO", false);
+            DriverStation.reportWarning("Successfully made follow relationship NEO: " + ((NeoMotor) other).id, false);
             super.follow(((CANSparkMax) other));
         } else if(other instanceof FalconMotor){
             super.follow(ExternalFollower.kFollowerPhoenix, other.getID());
@@ -324,7 +333,6 @@ public class NeoMotor extends CANSparkMax implements Entity, SimpleMotorControl 
         pidController.setD(pid.getD());
         pidController.setFF(pid.getFF());
     }
-
 
     //---------------------------------------------Ramp Rate----------------------------------------------------------//
     @Override

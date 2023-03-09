@@ -147,7 +147,7 @@ public class PurePursuitGenerator {
             // select the first one if it's valid
             if (validIntersection1) {
                 lookahead = new Translation2d(x1 + x, y1 + y);
-                startAndEnd = getVelocity(i);
+                startAndEnd = velocityList.get(i);
             }
 
             // select the second one if it's valid and either lookahead is none,
@@ -155,7 +155,7 @@ public class PurePursuitGenerator {
             if (validIntersection2) {
                 if (lookahead == null || Math.abs(x1 - p2[0]) > Math.abs(x2 - p2[0]) || Math.abs(y1 - p2[1]) > Math.abs(y2 - p2[1])) {
                     lookahead = new Translation2d(x2 + x, y2 + y);
-                    startAndEnd = getVelocity(i);
+                    startAndEnd = velocityList.get(i);
                 }
             }
         }
@@ -169,12 +169,12 @@ public class PurePursuitGenerator {
 
             // if we are closer than lookahead distance to the end, set it as the lookahead
             if (Math.sqrt((endX - x) * (endX - x) + (endY - y) * (endY - y)) <= r) {
-                return Map.entry(new Translation2d(endX, endY), getVelocity(pointList.size() - 1));
+                return Map.entry(new Translation2d(endX, endY), getVelocity(x, y,pointList.size() - 1));
             }
         }
 
         if(lookahead == null) {
-            //System.out.printf("Could no find lookahead for: (%.4f, %.4f)\n", x, y);
+            //System.out.printf("Could not find lookahead for: (%.4f, %.4f)\n", x, y);
             return Map.entry(new Translation2d(x, y), new Velocity(0, FEET_PER_SECOND));
         }
 
@@ -184,15 +184,24 @@ public class PurePursuitGenerator {
         return Map.entry(lookahead, startAndEnd);
     }
 
-    public Velocity getVelocity(int position) {
+    public Velocity getVelocity(double x, double y, int position) {
         int index = position;
 
-        for(double dist = 0; dist < lookAheadDistance.getValue(FOOT); dist += pointList.get(index).getDistance(pointList.get(index - 1))) {
+        double distance = Math.sqrt(Math.pow(pointList.get(position).getX() - x, 2) + Math.pow(pointList.get(position).getY() - y, 2));
+
+        for(double dist = distance; dist > 0; dist -= Math.abs(pointList.get(index).getDistance(pointList.get(index - 1)))) {
             if(index <= 1)
                 break;
 
             index--;
         }
+
+//        for(double dist = 0; dist < lookAheadDistance.getValue(FOOT); dist += Math.abs(pointList.get(index).getDistance(pointList.get(index - 1)))) {
+//            if(index <= 1)
+//                break;
+//
+//            index--;
+//        }
 
         return velocityList.get(index);
     }

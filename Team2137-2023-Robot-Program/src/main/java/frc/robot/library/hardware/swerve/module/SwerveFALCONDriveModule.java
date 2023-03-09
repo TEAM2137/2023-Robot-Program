@@ -103,8 +103,10 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
         this.mDriveMotor.setInverted(mDriveMotorObj.inverted());
         this.mDriveMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, mDriveMotorObj.getCurrentLimit(), mDriveMotorObj.getCurrentLimit(), 1));
         this.mDriveMotor.setNeutralMode(NeutralMode.Brake);
-        this.mDriveMotor.configOpenloopRamp(mDriveMotorObj.getRampRate());
-//        this.mDriveMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor, 0, 10);
+        //this.mDriveMotor.configOpenloopRamp(mDriveMotorObj.getRampRate());
+        this.mDriveMotor.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, 0, 10);
+        configDrivetrainControlType(Constants.DriveControlType.VELOCITY);
+        this.mDriveMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_21_FeedbackIntegrated, 50);
 
         logger.writeEvent(4, FileLogger.EventType.Debug, "Initializing Falcon Turn Motor...");
         this.mTurnMotor.configFactoryDefault();
@@ -211,7 +213,8 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
             configDrivetrainControlType(Constants.DriveControlType.VELOCITY);
         }
 
-        this.mDriveMotor.set(TalonFXControlMode.Velocity, speed.getCTREVelocityUnit(dblDriveWheelRotationPerFoot).getValue(CTRE_VELOCITY));//,
+//        this.mDriveMotor.set(TalonFXControlMode.Velocity, speed.getCTREVelocityUnit(dblDriveWheelRotationPerFoot).getValue(CTRE_VELOCITY));//,
+        this.mDriveMotor.set(TalonFXControlMode.Velocity, speed.getCTREVelocityUnit(dblDriveWheelRotationPerFoot));//,
 //                DemandType.ArbitraryFeedForward, mDriveMotorObjFeedForward.calculate(speed.getValue(Distance.DistanceUnits.METER, Time2d.TimeUnits.SECONDS))); //In Ticks per 100ms and Meter per second
     }
 
@@ -307,10 +310,10 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
     public void configDrivetrainControlType(Constants.DriveControlType control) {
         switch (control) {
             case VELOCITY:
-//                PID tmpPIDVelocity = this.mDriveMotorObj.getPID(intDriveVelocityPIDSlotID);
-//                this.mDriveMotor.config_kP(0, tmpPIDVelocity.getP());
-//                this.mDriveMotor.config_kI(0, tmpPIDVelocity.getI());
-//                this.mDriveMotor.config_kD(0, tmpPIDVelocity.getD());
+                PID tmpPIDVelocity = this.mDriveMotorObj.getPID(0);
+                this.mDriveMotor.config_kP(0, tmpPIDVelocity.getP());
+                this.mDriveMotor.config_kI(0, tmpPIDVelocity.getI());
+                this.mDriveMotor.config_kD(0, tmpPIDVelocity.getD());
                 //TODO fix
 //                this.mDriveMotorObjFeedForward = this.mDriveMotorObj.getPID(intDriveVelocityPIDSlotID).getWPIFeedForwardController();
                 mDriveControlType = Constants.DriveControlType.VELOCITY;
