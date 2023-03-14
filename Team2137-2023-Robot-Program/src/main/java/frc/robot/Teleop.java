@@ -63,6 +63,10 @@ public class Teleop implements OpMode {
                 this.mDrivetrain.resetOdometry();
                 break;
         }
+
+        objectTracker = new ObjectTracker();
+        AprilTags.init();
+        ReflectiveTape.init();
     }
 
     @Override
