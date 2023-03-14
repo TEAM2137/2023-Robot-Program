@@ -19,7 +19,7 @@ public class RectArea {
         this.id = id;
     }
 
-    public boolean insideArea(double px, double py) {
+    public synchronized boolean insideArea(double px, double py) {
         boolean insideX = px > x && px < x + width;
         boolean insideY = py > y && py < y + height;
         return insideX && insideY;

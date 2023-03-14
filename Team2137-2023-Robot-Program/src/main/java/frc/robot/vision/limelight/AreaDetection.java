@@ -29,7 +29,7 @@ public class AreaDetection {
         addLeftSideAreas();
     }
 
-    public Point getNearestTagCoordinates() {
+    public synchronized Point getNearestTagCoordinates() {
         int id = getAreaId();
         if (id >= 0) {
             Point tagPos = leftSideTags.get(id);
@@ -39,7 +39,7 @@ public class AreaDetection {
         }
     }
 
-    public double xDstToNearestTag() {
+    public synchronized double xDstToNearestTag() {
         Point p = dstToNearestTag();
         if (p == null) {
             return 0;
@@ -48,7 +48,7 @@ public class AreaDetection {
         }
     }
 
-    public double yDstToNearestTag() {
+    public synchronized double yDstToNearestTag() {
         Point p = dstToNearestTag();
         if (p == null) {
             return 0;
@@ -57,7 +57,7 @@ public class AreaDetection {
         }
     }
 
-    public Point dstToNearestTag() {
+    public synchronized Point dstToNearestTag() {
         int id = getAreaId();
         if (id >= 0) {
             Point tagPos = leftSideTags.get(id);
@@ -67,21 +67,21 @@ public class AreaDetection {
         }
     }
 
-    private void addLeftSideAreas() {
+    private synchronized void addLeftSideAreas() {
         for (int i = 0; i < leftSideTags.size(); i++) {
             Point position = new Point(leftSideTags.get(i).x, leftSideTags.get(i).y - 30);
             leftSideAreas.add(new RectArea(i, position.x, position.y, 60, 60));        
         }
     }
 
-    private void addRightSideAreas() {
+    private synchronized void addRightSideAreas() {
         for (int i = 0; i < rightSideTags.size(); i++) {
             Point position = new Point(rightSideTags.get(i).x - 60, rightSideTags.get(i).y - 30);
             rightSideAreas.add(new RectArea(i, position.x, position.y, 60, 60));        
         }
     }
 
-    public int getAreaId() {
+    public synchronized int getAreaId() {
         
         if (getArea() == null) {
             return -1;
@@ -90,7 +90,7 @@ public class AreaDetection {
         }
     }
 
-    public RectArea getArea() {
+    public synchronized RectArea getArea() {
 
         // if on left side
         if (AprilTags.getX() < AprilTags.fieldSizeX) {
@@ -106,7 +106,7 @@ public class AreaDetection {
         return null;
     }
 
-    public boolean inAnyAreas() {
+    public synchronized boolean inAnyAreas() {
 
         // if on left side
         if (AprilTags.getX() < AprilTags.fieldSizeX) {
