@@ -19,9 +19,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.camera.limelight.AprilTags;
-import frc.robot.camera.limelight.ReflectiveTape;
-import frc.robot.camera.objects.ObjectTracker;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.XMLSettingReader;
@@ -31,6 +28,9 @@ import frc.robot.library.hardware.DriveTrain;
 import frc.robot.library.hardware.Gamepad;
 import frc.robot.library.hardware.swerve.SwerveDrivetrain;
 import frc.robot.library.hardware.swerve.module.SwerveModuleState;
+import frc.robot.vision.limelight.AprilTags;
+import frc.robot.vision.limelight.ReflectiveTape;
+import frc.robot.vision.objects.ObjectTracker;
 
 public class Teleop implements OpMode {
 

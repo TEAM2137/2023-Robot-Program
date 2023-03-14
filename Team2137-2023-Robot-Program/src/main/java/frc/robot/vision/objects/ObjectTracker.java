@@ -1,4 +1,4 @@
-package frc.robot.camera.objects;
+package frc.robot.vision.objects;
 
 import java.util.ArrayList;
 

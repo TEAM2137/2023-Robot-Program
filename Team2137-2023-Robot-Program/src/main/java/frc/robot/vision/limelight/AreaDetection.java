@@ -1,9 +1,9 @@
-package frc.robot.camera.limelight;
+package frc.robot.vision.limelight;
 
 import java.util.ArrayList;
 import org.opencv.core.Point;
 
-import frc.robot.camera.limelight.field.RectArea;
+import frc.robot.vision.limelight.field.RectArea;
 
 public class AreaDetection {
 

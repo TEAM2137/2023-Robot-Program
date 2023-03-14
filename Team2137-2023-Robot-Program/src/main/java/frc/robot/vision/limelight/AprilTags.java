@@ -1,4 +1,4 @@
-package frc.robot.camera.limelight;
+package frc.robot.vision.limelight;
 
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;

@@ -1,4 +1,4 @@
-package frc.robot.camera.limelight;
+package frc.robot.vision.limelight;
 
 import org.opencv.core.Point;
 
