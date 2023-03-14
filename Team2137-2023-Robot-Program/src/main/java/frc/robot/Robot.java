@@ -10,9 +10,13 @@ import edu.wpi.first.networktables.NetworkTableEvent;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.functions.io.FileLogger;
+import frc.robot.functions.io.LogFactory;
 import frc.robot.functions.io.xmlreader.Entity;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.XMLSettingReader;
@@ -22,6 +26,8 @@ import frc.robot.library.Constants;
 import frc.robot.library.Gamepad;
 import frc.robot.library.OpMode;
 
+import java.io.File;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -51,10 +57,13 @@ public class Robot extends TimedRobot {
 
   public static ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(2);
 
+  public static DateTimeFormatter robotDateTimeFormatter = DateTimeFormatter.ofPattern("MMdd_HHmmss_SSS");
+
   public static EntityGroup robotEntityGroup;
   public static EntityGroup settingsEntityGroup;
 
   public static XMLSettingReader settingReader;
+  public static LogFactory logFactory;
   public static FileLogger fileLogger;
 
   public static NetworkTable configurationNetworkTable;
@@ -79,14 +88,18 @@ public class Robot extends TimedRobot {
 
     DriverStation.silenceJoystickConnectionWarning(true);
 
-    fileLogger = new FileLogger(10, Constants.RobotState.MAIN, Constants.StandardFileAndDirectoryLocations.GenericFileLoggerDir.getFileLocation(isSimulation), isSimulation);
+    logFactory = new LogFactory(10, true);
+
+    fileLogger = logFactory.buildLogger("Main");
     fileLogger.writeEvent(0, FileLogger.EventType.Status, "Started FileLogger Continuing with code...");
 
     fileLogger.writeEvent(0, FileLogger.EventType.Status, "Opening Settings XML File...");
-    settingReader = new XMLSettingReader(Constants.StandardFileAndDirectoryLocations.GenericSettings.getFileLocation(isSimulation),  fileLogger);
+    settingReader = new XMLSettingReader(Constants.StandardFileAndDirectoryLocations.GenericSettings.getFileLocation(isSimulation), logFactory, fileLogger);
 
     configurationNetworkTable = NetworkTableInstance.getDefault().getTable("XMLConfiguration");
     NetworkTable smartDashboardTable = NetworkTableInstance.getDefault().getTable("SmartDashboard");
+
+    autonomousClass = new Autonomous();
 
     NetworkTableEntry implementChanges = smartDashboardTable.getEntry("ImplementChanges");
     NetworkTableEntry flushConfigurationToXML = smartDashboardTable.getEntry("FlushConfigurationToXML");
@@ -130,7 +143,30 @@ public class Robot extends TimedRobot {
           break;
       }
     });
+
+    Robot.subSystemCommandList.put("Delay", this::delay);
   }
+
+  private Timer mDelayStepTimer;
+
+  public void delay(Step step) {
+    switch(step.getStepState()) {
+      case STATE_INIT:
+        mDelayStepTimer = new Timer();
+        mDelayStepTimer.reset();
+        mDelayStepTimer.start();
+
+        step.changeStepState(Constants.StepState.STATE_RUNNING);
+        break;
+      case STATE_RUNNING:
+        if(mDelayStepTimer.hasElapsed(step.getParm(1))) {
+          step.changeStepState(Constants.StepState.STATE_FINISH);
+          mDelayStepTimer.stop();
+        }
+        break;
+    }
+  }
+
 
   /**
    * This function is called every robot packet, no matter the mode. Use this for items like
@@ -173,19 +209,15 @@ public class Robot extends TimedRobot {
 
   @Override
   public void autonomousInit() {
-
-      callEndFunction();
+      if(lastRobotState != null) callEndFunction();
       clearOpModes();
 
       callStateSubscribers(Constants.RobotState.AUTONOMOUS);
       currentActiveAutonomousSteps.clear();
 
-
       lastRobotState = Constants.RobotState.AUTONOMOUS;
 
-      autonomousClass = new Autonomous();
       autonomousClass.init(settingReader, fileLogger);
-
   }
 
   /** This function is called periodically during autonomous. */
@@ -196,7 +228,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopInit() {
-      callEndFunction();
+      if(lastRobotState != null) callEndFunction();
       clearOpModes();
 
       for(Step step : persistenceTeleopSteps) {
@@ -221,7 +253,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void testInit() {
-      callEndFunction();
+      if(lastRobotState != null) callEndFunction();
       clearOpModes();
 
       callStateSubscribers(Constants.RobotState.TEST);
@@ -282,7 +314,7 @@ public class Robot extends TimedRobot {
   }
 
   private void clearOpModes() {
-    autonomousClass = null; //"Lose" all the pointers to the objects
+//    autonomousClass = null; //"Lose" all the pointers to the objects
     teleopClass = null;
     testClass = null;
     disabledClass = null;

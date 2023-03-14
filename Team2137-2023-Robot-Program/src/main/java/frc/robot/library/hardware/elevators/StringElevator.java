@@ -52,15 +52,17 @@ public class StringElevator extends EntityGroup implements Elevator {
 
     private final PIDController pidController;
 
+    private final FileLogger fileLogger;
+
     /**
      * Takes in a part of the xml file and parses it into variables and subtypes using recursion
      *
      * @param element    - Portion of the XML File
      * @param parent -
-     * @param fileLogger -
      */
-    public StringElevator(Element element, EntityGroup parent, FileLogger fileLogger) {
-        super(element, parent, fileLogger);
+    public StringElevator(Element element, EntityGroup parent) {
+        super(element, parent, true);
+        fileLogger = getLogger();
 
         fileLogger.writeEvent(4, "Entering String Elevator constructor");
 
@@ -127,7 +129,7 @@ public class StringElevator extends EntityGroup implements Elevator {
         if(this.getEntity("Tolerance") != null) {
             mTolerance = (Distance) getEntity("Tolerance");
         } else {
-            mTolerance = new Distance(0.125, INCH);
+            mTolerance = new Distance(1, INCH);
         }
 
         mLiftMotors[0].setDistancePerRevolution(new Distance(mSpoolDiameter.getValue(INCH) * Math.PI, INCH));
@@ -151,8 +153,15 @@ public class StringElevator extends EntityGroup implements Elevator {
         
         logger = fileLogger;
 
+//        Robot.robotStateSubscribers.add((state) -> {
+//            if(state == Constants.RobotState.TELEOP && mHomingStepState == STATE_NOT_STARTED) {
+//                mHomingStepState = STATE_INIT;
+//            }
+//        });
+
         this.addSubsystemCommand(getName() + "-SetRawPosition", this::setRawPosition);
         this.addSubsystemCommand(getName() + "-SetRawSpeed", this::setSpeed);
+        this.addSubsystemCommand(getName() + "-SetSingleRawSpeed", this::setSingleSpeed);
         this.addSubsystemCommand(getName() + "-HomeElevator", this::homeElevator);
     }
 
@@ -171,7 +180,7 @@ public class StringElevator extends EntityGroup implements Elevator {
                     mLiftMotors[0].disableForwardLimit();
                     mLiftMotors[0].disableReverseLimit();
                     DriverStation.reportError("Starting the Home seqence for " + getName(), false);
-                    setSpeed(-0.25);
+                    setSpeed(-0.375);
                     mGoalPosition = null;
                     mHomingStepState = STATE_RUNNING;
                 }
@@ -201,6 +210,7 @@ public class StringElevator extends EntityGroup implements Elevator {
 
     @Override
     public void setSpeed(final double speed) {
+
         if(mRatchet != null) {
             if (speed > 0) {
                 mRatchet.set(DoubleSolenoid.Value.kReverse);
@@ -213,6 +223,15 @@ public class StringElevator extends EntityGroup implements Elevator {
             }, 100, TimeUnit.MILLISECONDS);
         } else {
             mLiftMotors[0].set(speed);
+        }
+    }
+
+    @InstantCommand
+    public void setSingleSpeed(Step step) {
+        if(step.getStepState() == STATE_INIT){
+            setSpeed(step.getSpeed());
+
+            step.changeStepState(STATE_FINISH);
         }
     }
 
@@ -262,6 +281,7 @@ public class StringElevator extends EntityGroup implements Elevator {
     public void setRawPosition(Step step) {
         switch (step.getStepState()) {
             case STATE_INIT:
+
                 if(step.hasValue("delay")) {
                     Robot.threadPoolExecutor.schedule(() -> {
                         setPosition(new Distance(step.getParm(1), INCH));

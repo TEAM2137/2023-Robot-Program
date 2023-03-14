@@ -16,6 +16,7 @@ package frc.robot.functions.io.xmlreader;
 
 import frc.robot.Robot;
 import frc.robot.functions.io.FileLogger;
+import frc.robot.functions.io.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -43,7 +44,7 @@ public class XMLSettingReader {
     private final FileLogger log;
     private final int maxSettingsFileHistory = 15;
 
-    public XMLSettingReader(String dir, FileLogger logger) {
+    public XMLSettingReader(String dir, LogFactory loggerFactory, FileLogger logger) {
         log = logger;
         this.settingFile = new File(dir);
 
@@ -81,8 +82,8 @@ public class XMLSettingReader {
         Element settingsEntities =  (Element) rootElement.getElementsByTagName("Settings").item(0);
 
         log.writeEvent(6, FileLogger.EventType.Status, "Starting recursive search in XML File...");
-        Robot.settingsEntityGroup = new EntityGroup(settingsEntities, null, log);
-        Robot.robotEntityGroup = new EntityGroup(robotEntities, null, log);
+        Robot.settingsEntityGroup = new EntityGroup(settingsEntities, null, true);
+        Robot.robotEntityGroup = new EntityGroup(robotEntities, null, true);
 
         StringBuilder builder = new StringBuilder();
         Robot.robotEntityGroup.constructTreeItemPrintout(builder, 1);

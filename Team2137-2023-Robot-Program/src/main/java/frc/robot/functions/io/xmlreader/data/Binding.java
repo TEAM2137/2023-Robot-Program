@@ -32,10 +32,9 @@ public class Binding extends EntityGroup {
      *
      * @param element    - Portion of the XML File
      * @param parent
-     * @param fileLogger
      */
-    public Binding(Element element, EntityGroup parent, FileLogger fileLogger) {
-        super(element, parent, fileLogger);
+    public Binding(Element element, EntityGroup parent) {
+        super(element, parent, false);
 
         for (Entity entry : getEntities()) {
             if (entry.getName().equalsIgnoreCase("Map")) {

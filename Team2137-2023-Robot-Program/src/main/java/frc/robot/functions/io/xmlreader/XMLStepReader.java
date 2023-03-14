@@ -113,12 +113,12 @@ public class XMLStepReader {
         return returnList;
     }
 
-    public boolean isLastStep() {
-        return currentStepCounter == steps.size() - 1;
+    public boolean isLastDriveStep() {
+        return !hasFutureDriveStep();
     }
 
-    public boolean isFirstStep() {
-        return currentStepCounter == 0;
+    public boolean isFirstDriveStep() {
+        return getLastDriveStep() == null;
     }
 
     public Step getLastDriveStep() {

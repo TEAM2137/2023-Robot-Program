@@ -91,6 +91,14 @@ public final class Constants {
             }
         }
 
+        public String getMainDirectory(boolean simulation) {
+            if (simulation) {
+                return xmlDesktopFileLocation;
+            } else {
+                return xmlRoboRioFileLocation;
+            }
+        }
+
         /**
          * Creates the new xml standard directories {@see XMLSettingReader}
          * @param simulation - Whether the robot is on desktop or roborio

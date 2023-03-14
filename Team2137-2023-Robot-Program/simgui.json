@@ -18,7 +18,8 @@
       "/FMSInfo": "FMSInfo",
       "/LiveWindow/Ungrouped/DigitalInput[8]": "Digital Input",
       "/LiveWindow/Ungrouped/DigitalInput[9]": "Digital Input",
-      "/LiveWindow/Ungrouped/Scheduler": "Scheduler"
+      "/LiveWindow/Ungrouped/Scheduler": "Scheduler",
+      "/SmartDashboard/AutonomousChooser": "String Chooser"
     }
   },
   "NetworkTables": {

@@ -52,8 +52,8 @@ public class DeadWheelActiveTracking extends EntityGroup {
     private final Velocity xSpeed = new Velocity(0, FEET_PER_SECOND);
     private final Velocity ySpeed = new Velocity(0, FEET_PER_SECOND);
 
-    public DeadWheelActiveTracking(Element element, EntityGroup parent, FileLogger fileLogger) {
-        super(element, parent, fileLogger);
+    public DeadWheelActiveTracking(Element element, EntityGroup parent) {
+        super(element, parent, false);
 
         xEncoderObj = (Encoder) parent.getEntity("xCoder");
         yEncoderObj = (Encoder) parent.getEntity("yCoder");

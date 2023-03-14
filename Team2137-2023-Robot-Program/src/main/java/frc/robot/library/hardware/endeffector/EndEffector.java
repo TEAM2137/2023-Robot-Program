@@ -61,12 +61,13 @@ public class EndEffector extends EntityGroup {
     private final double pitchAllowedErr = 0.5;
     private final double feedforward;
 
-    public EndEffector(Element element, EntityGroup parent, FileLogger fileLogger){
-        super(element, parent, fileLogger);
+    public EndEffector(Element element, EntityGroup parent){
+        super(element, parent, true);
 
-        logger = fileLogger;
+        logger = getLogger();
 
         jaw1 = (DoubleSolenoid) getEntity("JawSolenoid");
+        setEffectorState(true);
         logger.writeLine("ENDEFFECTOR: Jaw Solenoid Initialized");
 
         pitchMotor = (NeoMotor) getEntity("WristMotor");
@@ -89,7 +90,7 @@ public class EndEffector extends EntityGroup {
         if(step.getStepState() == Constants.StepState.STATE_INIT) {
             if(step.getParm(1) != 0) {
                 rawPitchControl = true;
-                pitchMotor.set(Math.pow(Math.sin(step.getParm(1) * (Math.PI / 2)), 3));
+                pitchMotor.set(Math.min(Math.pow(Math.sin(step.getParm(1) * (Math.PI / 2)), 3), 0.2));
             } else if (rawPitchControl) {
                 rawPitchControl = false;
                 pitchMotor.set(0.0);

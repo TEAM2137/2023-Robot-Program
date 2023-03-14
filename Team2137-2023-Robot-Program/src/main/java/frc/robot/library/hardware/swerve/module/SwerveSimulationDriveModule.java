@@ -62,14 +62,13 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
 
     private final SwerveModuleState.SwerveModulePositions mSwerveDrivePosition;
 
-    public SwerveSimulationDriveModule(Element element, EntityGroup parent, FileLogger fileLogger) {
-        super(element, parent, fileLogger);
+    public SwerveSimulationDriveModule(Element element, EntityGroup parent) {
+        super(element, parent, false);
 
-        fileLogger.writeEvent(0, FileLogger.EventType.Error, "Simulated SwerveModuleCreated " + this.getName());
+        logger = getLogger();
+        logger.writeEvent(0, FileLogger.EventType.Error, "Simulated SwerveModuleCreated " + this.getName());
 
         mSwerveDrivePosition = SwerveModuleState.SwerveModulePositions.getPositionFromString(this.getName());
-
-        logger = fileLogger;
 
 //        dblWheelDiameter = (Number) XMLSettingReader.settingsEntityGroup.getEntity("DriveTrain-WheelDiameter");
 //        logger.writeEvent(0, FileLogger.EventType.Debug, "WheelDiameter: " + dblWheelDiameter.getValue());

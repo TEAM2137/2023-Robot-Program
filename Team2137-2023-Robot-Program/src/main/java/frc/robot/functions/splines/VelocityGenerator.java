@@ -14,6 +14,8 @@
 
 package frc.robot.functions.splines;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.spline.PoseWithCurvature;
 import frc.robot.library.units.TranslationalUnits.Acceleration;
 import frc.robot.library.units.TranslationalUnits.Distance;
@@ -33,6 +35,7 @@ public class VelocityGenerator {
     //Corner percent is the amount to stretch the original slow down determined by the percent of curve (degree change / 180)
     public VelocityGenerator(List<PoseWithCurvature> _poses, Velocity maxDrivetrainVelocity, Acceleration maxDrivetrainAcceleration, double cornerPercent) {//, Velocity startSpeed, Velocity endSpeed) {
         poses = _poses;
+
         //Max RadPerMeter is 2Pi
         speeds.add(new Velocity(0, FEET_PER_SECOND));
 

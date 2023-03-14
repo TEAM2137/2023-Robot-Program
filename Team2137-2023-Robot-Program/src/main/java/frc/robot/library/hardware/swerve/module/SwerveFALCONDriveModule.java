@@ -69,11 +69,11 @@ public class SwerveFALCONDriveModule extends EntityGroup implements SwerveModule
     private Constants.DriveControlType mDriveControlType = Constants.DriveControlType.VELOCITY;
     private SwerveModuleState.SwerveModulePositions mSwerveDrivePosition;
 
-    public SwerveFALCONDriveModule(Element element, EntityGroup parent, FileLogger fileLogger) {
-        super(element, parent, fileLogger);
+    public SwerveFALCONDriveModule(Element element, EntityGroup parent) {
+        super(element, parent, true);
 
         //region Logging Setup
-        logger = fileLogger;
+        logger = getLogger();
         logger.setTag("SwerveFALCONDriveModule");
         //endregion
 

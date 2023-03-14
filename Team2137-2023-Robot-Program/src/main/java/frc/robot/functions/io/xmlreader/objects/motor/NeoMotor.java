@@ -125,6 +125,8 @@ public class NeoMotor extends CANSparkMax implements Entity, SimpleMotorControl 
         setCurrentLimit(Integer.parseInt(Entity.getOrDefault(element, "CurrentLimit", "-1")));
         setRampRate(Double.parseDouble(Entity.getOrDefault(element, "RampRate", "0")));
 
+        super.setClosedLoopRampRate(rampRate);
+
         if(Entity.getOrDefault(element, "IdleMode", "Brake").equalsIgnoreCase("Brake")) {
             setNeutralMode(IdleMode.kBrake);
         } else {
@@ -133,7 +135,6 @@ public class NeoMotor extends CANSparkMax implements Entity, SimpleMotorControl 
     }
 
     //---------------------------------------------------Soft Limit---------------------------------------------------//
-
     @Override
     public void configureForwardLimit(Distance d) {
         //DriverStation.reportWarning(getName() + "-SoftLimit" + ((float) ((d.getValue(INCH) / distancePerRevolution.getValue(INCH)) * getGearRatio() * getCountPerRevolution()), false);

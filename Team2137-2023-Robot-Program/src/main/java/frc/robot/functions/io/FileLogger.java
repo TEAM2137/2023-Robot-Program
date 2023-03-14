@@ -17,6 +17,7 @@ package frc.robot.functions.io;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.DriverStation;
+import frc.robot.Robot;
 import frc.robot.library.Constants.RobotState;
 
 import java.io.*;
@@ -60,37 +61,26 @@ public class FileLogger {
 
     private final int debug;
     private static FileWriter writer;
-    private final String logName;
-    private final String logFileDirectory;
     private final int maxLogFiles = 5;
 
     private boolean copyToSystemStream = true;
 
-    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("MMdd_HHmmss_SSS");
     private String tagString = "";
 
-    private static ScheduledThreadPoolExecutor flushExecutor;
+//    private static ScheduledThreadPoolExecutor flushExecutor;
+    private ScheduledFuture<?> scheduledFuture;
 
     /**
      * Constructor for Filelogger, (creates file, starts flushing thread)
      * @param _debug - Debug choice
-     * @param robotState - Current robot state (Auto, Tele)
      */
-    public FileLogger(int _debug, RobotState robotState, String directory, boolean _copyToSystemStream){
+    protected FileLogger(int _debug, String fileFullName, boolean _copyToSystemStream){
         this.debug = _debug;
         copyToSystemStream = _copyToSystemStream;
 
-        //startThreadedNetworkTable(100);
-
-        this.logName = "log_" + robotState.toString() + "_" + getDateString() + ".txt";
-
-//        this.logFileDirectory = System.getProperty("user.dir") + "\\File Logger\\";
-        this.logFileDirectory = directory;
-//        this.logFileDirectory = "/home/lvuser/File Logger/";
-
-        System.out.println(this.logFileDirectory + this.logName);
+        System.out.println(fileFullName);
         try {
-            writer = new FileWriter(this.logFileDirectory + this.logName);
+            writer = new FileWriter(fileFullName);
             writer.write("MMdd_HHmmss_SSS-Type: Event\n");
             flush();
         } catch (IOException e) {
@@ -98,14 +88,15 @@ public class FileLogger {
             e.printStackTrace();
         }
         startThreadedFlush();
-        cleanLogs();
+//        cleanLogs();
     }
 
     private synchronized void startThreadedFlush() {
         //writeEvent(0, EventType.Status, "Starting Threaded File Flush with 100ms periods");
         flush();
-        flushExecutor = new ScheduledThreadPoolExecutor(1);
-        flushExecutor.scheduleAtFixedRate(this::flush, 0, 100, TimeUnit.MILLISECONDS);
+        scheduledFuture = Robot.threadPoolExecutor.scheduleAtFixedRate(this::flush, 0, 100, TimeUnit.MILLISECONDS);
+//        flushExecutor = new ScheduledThreadPoolExecutor(1);
+//        flushExecutor.scheduleAtFixedRate(this::flush, 0, 100, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -122,7 +113,7 @@ public class FileLogger {
     }
 
     private String getDateString() {
-        return dateTimeFormatter.format(LocalDateTime.now());
+        return Robot.robotDateTimeFormatter.format(LocalDateTime.now());
     }
 
     private synchronized void writingAction(int _debug, Runnable runnable) {
@@ -218,22 +209,22 @@ public class FileLogger {
      * List all the files in the Log directory
      * Then if there is more than the max log amount then delete
      */
-    private void cleanLogs(){
-        File[] fileList = new File(logFileDirectory).listFiles();
-
-        if(fileList == null || fileList.length == 0)
-            return;
-
-        Arrays.sort(fileList, Comparator.comparing(File::lastModified).reversed());
-
-        if (fileList.length > maxLogFiles) {
-            writeEvent(0, EventType.Status, "Cleaning old logs...");
-
-            for (int i = maxLogFiles; i < fileList.length; i++) {
-                fileList[i].delete();
-            }
-        }
-    }
+//    private void cleanLogs(){
+//        File[] fileList = new File(logFileDirectory).listFiles();
+//
+//        if(fileList == null || fileList.length == 0)
+//            return;
+//
+//        Arrays.sort(fileList, Comparator.comparing(File::lastModified).reversed());
+//
+//        if (fileList.length > maxLogFiles) {
+//            writeEvent(0, EventType.Status, "Cleaning old logs...");
+//
+//            for (int i = maxLogFiles; i < fileList.length; i++) {
+//                fileList[i].delete();
+//            }
+//        }
+//    }
 
     public int getDebug() {
         return debug;
@@ -243,7 +234,7 @@ public class FileLogger {
      * Close the FileLogger writer
      */
     public synchronized void close(){
-        flushExecutor.shutdown();
+        scheduledFuture.cancel(false);
 
         try {
             writer.close();

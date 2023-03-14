@@ -42,6 +42,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -160,10 +161,13 @@ public class EntityGroup extends EntityImpl {
      * Takes in a part of the xml file and parses it into variables and subtypes using recursion
      * @param element - Portion of the XML File
      */
-    public EntityGroup(Element element, EntityGroup parent, FileLogger fileLogger) {
+    public EntityGroup(Element element, EntityGroup parent, boolean customLog) {
         super(element);
         type = element.getTagName(); //Record the Tag Name or the Type
-        logger = fileLogger;
+        if(customLog)
+            logger = Robot.logFactory.buildLogger(getName());
+        else
+            logger = Robot.fileLogger;
 
         Robot.subSystemCallList.add(this);
 
@@ -225,7 +229,7 @@ public class EntityGroup extends EntityImpl {
                                 logger.writeEvent(0, FileLogger.EventType.Error, tmp.getTagName());
                             }
 
-                            EntityGroup returner = entityGroupClass.getDeclaredConstructor(Element.class, EntityGroup.class, FileLogger.class).newInstance(tmp, this, logger);
+                            EntityGroup returner = entityGroupClass.getDeclaredConstructor(Element.class, EntityGroup.class).newInstance(tmp, this);
 
                             childSubsystem.put(returner.getName().toUpperCase(), returner);
                         } catch (NoSuchMethodException e) {
@@ -248,6 +252,10 @@ public class EntityGroup extends EntityImpl {
 
         childEntities.forEach((b) -> b.constructTreeItemPrintout(builder, depth + 1));
         childSubsystem.forEach((a, b) -> b.constructTreeItemPrintout(builder, depth + 1));
+    }
+
+    public FileLogger getLogger() {
+        return logger;
     }
 
     /**

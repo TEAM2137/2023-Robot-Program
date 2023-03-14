@@ -26,10 +26,9 @@ public class TeleopBinding extends EntityGroup {
      *
      * @param element    - Portion of the XML File
      * @param parent
-     * @param fileLogger
      */
-    public TeleopBinding(Element element, EntityGroup parent, FileLogger fileLogger) {
-        super(element, parent, fileLogger);
+    public TeleopBinding(Element element, EntityGroup parent) {
+        super(element, parent, false);
 
         for(Entity entry : getEntities()) {
             if(entry.getName().equalsIgnoreCase("Step")) {

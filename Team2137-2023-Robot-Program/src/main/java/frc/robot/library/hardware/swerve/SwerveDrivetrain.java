@@ -49,6 +49,7 @@ import frc.robot.library.units.UnitUtil;
 import org.ejml.simple.SimpleMatrix;
 import org.w3c.dom.Element;
 
+import java.sql.Driver;
 import java.util.concurrent.TimeUnit;
 
 import static frc.robot.library.units.AngleUnits.Angle.AngleUnits.DEGREE;
@@ -68,6 +69,8 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
     private Distance robotLength;
     private Distance robotWidth;
 
+    private double mInitalPitch = 0;
+
     private PID mThetaController;
 
     public SwerveKinematics swerveKinematics;
@@ -77,11 +80,11 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
     private final FileLogger logger;
 
     private final Pigeon2 pigeonIMU;
+    private Gyro gyroObj;
+    public SwerveDrivetrain(Element element, EntityGroup parent) {
+        super(element, parent, true);
 
-    public SwerveDrivetrain(Element element, EntityGroup parent, FileLogger fileLogger) {
-        super(element, parent, fileLogger);
-
-        logger = fileLogger;
+        logger = getLogger();
         logger.setTag("SwerveDriveTrainConstructor");
 
         robotLength = (Distance) Robot.settingsEntityGroup.getEntity("RobotLength");
@@ -98,10 +101,11 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
         PID autoLevel = (PID) getEntity("AutoLevel");
         if (autoLevel != null) {
+            DriverStation.reportWarning("Built Auto Level PID", false);
             mAutoLevelPIDController = new PIDController(autoLevel.getP(), autoLevel.getI(), autoLevel.getD());
         }
 
-        PID thetaLevel = (PID) getEntity("ThetaAlignment");
+        PID thetaLevel = (PID) getEntity("ThetaController");
         if(thetaLevel != null) {
             mThetaController = thetaLevel;
         }
@@ -121,16 +125,18 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         }
 
         logger.writeEvent(6, FileLogger.EventType.Debug, "Creating Pigeon Gyro...");
-        Gyro gyroObj = (Gyro) getEntity("Pigeon");
+        gyroObj = (Gyro) getEntity("Pigeon");
         pigeonIMU = new Pigeon2(gyroObj.getID());
         pigeonIMU.configFactoryDefault();
         pigeonIMU.configMountPose(gyroObj.getOffset(), 0, 0);
+        mInitalPitch = pigeonIMU.getPitch();
 
         this.addSubsystemCommand("rawDrive", this::rawDrive);
         this.addSubsystemCommand("SetPosition", this::setPosition);
         this.addSubsystemCommand("GyroReset", this::gyroReset);
         this.addSubsystemCommand("AutoLevel", this::autoLevel);
         this.addSubsystemCommand("DriveOnCharge", this::DriveOnChargeStep);
+        this.addSubsystemCommand("xLock", this::xLock);
 
         Robot.threadPoolExecutor.scheduleAtFixedRate(this::updateKinematics, 0, 50, TimeUnit.MILLISECONDS);
     }
@@ -152,7 +158,7 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         if (step.getStepState() == Constants.StepState.STATE_INIT) {
 //            pigeonIMU.configMountPoseYaw(gyroObj.getOffset());
 
-            pigeonIMU.setYaw(0);
+            pigeonIMU.setYaw(90);
 
             DriverStation.reportError("Gyro Zeroed", false);
 
@@ -187,6 +193,7 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
     }
 
     public PIDController mAutoLevelPIDController;
+    public PIDController mAutoLevelPIDThetaController;
     public Timer mAutoLevelSustainedTargetTimer;
     public boolean mAutoLevelTimerStarted;
 
@@ -201,14 +208,16 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
                 mAutoLevelTimerStarted = false;
                 break;
             case STATE_RUNNING:
-                Angle angle = new Angle(pigeonIMU.getPitch(), DEGREE);
+                Angle angle = new Angle(pigeonIMU.getPitch() - mInitalPitch, DEGREE);
                 double output = mAutoLevelPIDController.calculate(-angle.getValue(DEGREE));
 
                 SwerveModuleState[] swerveModuleState = new SwerveModuleState[]{
-                        new SwerveModuleState(new Number(output), angle, SwerveModuleState.SwerveModulePositions.LEFT_FRONT),
-                        new SwerveModuleState(new Number(output), angle, SwerveModuleState.SwerveModulePositions.LEFT_BACK),
-                        new SwerveModuleState(new Number(output), angle, SwerveModuleState.SwerveModulePositions.RIGHT_FRONT),
-                        new SwerveModuleState(new Number(output), angle, SwerveModuleState.SwerveModulePositions.RIGHT_BACK)};
+                        new SwerveModuleState(new Number(output), Rotation2d.fromDegrees(0), SwerveModuleState.SwerveModulePositions.LEFT_FRONT),
+                        new SwerveModuleState(new Number(output), Rotation2d.fromDegrees(0), SwerveModuleState.SwerveModulePositions.LEFT_BACK),
+                        new SwerveModuleState(new Number(output), Rotation2d.fromDegrees(0), SwerveModuleState.SwerveModulePositions.RIGHT_FRONT),
+                        new SwerveModuleState(new Number(output), Rotation2d.fromDegrees(0), SwerveModuleState.SwerveModulePositions.RIGHT_BACK)};
+
+                SmartDashboard.putNumber("AutoLevelOutputEffort", output);
 
                 setSwerveModuleStates(swerveModuleState);
 
@@ -236,21 +245,38 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         }
     }
 
+    private boolean mAutoLevelAtTarget = false;
     private boolean mDriveOnChargePeakFlag = false;
+    private double mLastGyroReading = 0;
 
     @InstantCommand
     public void DriveOnChargeStep(Step step) {
         switch(step.getStepState()) {
             case STATE_INIT:
+
                 SwerveModuleState[] moduleStates = calculateSwerveMotorSpeedsFieldCentric(new Number(0), new Number(-step.getSpeed()), new AngularVelocity(0, DEGREE_PER_SECOND));
                 this.setSwerveModuleStates(moduleStates);
+
+//                mAutoLevelPIDThetaController = new PIDController(mThetaController.getP(), mThetaController.getI(), mThetaController.getD());
+//                mAutoLevelPIDThetaController.setSetpoint(0);
+//                mAutoLevelPIDThetaController.setTolerance(5);
 
                 step.changeStepState(Constants.StepState.STATE_RUNNING);
                 break;
             case STATE_RUNNING:
-                Angle angle = new Angle(pigeonIMU.getPitch(), DEGREE);
+                Angle angle = new Angle(pigeonIMU.getPitch() - mInitalPitch, DEGREE);
 
-                if(angle.getValue(DEGREE) > 13.0 && !mDriveOnChargePeakFlag) {
+//                if(!mAutoLevelPIDThetaController.atSetpoint()) {
+//                    SwerveModuleState[] moduleStatesRun = calculateSwerveMotorSpeedsFieldCentric(new Number(0), new Number(0), new AngularVelocity(mAutoLevelPIDThetaController.calculate(getAngle().getValue(DEGREE)), DEGREE_PER_SECOND));
+//                    this.setSwerveModuleStates(moduleStatesRun);
+//                } else if(!mAutoLevelAtTarget) {
+//                    SwerveModuleState[] moduleStates = calculateSwerveMotorSpeedsFieldCentric(new Number(0), new Number(-step.getSpeed()), new AngularVelocity(0, DEGREE_PER_SECOND));
+//                    this.setSwerveModuleStates(moduleStates);
+//
+//                    mAutoLevelAtTarget = true;
+//                }
+
+                if(angle.getValue(DEGREE) < -14.0 && !mDriveOnChargePeakFlag) { //&& mAutoLevelAtTarget) {
                     mDriveOnChargePeakFlag = true;
 
                     if(step.hasValue("parm1") && step.getParm(1) != 0) {
@@ -259,13 +285,15 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
                     }
                 }
 
-                if(mDriveOnChargePeakFlag && angle.getValue(DEGREE) < 5) {
+                if(mDriveOnChargePeakFlag && angle.getValue(DEGREE) > -10) {
+//                if(mDriveOnChargePeakFlag && (angle.getValue(DEGREE) - mLastGyroReading > 0 || angle.getValue(DEGREE) > -8)) {
                     this.setSpeed(0);
                     xLock();
 
                     step.changeStepState(Constants.StepState.STATE_FINISH);
                 }
 
+                mLastGyroReading = angle.getValue(DEGREE);
                 break;
         }
     }
@@ -275,6 +303,14 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         leftBackModule.setModuleAngle(Rotation2d.fromDegrees(-45));
         rightFrontModule.setModuleAngle(Rotation2d.fromDegrees(-45));
         rightBackModule.setModuleAngle(Rotation2d.fromDegrees(45));
+    }
+
+    public void xLock(Step step) {
+        if(step.getStepState() == Constants.StepState.STATE_INIT) {
+            xLock();
+
+            step.changeStepState(Constants.StepState.STATE_FINISH);
+        }
     }
 
     public void resetOdometry() {
@@ -288,6 +324,7 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
     @Override
     public void periodic() {
 
+        SmartDashboard.putNumber("Pitch", pigeonIMU.getPitch() - mInitalPitch);
     }
 
     @Override
