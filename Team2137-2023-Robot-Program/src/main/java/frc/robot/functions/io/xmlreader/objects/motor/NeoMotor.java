@@ -356,6 +356,10 @@ public class NeoMotor extends CANSparkMax implements Entity, SimpleMotorControl 
         return super.setOpenLoopRampRate(rate);
     }
 
+    @Override
+    public double getOutputAmperage() {
+        return super.getOutputCurrent();
+    }
 
     /**
      * Gets the set name of the Entity

@@ -38,11 +38,11 @@ public class VisionPID {
         // Movement
         SwerveDrivetrain swerve = mDrivetrain;
         if (Math.abs(objectPosition.x) < 10) {
-            swerve.setSwerveModuleStates(swerve.calculateSwerveMotorSpeeds(
-                xVelocity, 0, 0, 1, 1, Constants.DriveControlType.VELOCITY));
+//            swerve.setSwerveModuleStates(swerve.calculateSwerveMotorSpeeds(
+//                xVelocity, 0, 0, 1, 1, Constants.DriveControlType.VELOCITY));
         } else {
-            swerve.setSwerveModuleStates(swerve.calculateSwerveMotorSpeeds(
-                0, 0, 0, 1, 1, Constants.DriveControlType.VELOCITY));
+//            swerve.setSwerveModuleStates(swerve.calculateSwerveMotorSpeeds(
+//                0, 0, 0, 1, 1, Constants.DriveControlType.VELOCITY));
         }
     }
 

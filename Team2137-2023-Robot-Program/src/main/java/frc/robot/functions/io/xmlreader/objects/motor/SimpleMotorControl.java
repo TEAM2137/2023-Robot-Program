@@ -40,4 +40,6 @@ public interface SimpleMotorControl extends SimpleMotorData {
     int getID();
 
     void setNeutralMode(CANSparkMax.IdleMode mode);
+
+    double getOutputAmperage();
 }

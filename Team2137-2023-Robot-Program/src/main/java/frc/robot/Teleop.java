@@ -31,6 +31,9 @@ import frc.robot.library.units.AngleUnits.AngularVelocity;
 import frc.robot.library.units.TranslationalUnits.Distance;
 import frc.robot.library.units.Number;
 import frc.robot.library.units.TranslationalUnits.Velocity;
+import frc.robot.vision.limelight.AprilTags;
+import frc.robot.vision.limelight.ReflectiveTape;
+import frc.robot.vision.objects.ObjectTracker;
 
 import static frc.robot.library.units.AngleUnits.AngularVelocity.AngularVelocityUnits.RADIAN_PER_SECOND;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.INCH;
@@ -43,6 +46,8 @@ public class Teleop implements OpMode {
     private EntityGroup mRobotSubsystem;
     private XMLSettingReader mSettingReader;
     private SwerveDrivetrain mDrivetrain;
+
+    private ObjectTracker objectTracker;
 
     @Override
     public void init(XMLSettingReader xmlSettingReader, FileLogger fileLogger) {
@@ -64,9 +69,9 @@ public class Teleop implements OpMode {
                 break;
         }
 
-        objectTracker = new ObjectTracker();
-        AprilTags.init();
-        ReflectiveTape.init();
+//        objectTracker = new ObjectTracker();
+//        AprilTags.init();
+//        ReflectiveTape.init();
     }
 
     @Override
@@ -75,10 +80,10 @@ public class Teleop implements OpMode {
 
         for(int i = 0; i < Robot.currentActiveTeleopSteps.size(); i++) {
             Step tmpStep = Robot.currentActiveTeleopSteps.get(i);
-            logger.writeEvent(0, "Running Command With Name: " + tmpStep.getCommand());
+//            logger.writeEvent(0, "Running Command With Name: " + tmpStep.getCommand());
 
             if (tmpStep.getStepState() == Constants.StepState.STATE_FINISH) {
-                this.logger.writeEvent(3, FileLogger.EventType.Debug, tmpStep.getCommand() + " finished, now removing from operational stack");
+//                this.logger.writeEvent(3, FileLogger.EventType.Debug, tmpStep.getCommand() + " finished, now removing from operational stack");
                 Robot.currentActiveTeleopSteps.remove(tmpStep);
             } else {
                 if(Robot.subSystemCommandList.containsKey(tmpStep.getCommand())) {

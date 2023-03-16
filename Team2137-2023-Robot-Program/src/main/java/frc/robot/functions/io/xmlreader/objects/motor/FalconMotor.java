@@ -302,6 +302,12 @@ public class FalconMotor extends TalonFX implements Entity, SimpleMotorControl {
 
     //--
 
+    @Override
+    public double getOutputAmperage() {
+        return super.getStatorCurrent();
+    }
+
+
     /**
      * Gets the set name of the Entity
      *

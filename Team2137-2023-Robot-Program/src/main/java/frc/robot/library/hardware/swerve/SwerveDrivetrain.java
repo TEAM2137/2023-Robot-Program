@@ -32,6 +32,7 @@ import frc.robot.functions.io.xmlreader.objects.Gyro;
 import frc.robot.functions.io.xmlreader.objects.motor.Motor;
 import frc.robot.library.Constants;
 import frc.robot.library.hardware.DriveTrain;
+import frc.robot.library.hardware.FusedTrackingAlgorithm;
 import frc.robot.library.hardware.swerve.module.SwerveModule;
 import frc.robot.library.hardware.swerve.module.SwerveModuleState;
 import frc.robot.library.units.AngleUnits.Angle;
@@ -46,10 +47,10 @@ import frc.robot.library.units.UnitContainers.Point2d;
 import frc.robot.library.units.UnitContainers.Pose2d;
 import frc.robot.library.units.UnitEnum;
 import frc.robot.library.units.UnitUtil;
+import frc.robot.vision.limelight.AprilTags;
 import org.ejml.simple.SimpleMatrix;
 import org.w3c.dom.Element;
 
-import java.sql.Driver;
 import java.util.concurrent.TimeUnit;
 
 import static frc.robot.library.units.AngleUnits.Angle.AngleUnits.DEGREE;
@@ -68,8 +69,9 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
     private Distance robotLength;
     private Distance robotWidth;
+    private Velocity maxDrivetrainVelocity;
 
-    private double mInitalPitch = 0;
+    private double mInitialPitch = 0;
 
     private PID mThetaController;
 
@@ -81,6 +83,9 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
     private final Pigeon2 pigeonIMU;
     private Gyro gyroObj;
+
+    private FusedTrackingAlgorithm fusedTrackingAlgorithm;
+
     public SwerveDrivetrain(Element element, EntityGroup parent) {
         super(element, parent, true);
 
@@ -110,8 +115,15 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
             mThetaController = thetaLevel;
         }
 
+        Number velocityVal = (Number) getEntity("MaxVelocity");
+        if(velocityVal != null) {
+            maxDrivetrainVelocity = new Velocity(velocityVal.getValue(), FEET_PER_SECOND);
+        } else {
+            maxDrivetrainVelocity = new Velocity(Double.POSITIVE_INFINITY, FEET_PER_SECOND);
+        }
+
         logger.writeEvent(6, FileLogger.EventType.Debug, "Creating Swerve Kinematics class...");
-        swerveKinematics = new SwerveKinematics(robotWidth, robotLength);
+        swerveKinematics = new SwerveKinematics(robotWidth, robotLength, 1.0);
 
         logger.writeEvent(6, FileLogger.EventType.Debug, "Finding swerve modules from EntityGroup");
         try {
@@ -129,9 +141,10 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         pigeonIMU = new Pigeon2(gyroObj.getID());
         pigeonIMU.configFactoryDefault();
         pigeonIMU.configMountPose(gyroObj.getOffset(), 0, 0);
-        mInitalPitch = pigeonIMU.getPitch();
+        mInitialPitch = pigeonIMU.getPitch();
 
         this.addSubsystemCommand("rawDrive", this::rawDrive);
+        this.addSubsystemCommand("SetDrivetrainVelocity", this::setDrivetrainVelocity);
         this.addSubsystemCommand("SetPosition", this::setPosition);
         this.addSubsystemCommand("GyroReset", this::gyroReset);
         this.addSubsystemCommand("AutoLevel", this::autoLevel);
@@ -139,8 +152,18 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         this.addSubsystemCommand("xLock", this::xLock);
 
         Robot.threadPoolExecutor.scheduleAtFixedRate(this::updateKinematics, 0, 50, TimeUnit.MILLISECONDS);
+
+        AprilTags.init();
+
+        fusedTrackingAlgorithm = new FusedTrackingAlgorithm(swerveKinematics::getCurrentRobotPosition, () -> {
+            return new Point2d<Distance>(new Distance(AprilTags.getX(), INCH), new Distance(AprilTags.getY(), INCH));
+        }, 50);
     }
 
+    /**
+     * Private function to pass to a thread executor to update the odometry. Should have a run period equal to that of
+     * the CAN packet period for the encoder.
+     */
     private void updateKinematics() {
         SwerveModuleState lfVelState = leftFrontModule.getSwerveModuleState();
         SwerveModuleState lbVelState = leftBackModule.getSwerveModuleState();
@@ -151,21 +174,30 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
         SmartDashboard.putNumber("Dist X", dist.getX().getValue(FOOT));
         SmartDashboard.putNumber("Dist Y", dist.getY().getValue(FOOT));
+        SmartDashboard.putNumber("Theta", getAngle().getValue(DEGREE));
     }
 
+    /**
+     * Instant Command that resets the gyro to the zero value for the driver's usage.
+     * @param step - Step to run the reset on.
+     */
     @InstantCommand
     public void gyroReset(Step step) {
         if (step.getStepState() == Constants.StepState.STATE_INIT) {
 //            pigeonIMU.configMountPoseYaw(gyroObj.getOffset());
 
-            pigeonIMU.setYaw(90);
+            pigeonIMU.setYaw(0);
 
-            DriverStation.reportError("Gyro Zeroed", false);
+            logger.writeEvent(0, FileLogger.EventType.Status, "DriverGryoReset Complete");
 
             step.changeStepState(Constants.StepState.STATE_FINISH);
         }
     }
 
+    /**
+     * Instant Command that sets the position of the drive train usually at the beginning of the match.
+     * @param step - Step to run inorder to set position
+     */
     @InstantCommand
     public void setPosition(Step step) {
         if (step.getStepState() == Constants.StepState.STATE_INIT) {
@@ -175,28 +207,16 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         }
     }
 
-    @PersistentCommand
-    public void rawDrive(Step step) {
-        if (step.getStepState() == Constants.StepState.STATE_INIT) {
-            Pair<Double, Double> xy = Pair.of(step.getXDistance(), step.getYDistance());
-            xy = Constants.joyStickSlopedDeadband(xy.getFirst(), xy.getSecond(), true, 0.1);
-
-            double rMag = Math.pow(Math.sin(Constants.deadband(step.getParm(1), 0.08) * (Math.PI / 2)), 3);
-
-            if(xy.getFirst() == 0 && xy.getSecond() == 0 && rMag == 0) {
-                setSpeed(0);
-            } else {
-                SwerveModuleState[] states = calculateSwerveMotorSpeedsFieldCentric(new Number(xy.getFirst()), new Number(xy.getSecond()), new Number(rMag));
-                setSwerveModuleStates(states);
-            }
-        }
-    }
-
     public PIDController mAutoLevelPIDController;
     public PIDController mAutoLevelPIDThetaController;
     public Timer mAutoLevelSustainedTargetTimer;
     public boolean mAutoLevelTimerStarted;
 
+    /**
+     * Auto Level command for the 2023 FRC game runs when robot is ON the charge station and uses a PID loop to level
+     * the robot
+     * @param step - Step for the command to run
+     */
     @InstantCommand
     public void autoLevel(Step step) {
         switch (step.getStepState()) {
@@ -208,7 +228,7 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
                 mAutoLevelTimerStarted = false;
                 break;
             case STATE_RUNNING:
-                Angle angle = new Angle(pigeonIMU.getPitch() - mInitalPitch, DEGREE);
+                Angle angle = new Angle(pigeonIMU.getPitch() - mInitialPitch, DEGREE);
                 double output = mAutoLevelPIDController.calculate(-angle.getValue(DEGREE));
 
                 SwerveModuleState[] swerveModuleState = new SwerveModuleState[]{
@@ -245,55 +265,63 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         }
     }
 
-    private boolean mAutoLevelAtTarget = false;
     private boolean mDriveOnChargePeakFlag = false;
-    private double mLastGyroReading = 0;
 
+    /**
+     * Instant Command - Used for the FRC 2023 season in conjunction with the AutoLevel command. This command moves the
+     * robot until it is on the charge station.
+     * @param step - Step to run this command with.
+     *             Speed  = Speed that the robot initially uses to get on charge station
+     *             Parm 1 = Slower Speed once robot hits peak angle
+     */
     @InstantCommand
     public void DriveOnChargeStep(Step step) {
         switch(step.getStepState()) {
             case STATE_INIT:
 
-                SwerveModuleState[] moduleStates = calculateSwerveMotorSpeedsFieldCentric(new Number(0), new Number(-step.getSpeed()), new AngularVelocity(0, DEGREE_PER_SECOND));
+                SwerveModuleState[] moduleStates = calculateSwerveMotorSpeedsFieldCentric(new Number(0), new Number(-step.getSpeed()), new AngularVelocity(0, DEGREE_PER_SECOND), new Number(1));
                 this.setSwerveModuleStates(moduleStates);
-
-//                mAutoLevelPIDThetaController = new PIDController(mThetaController.getP(), mThetaController.getI(), mThetaController.getD());
-//                mAutoLevelPIDThetaController.setSetpoint(0);
-//                mAutoLevelPIDThetaController.setTolerance(5);
 
                 step.changeStepState(Constants.StepState.STATE_RUNNING);
                 break;
             case STATE_RUNNING:
-                Angle angle = new Angle(pigeonIMU.getPitch() - mInitalPitch, DEGREE);
-
-//                if(!mAutoLevelPIDThetaController.atSetpoint()) {
-//                    SwerveModuleState[] moduleStatesRun = calculateSwerveMotorSpeedsFieldCentric(new Number(0), new Number(0), new AngularVelocity(mAutoLevelPIDThetaController.calculate(getAngle().getValue(DEGREE)), DEGREE_PER_SECOND));
-//                    this.setSwerveModuleStates(moduleStatesRun);
-//                } else if(!mAutoLevelAtTarget) {
-//                    SwerveModuleState[] moduleStates = calculateSwerveMotorSpeedsFieldCentric(new Number(0), new Number(-step.getSpeed()), new AngularVelocity(0, DEGREE_PER_SECOND));
-//                    this.setSwerveModuleStates(moduleStates);
-//
-//                    mAutoLevelAtTarget = true;
-//                }
+                Angle angle = new Angle(pigeonIMU.getPitch() - mInitialPitch, DEGREE);
 
                 if(angle.getValue(DEGREE) < -14.0 && !mDriveOnChargePeakFlag) { //&& mAutoLevelAtTarget) {
                     mDriveOnChargePeakFlag = true;
 
                     if(step.hasValue("parm1") && step.getParm(1) != 0) {
-                        SwerveModuleState[] slowDownState = calculateSwerveMotorSpeedsFieldCentric(new Number(0), new Number(-step.getParm(1)), new AngularVelocity(0, DEGREE_PER_SECOND));
+                        SwerveModuleState[] slowDownState = calculateSwerveMotorSpeedsFieldCentric(new Number(0), new Number(-step.getParm(1)), new AngularVelocity(0, DEGREE_PER_SECOND), new Number(1));
                         this.setSwerveModuleStates(slowDownState);
                     }
                 }
 
                 if(mDriveOnChargePeakFlag && angle.getValue(DEGREE) > -10) {
-//                if(mDriveOnChargePeakFlag && (angle.getValue(DEGREE) - mLastGyroReading > 0 || angle.getValue(DEGREE) > -8)) {
                     this.setSpeed(0);
                     xLock();
 
                     step.changeStepState(Constants.StepState.STATE_FINISH);
                 }
 
-                mLastGyroReading = angle.getValue(DEGREE);
+                break;
+        }
+    }
+
+    @InstantCommand
+    private void setDrivetrainVelocity(Step step) {
+        switch (step.getStepState()) {
+            case STATE_INIT:
+                SwerveModuleState[] states = calculateSwerveMotorSpeedsFieldCentric(new Velocity(step.getXDistance(), FEET_PER_SECOND), new Velocity(step.getYDistance(), FEET_PER_SECOND), new AngularVelocity(step.getParm(1), DEGREE_PER_SECOND));
+                setSwerveModuleStates(states);
+
+                step.StartTimer();
+                step.changeStepState(Constants.StepState.STATE_RUNNING);
+                break;
+            case STATE_RUNNING:
+                if(step.hasTimeoutElapsed()) {
+                    step.changeStepState(Constants.StepState.STATE_FINISH);
+                    setSpeed(0);
+                }
                 break;
         }
     }
@@ -305,11 +333,49 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         rightBackModule.setModuleAngle(Rotation2d.fromDegrees(45));
     }
 
+    @InstantCommand
     public void xLock(Step step) {
         if(step.getStepState() == Constants.StepState.STATE_INIT) {
             xLock();
 
             step.changeStepState(Constants.StepState.STATE_FINISH);
+        }
+    }
+
+    @PersistentCommand
+    public void rawDrive(Step step) {
+        if (step.getStepState() == Constants.StepState.STATE_INIT) {
+            Pair<Double, Double> xy = Pair.of(step.getXDistance(), -step.getYDistance());
+            xy = Constants.joyStickSlopedDeadband(xy.getFirst(), xy.getSecond(), true, 0.1);
+
+            double rMag = Math.pow(Math.sin(Constants.deadband(step.getParm(1), 0.08) * (Math.PI / 2)), 3);
+
+            if(xy.getFirst() == 0 && xy.getSecond() == 0 && rMag == 0) {
+                setSpeed(0);
+            } else {
+                SwerveModuleState[] states = calculateSwerveMotorSpeedsFieldCentric(new Number(xy.getFirst()), new Number(xy.getSecond()), new Number(rMag), new Number(1));
+                setSwerveModuleStates(states);
+            }
+        }
+    }
+
+    @PersistentCommand
+    public void AutoScoreAlignment(Step step) {
+        if (step.getStepState() == Constants.StepState.STATE_INIT) {
+            if(step.getParm(1) > 0.5) {
+                step.changeStepState(Constants.StepState.STATE_RUNNING);
+            }
+        }
+
+        if(step.getStepState() == Constants.StepState.STATE_RUNNING) {
+            if(step.getParm(1) <= 0.5) {
+                step.changeStepState(Constants.StepState.STATE_INIT);
+
+                setSpeed(0);
+                return;
+            }
+
+
         }
     }
 
@@ -323,8 +389,6 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
     @Override
     public void periodic() {
-
-        SmartDashboard.putNumber("Pitch", pigeonIMU.getPitch() - mInitalPitch);
     }
 
     @Override
@@ -334,107 +398,23 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         return new Pose2d<>(pos.getX(), pos.getY(), getAngle());
     }
 
-    public SwerveModuleState[] calculateSwerveMotorSpeedsFieldCentric(Unit<?, ? extends UnitEnum> xMag, Unit<?, ? extends UnitEnum> yMag, AngleUnit<?, ? extends UnitEnum> rMag) {
+    public SwerveModuleState[] calculateSwerveMotorSpeedsFieldCentric(Unit<?, ? extends UnitEnum> xMag, Unit<?, ? extends UnitEnum> yMag, AngleUnit<?, ? extends UnitEnum> rMag, Unit<?, ? extends UnitEnum> maximum) {
         SimpleMatrix fieldCentric = Constants.convertFrame(getAngle(), Constants.createFrameMatrix(xMag.getValueInPrimaryUnit(), yMag.getValueInPrimaryUnit(), rMag.getValueInPrimaryUnit()));
 
         Unit<?, ? extends UnitEnum> x = UnitUtil.create(fieldCentric.get(0, 0), xMag.getPrimaryUnit());
         Unit<?, ? extends UnitEnum> y = UnitUtil.create(fieldCentric.get(1, 0), yMag.getPrimaryUnit());
         Unit<?, ? extends UnitEnum> w = UnitUtil.create(fieldCentric.get(2, 0), rMag.getPrimaryUnit());
 
-        return swerveKinematics.getSwerveModuleState(x, y, w);
+        return swerveKinematics.getSwerveModuleState(x, y, w, maximum);
     }
 
-    public SwerveModuleState[] calculateSwerveMotorSpeedsFieldCentric(double xMag, double yMag, double rMag) {
-        return calculateSwerveMotorSpeeds(Constants.convertFrame(getAngle(), Constants.createFrameMatrix(xMag, yMag, rMag)), 1, 1, Constants.DriveControlType.RAW);
-    }
+    public SwerveModuleState[] calculateSwerveMotorSpeedsFieldCentric(Unit<?, ? extends UnitEnum> xMag, Unit<?, ? extends UnitEnum> yMag, AngleUnit<?, ? extends UnitEnum> rMag) {
+        if(xMag instanceof Velocity)
+            return calculateSwerveMotorSpeedsFieldCentric(xMag, yMag, rMag, maxDrivetrainVelocity);
+        if(xMag instanceof Number)
+            return calculateSwerveMotorSpeedsFieldCentric(xMag, yMag, rMag, new Number(1));
 
-    @Deprecated
-    public SwerveModuleState[] calculateSwerveMotorSpeedsFieldCentric(double xMag, double yMag, double rMag, double trackWidth, double wheelBase, Constants.DriveControlType controlType) {
-        return calculateSwerveMotorSpeeds(Constants.convertFrame(getAngle(), Constants.createFrameMatrix(xMag, yMag, rMag)), trackWidth, wheelBase, controlType);
-    }
-
-    /**
-     * input matrix ->
-     * [X1]
-     * [Y1]
-     * [R1]
-     * <p>
-     * Resultant ->
-     * [Left Front Speed]   [Left Front Angle]
-     * [Left Back Speed]    [Left Back Angle]
-     * [Right Front Speed]  [Right Front Angle]
-     * [Right Back Speed]   [Right Back Angle]
-     */
-    @Deprecated
-    public SwerveModuleState[] calculateSwerveMotorSpeeds(SimpleMatrix directions, double trackWidth, double wheelBase, Constants.DriveControlType controlType) {
-        return calculateSwerveMotorSpeeds(directions.get(0, 0), directions.get(1, 0), directions.get(2, 0), trackWidth, wheelBase, controlType);
-    }
-
-    /**
-     * Returns the speeds of the Swerve Drive Train when given the Controller Values
-     * <p>
-     * Inputs can be velocities for -1 to 1 from the joy stick
-     * xD - The left joystick -1 ~ 1
-     * yD - The left joystick -1 ~ 1
-     * tD - The rightjoy stick or turning button -1 ~ 1
-     *
-     * @return An Array of Points with x being drive speed and y wheel angle in degree
-     */
-    @Deprecated
-    public SwerveModuleState[] calculateSwerveMotorSpeeds(double xMag, double yMag, double rMag, double axelDistance, double wheelBase, Constants.DriveControlType controlType) {
-        //double r = Math.sqrt((axelDistance * axelDistance) + (wheelBase * wheelBase)) / 2.0; //Distance between adjacent wheel
-
-        double a = xMag - (rMag * (axelDistance / 2.0)); // translatedSpeeds[2] * (axleDistance / r) is the ratio of wheel distance from other wheels
-        double b = xMag + (rMag * (axelDistance / 2.0));
-        double c = yMag - (rMag * (wheelBase / 2.0));
-        double d = yMag + (rMag * (wheelBase / 2.0));
-
-        double[][] speeds = new double[][]{
-                new double[]{Math.sqrt((b * b) + (d * d)), -Math.atan2(b, d)}, // Left Front
-                new double[]{Math.sqrt((a * a) + (d * d)), -Math.atan2(a, d)}, // Left Back
-                new double[]{Math.sqrt((b * b) + (c * c)), -Math.atan2(b, c)}, // Right Front
-                new double[]{Math.sqrt((a * a) + (c * c)), -Math.atan2(a, c)}, // Right Back
-        };
-
-        double joystickRadialValue = Math.sqrt(Math.pow(xMag, 2) + Math.pow(yMag, 2));
-
-        if (joystickRadialValue < 0.07 && Math.abs(rMag) < 0.07) {
-            speeds[0][1] = leftFrontModule.getModuleGoalAngle().getRadians();
-            speeds[1][1] = leftBackModule.getModuleGoalAngle().getRadians();
-            speeds[2][1] = rightFrontModule.getModuleGoalAngle().getRadians();
-            speeds[3][1] = rightBackModule.getModuleGoalAngle().getRadians();
-        }
-
-        if (controlType == Constants.DriveControlType.VELOCITY) {
-            return new SwerveModuleState[]{
-                    new SwerveModuleState(new Velocity(speeds[0][0], FEET_PER_SECOND), new Rotation2d(speeds[0][1]), SwerveModuleState.SwerveModulePositions.LEFT_FRONT),
-                    new SwerveModuleState(new Velocity(speeds[1][0], FEET_PER_SECOND), new Rotation2d(speeds[1][1]), SwerveModuleState.SwerveModulePositions.LEFT_BACK),
-                    new SwerveModuleState(new Velocity(speeds[2][0], FEET_PER_SECOND), new Rotation2d(speeds[2][1]), SwerveModuleState.SwerveModulePositions.RIGHT_FRONT),
-                    new SwerveModuleState(new Velocity(speeds[3][0], FEET_PER_SECOND), new Rotation2d(speeds[3][1]), SwerveModuleState.SwerveModulePositions.RIGHT_BACK),
-            };
-        } else if (controlType == Constants.DriveControlType.DISTANCE) {
-            return new SwerveModuleState[]{
-                    new SwerveModuleState(new Distance(speeds[0][0], INCH), new Rotation2d(speeds[0][1]), SwerveModuleState.SwerveModulePositions.LEFT_FRONT),
-                    new SwerveModuleState(new Distance(speeds[1][0], INCH), new Rotation2d(speeds[1][1]), SwerveModuleState.SwerveModulePositions.LEFT_BACK),
-                    new SwerveModuleState(new Distance(speeds[2][0], INCH), new Rotation2d(speeds[2][1]), SwerveModuleState.SwerveModulePositions.RIGHT_FRONT),
-                    new SwerveModuleState(new Distance(speeds[3][0], INCH), new Rotation2d(speeds[3][1]), SwerveModuleState.SwerveModulePositions.RIGHT_BACK),
-            };
-        } else {
-            return new SwerveModuleState[]{
-                    new SwerveModuleState(speeds[0][0], new Rotation2d(speeds[0][1]), SwerveModuleState.SwerveModulePositions.LEFT_FRONT),
-                    new SwerveModuleState(speeds[1][0], new Rotation2d(speeds[1][1]), SwerveModuleState.SwerveModulePositions.LEFT_BACK),
-                    new SwerveModuleState(speeds[2][0], new Rotation2d(speeds[2][1]), SwerveModuleState.SwerveModulePositions.RIGHT_FRONT),
-                    new SwerveModuleState(speeds[3][0], new Rotation2d(speeds[3][1]), SwerveModuleState.SwerveModulePositions.RIGHT_BACK),
-            };
-        }
-    }
-
-    /**
-     * Corrected Angle (0~PI)
-     */
-    public static double normalizeRadianAngle(double value) {
-        value %= Math.PI;
-        return value < 0 ? value + Math.PI : value;
+        return calculateSwerveMotorSpeedsFieldCentric(xMag, yMag, rMag, new Number(Double.POSITIVE_INFINITY));
     }
 
     public void setSwerveModuleStates(SwerveModuleState[] swerveModuleStates) {
@@ -456,22 +436,6 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         }
     }
 
-    /**
-     * Turns the controller input into field centric values
-     *
-     * @param xSpeed          - Desired X speed on field
-     * @param ySpeed          - Desired Y speed on field
-     * @param radianPerSecond - Desired Turn speed on field
-     * @param robotAngle      - Current robot Angle on field
-     * @return Array or double {xSpeed, ySpeed, turnSpeed}
-     */
-    public static double[] toFieldRelativeChassisSpeeds(double xSpeed, double ySpeed, double radianPerSecond, Rotation2d robotAngle) {
-        return new double[]{
-                -(xSpeed * robotAngle.getCos() + ySpeed * robotAngle.getSin()),
-                -(-xSpeed * robotAngle.getSin() + ySpeed * robotAngle.getCos()),
-                radianPerSecond};
-    }
-
     @Override
     public void setLeftSpeed(double speed) {
         this.leftFrontModule.setRawDriveSpeed(speed);
@@ -490,6 +454,9 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         return new Angle(raw, DEGREE);
     }
 
+    public Velocity getMaxDrivetrainVelocity() {
+        return maxDrivetrainVelocity;
+    }
 
     @Override
     public void setAngleOffset(Rotation2d offset) {

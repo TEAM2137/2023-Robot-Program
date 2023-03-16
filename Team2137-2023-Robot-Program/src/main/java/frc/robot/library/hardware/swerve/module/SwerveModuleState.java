@@ -141,6 +141,21 @@ public class SwerveModuleState {
         this(vect.getMagnitude(), vect.getAngle(), pos);
     }
 
+    public Unit<?, ? extends UnitEnum> getDirectionalValue() {
+        switch(controlType) {
+            case VELOCITY:
+                return speed2d;
+            case ACCELERATION:
+                return acceleration;
+            case DISTANCE:
+                return distance2d;
+            case RAW:
+            case UNDEFINED:
+            default:
+                return new Number(rawPowerValue);
+        }
+    }
+
     public Rotation2d getRotation2d() {
         return rotation2d;
     }

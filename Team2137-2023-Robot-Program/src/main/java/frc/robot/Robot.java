@@ -88,7 +88,7 @@ public class Robot extends TimedRobot {
 
     DriverStation.silenceJoystickConnectionWarning(true);
 
-    logFactory = new LogFactory(10, true);
+    logFactory = new LogFactory(10, isSimulation());
 
     fileLogger = logFactory.buildLogger("Main");
     fileLogger.writeEvent(0, FileLogger.EventType.Status, "Started FileLogger Continuing with code...");

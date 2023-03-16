@@ -67,7 +67,6 @@ public class Vector2d<T extends Unit<T, ? extends UnitEnum>> {
     }
 
     public Vector2d scale(double scale) {
-
         T newX = x.times(scale);
         T newY = y.times(scale);
 

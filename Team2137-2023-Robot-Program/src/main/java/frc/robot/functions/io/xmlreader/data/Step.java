@@ -74,7 +74,8 @@ public class Step extends EntityImpl {
     private Constants.StepState mCurrentStepState = Constants.StepState.STATE_INIT;
     private Constants.StepState mDriveSpecificState = null;
 
-    private double startTime;
+    private Double timeout;
+    private Long startTime;
 
     public Step(Element element) {
         super(element);
@@ -96,12 +97,18 @@ public class Step extends EntityImpl {
 //                this.values.put(tmp.getNodeName().toUpperCase(), new ValueEntry(genericElement.getTextContent(), true));
             }
         }
+
+        if(this.values.containsKey(StepValues.TIMEOUT.toString()))
+            timeout = Double.parseDouble(this.values.get(StepValues.TIMEOUT.toString()).value);
+        else
+            timeout = null;
     }
 
     public Step (String _COMMAND, String _TIMEOUT, String _SPEED, String _XDISTANCE, String _YDISTANCE, String _PARALLEL, String[] _PARMs) {
         super("Step");
         this.values.put(StepValues.COMMAND.toString(),  new ValueEntry(_COMMAND));
         this.values.put(StepValues.TIMEOUT.toString(), new ValueEntry(_TIMEOUT));
+        timeout = Double.parseDouble(_TIMEOUT);
         this.values.put(StepValues.SPEED.toString(),  new ValueEntry(_SPEED));
         this.values.put(StepValues.XDISTANCE.toString(),  new ValueEntry(_XDISTANCE));
         this.values.put(StepValues.YDISTANCE.toString(),  new ValueEntry(_YDISTANCE));
@@ -220,6 +227,13 @@ public class Step extends EntityImpl {
 
     public void StartTimer() {
         startTime = System.currentTimeMillis();
+    }
+
+    public boolean hasTimeoutElapsed() {
+        if(timeout != null && startTime != null)
+            return hasTimeElapsed(new Time(timeout, MILLISECONDS));
+        else
+            return false;
     }
 
     public Time getTime() {

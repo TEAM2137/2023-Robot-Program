@@ -2,7 +2,10 @@ package frc.robot.library.hardware.swerve;
 
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Robot;
+import frc.robot.functions.io.FileLogger;
 import frc.robot.library.hardware.swerve.module.SwerveModuleState;
 import frc.robot.library.units.*;
 import frc.robot.library.units.AngleUnits.Angle;
@@ -15,6 +18,8 @@ import frc.robot.library.units.UnitContainers.Point2d;
 import frc.robot.library.units.UnitContainers.Pose2d;
 import frc.robot.library.units.UnitContainers.Vector2d;
 import org.ejml.simple.SimpleMatrix;
+
+import java.io.File;
 
 import static frc.robot.library.units.AngleUnits.Angle.AngleUnits.RADIAN;
 import static frc.robot.library.units.AngleUnits.AngularAcceleration.AngularAccelerationUnits.RADIAN_PER_SECOND2;
@@ -31,8 +36,11 @@ public class SwerveKinematics {
 
     private static Point2d<Distance> latestRobotPosition;
     public static double lastTime;
+    public static double scaleFactorDistance;
 
-    public SwerveKinematics(Distance robotXLength, Distance robotYLength) {
+
+    public SwerveKinematics(Distance robotXLength, Distance robotYLength, double scaleFactor) {
+
         inverseKinematicForm = new SimpleMatrix(new double[][] {
                 //Left Front
                 new double[] { 1, 0, -robotYLength.getValue(METER)},
@@ -52,6 +60,7 @@ public class SwerveKinematics {
 
         forwardKinematicForm = inverseKinematicForm.pseudoInverse();
         lastTime = System.currentTimeMillis();
+        scaleFactor = scaleFactorDistance;
     }
 
     private SimpleMatrix getForwardKinematic(SimpleMatrix moduleComponentVelocity) {
@@ -98,7 +107,8 @@ public class SwerveKinematics {
 
         SimpleMatrix robotComponents = getForwardKinematic(current);
 
-        Vector2d<Velocity> velocityVector = new Vector2d<Velocity>(robotComponents.get(1, 0), -robotComponents.get(0, 0), METER_PER_SECOND);
+//        Vector2d<Velocity> velocityVector = new Vector2d<Velocity>(robotComponents.get(1, 0), -robotComponents.get(0, 0), METER_PER_SECOND);
+        Vector2d<Velocity> velocityVector = new Vector2d<Velocity>(-robotComponents.get(0, 0), -robotComponents.get(1, 0), METER_PER_SECOND);
 
         SmartDashboard.putNumber("XVel", velocityVector.getX().getValue(FEET_PER_SECOND));
         SmartDashboard.putNumber("YVel", velocityVector.getY().getValue(FEET_PER_SECOND));
@@ -116,6 +126,7 @@ public class SwerveKinematics {
 
         Time dt = new Time(System.currentTimeMillis() - lastTime, MILLISECONDS);
         Vector2d<Distance> result = (Vector2d<Distance>) velocityVector.times(dt);
+        result.scale(scaleFactorDistance);
         latestRobotPosition = new Point2d<Distance>(latestRobotPosition.getX().add(result.getX()), latestRobotPosition.getY().add(result.getY()));
 
         lastTime = System.currentTimeMillis();
@@ -124,7 +135,7 @@ public class SwerveKinematics {
     }
 
     //Returns Left Front, Right Front, Right Back, Left Back
-    public SwerveModuleState[] getSwerveModuleState(Unit<?, ? extends UnitEnum> x, Unit<?, ? extends UnitEnum> y, Unit<?, ? extends UnitEnum> omega) {
+    public SwerveModuleState[] getSwerveModuleState(Unit<?, ? extends UnitEnum> x, Unit<?, ? extends UnitEnum> y, Unit<?, ? extends UnitEnum> omega, Unit<?, ? extends UnitEnum> maximum) {
         UnitEnum unit = x.getPrimaryUnit();
         UnitEnum unitRotation = omega.getPrimaryUnit();
 
@@ -142,11 +153,31 @@ public class SwerveKinematics {
             moduleStates[1] = getStateValue(states.get(2, 0), states.get(3, 0), unit, unitRotation, SwerveModuleState.SwerveModulePositions.RIGHT_FRONT);
             moduleStates[2] = getStateValue(states.get(4, 0), states.get(5, 0), unit, unitRotation, SwerveModuleState.SwerveModulePositions.LEFT_BACK);
             moduleStates[3] = getStateValue(states.get(6, 0), states.get(7, 0), unit, unitRotation, SwerveModuleState.SwerveModulePositions.RIGHT_BACK);
+
+            moduleStates = normalizeStates(moduleStates, maximum);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         return moduleStates;
+    }
+
+    private SwerveModuleState[] normalizeStates(SwerveModuleState[] states, Unit<?, ? extends UnitEnum> max) {
+        double maxValue = max.getValueInPrimaryUnit();
+
+        for(SwerveModuleState state : states) {
+            double value = Math.abs(state.getDirectionalValue().getValueInPrimaryUnit());
+            if(value > maxValue)
+                maxValue = value;
+        }
+
+        SwerveModuleState[] newStates = new SwerveModuleState[states.length];
+
+        for(int i = 0; i < newStates.length; i++) {
+            newStates[i] = new SwerveModuleState((Unit<?, ? extends UnitEnum>) states[i].getDirectionalValue().divide(maxValue), states[i].getRotation2d(), states[i].getPosition());
+        }
+
+        return newStates;
     }
 
     public void reset(Point2d<Distance> newPosition) {
@@ -160,7 +191,7 @@ public class SwerveKinematics {
         return new SwerveModuleState(UnitUtil.create(mag, unit), UnitUtil.create(rad + offset.getRadians(), angularUnit), pos);
     }
 
-    public Point2d<Distance> getCurrentRobotPosition() {
+    public synchronized Point2d<Distance> getCurrentRobotPosition() {
         return latestRobotPosition;
     }
 }

@@ -1,11 +1,13 @@
 package frc.robot.library.hardware.endeffector;
 
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.data.Step;
 import frc.robot.functions.io.xmlreader.data.mappings.InstantCommand;
+import frc.robot.functions.io.xmlreader.data.mappings.Mapping;
 import frc.robot.functions.io.xmlreader.data.mappings.PersistentCommand;
 import frc.robot.functions.io.xmlreader.objects.motor.NeoMotor;
 import frc.robot.functions.io.xmlreader.objects.solenoid.DoubleSolenoid;
@@ -52,12 +54,14 @@ public class EndEffector extends EntityGroup {
 
     private Angle pitchTarget = new Angle(180, DEGREE);
     private boolean rawPitchControl = true;
-    //private double pitchSpeed = 0;
+    private boolean mLastAutoCloseSensorValue = false;
+    private Timer mLastManualControlTime = new Timer();
 
     private DoubleSolenoid jaw1;
 
     private final NeoMotor pitchMotor;
     private Number mTolerance;
+    private Mapping autoCloseMapping;
     private final double pitchAllowedErr = 0.5;
     private final double feedforward;
 
@@ -79,6 +83,8 @@ public class EndEffector extends EntityGroup {
         } else {
             mTolerance = new Number(4);
         }
+
+        autoCloseMapping = (Mapping) getEntity("AutoCloseSensorMap");
 
         this.addSubsystemCommand(getName() + "-SetRawClaw", this::setRawClaw);
         this.addSubsystemCommand(getName() + "-RawWristPosition", this::setWristPosition);
@@ -125,20 +131,28 @@ public class EndEffector extends EntityGroup {
         if(step.getStepState() == Constants.StepState.STATE_INIT) {
             setEffectorState(step.getParm(1) > 0);
 
+            mLastManualControlTime.restart();
+
             step.changeStepState(Constants.StepState.STATE_FINISH);
         }
     }
 
     @Override
-    public void periodic(){
+    public void periodic() {
+        if(mLastManualControlTime.hasElapsed(1) && !mLastAutoCloseSensorValue && autoCloseMapping.getBooleanValue()) {
+            setEffectorState(true);
+        }
 
-        SmartDashboard.putNumber("Test Claw Feed", -Math.sin((Math.PI) - getPitch().getValue(RADIAN)) * feedforward);
+
+        SmartDashboard.putNumber("Claw Current", pitchMotor.getOutputAmperage());
 
         // Update dashboard stats
         SmartDashboard.putBoolean("End Effector Closed", isJawClosed());
         SmartDashboard.putNumber("Pitch (Degrees)", getPitch().getValue(DEGREE));
         SmartDashboard.putNumber("Target Pitch (Degrees)", pitchTarget.getValue(DEGREE));
         SmartDashboard.putNumber("Pitch Allowed Error", pitchAllowedErr);
+
+        mLastAutoCloseSensorValue = autoCloseMapping.getBooleanValue();
     }
 
     /**

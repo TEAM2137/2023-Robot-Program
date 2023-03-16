@@ -59,7 +59,6 @@ import java.util.Map;
 import static edu.wpi.first.wpilibj.RobotBase.isSimulation;
 import static frc.robot.library.units.AngleUnits.Angle.AngleUnits.DEGREE;
 import static frc.robot.library.units.AngleUnits.AngularVelocity.AngularVelocityUnits.DEGREE_PER_SECOND;
-import static frc.robot.library.units.Time.TimeUnits.SECONDS;
 import static frc.robot.library.units.TranslationalUnits.Acceleration.AccelerationUnits.FEET_PER_SECOND2;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.INCH;
@@ -100,6 +99,8 @@ public class Autonomous implements OpMode {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        Robot.subSystemCommandList.put("SetDrivetrainAngle", this::setDrivetrainAngle);
     }
 
     //region Main Autonomous Opmode Functions
@@ -125,6 +126,8 @@ public class Autonomous implements OpMode {
 //        fileLogger.writeEvent(0, EventType.Status, "Finished Spline Pregeneration...");
 
         DriverStation.silenceJoystickConnectionWarning(true);
+
+        currentSplineIndex = 0;
 
         mPregeneratedSplines = new ArrayList<>();
         mPregeneratedVelocities = new ArrayList<>();
@@ -216,12 +219,12 @@ public class Autonomous implements OpMode {
 
         mStepReader.resetCounter();
 
-        for (int i = 0; i < mPregeneratedSplines.size(); i++) {
-            logSplineToFile(Constants.StandardFileAndDirectoryLocations.GenericFileLoggerDir.getFileLocation(true) + "Spline" + mLogCount + ".txt",
-                    mPregeneratedSplines.get(i),
-                    mPregeneratedVelocities.get(Math.min(i, mPregeneratedVelocities.size() - 1)));
-            mLogCount++;
-        }
+//        for (int i = 0; i < mPregeneratedSplines.size(); i++) {
+//            logSplineToFile(Constants.StandardFileAndDirectoryLocations.GenericFileLoggerDir.getFileLocation(false) + "Spline" + mLogCount + ".txt",
+//                    mPregeneratedSplines.get(i),
+//                    mPregeneratedVelocities.get(Math.min(i, mPregeneratedVelocities.size() - 1)));
+//            mLogCount++;
+//        }
     }
 
     public void logSplineToFile(String pathAndName, List<PoseWithCurvature> poses, List<Velocity> velocities) {
@@ -295,12 +298,34 @@ public class Autonomous implements OpMode {
             case "drive":
                 swerveDrivePurePursuit(step);
                 break;
-            case "SetSwerveVelocity":
-                setSwerveDrivetrainVelocity(step);
-                break;
         }
     }
     //endregion
+
+    public void setDrivetrainAngle(Step step) {
+        switch(step.getStepState()) {
+            case STATE_INIT:
+                PID values = mDrivetrain.getThetaPIDController();
+                mDriveThetaController = new PIDController(values.getP(), values.getI(), values.getD());
+
+                mDriveThetaController.setTolerance(1);
+                mDriveThetaController.enableContinuousInput(-180, 180);
+                mDriveThetaController.setSetpoint(step.getParm(1));
+
+                DriverStation.reportError("Set drivetrain angle target to: " + step.getParm(1), false);
+                step.changeStepState(StepState.STATE_RUNNING);
+                break;
+            case STATE_RUNNING:
+                double angleGoal = -mDriveThetaController.calculate(mDrivetrain.getAngle().getValue(DEGREE));
+                SwerveModuleState[] states = mDrivetrain.calculateSwerveMotorSpeedsFieldCentric(new Velocity(0, FEET_PER_SECOND), new Velocity(0, FEET_PER_SECOND), new AngularVelocity(angleGoal, DEGREE_PER_SECOND), new Velocity(16, FEET_PER_SECOND));
+                mDrivetrain.setSwerveModuleStates(states);
+
+                if(mDriveThetaController.atSetpoint())
+                    step.changeStepState(StepState.STATE_FINISH);
+
+                break;
+        }
+    }
 
     private PurePursuitGenerator mDrivePurePursuitGenerator;
     private PIDController mDriveThetaController;
@@ -316,25 +341,29 @@ public class Autonomous implements OpMode {
                     return;
                 }
 
-                mPurePursuitLookaheadDistance = new Distance(1, FOOT);
+                mPurePursuitLookaheadDistance = new Distance(2, FOOT);
                 mDrivePurePursuitGenerator = new PurePursuitGenerator(mPurePursuitLookaheadDistance,
                         mPregeneratedSplines.get(currentSplineIndex),
                         mPregeneratedVelocities.get(currentSplineIndex));
 
-                if(step.hasValue("parm3") && step.hasValue("parm2") && step.getParm(3) == 1 && mDrivetrain.getThetaPIDController() != null) {
+//                if(step.hasValue("parm3") && step.hasValue("parm2") && step.getParm(3) == 1 && mDrivetrain.getThetaPIDController() != null) {
                     PID values = mDrivetrain.getThetaPIDController();
                     mDriveThetaController = new PIDController(values.getP(), values.getI(), values.getD());
 
+                    mDriveThetaController.setTolerance(1);
+                    mDriveThetaController.enableContinuousInput(-180, 180);
                     mDriveThetaController.setSetpoint(step.getParm(2));
-                } else {
-                    mDriveThetaController = null;
-                }
+//                } else {
+//                    mDriveThetaController = null;
+//                }
+
+                DriverStation.reportError("Starting the Drive seqence for spline " + currentSplineIndex, false);
 
                 step.changeStepState(StepState.STATE_RUNNING);
                 break;
             case STATE_RUNNING:
                 frc.robot.library.units.UnitContainers.Pose2d<Distance> currentPositionRun = mDrivetrain.getCurrentOdometryPosition();
-//                currentPositionRun = new Pose2d<>(currentPositionRun.getY(), currentPositionRun.getX().times(-1), currentPositionRun.getTheta());
+//                currentPositionRun = new Pose2d<>(currentPositionRun.getX(), currentPositionRun.getY().times(-1), currentPositionRun.getTheta());
 //                currentPositionRun = new Pose2d<>(currentPositionRun.getY(), currentPositionRun.getX(), currentPositionRun.getTheta());
 //                System.out.printf("Current Run Position (%.4f, %.4f)\n", currentPositionRun.getX().getValue(FOOT), currentPositionRun.getY().getValue(FOOT));
 
@@ -365,13 +394,16 @@ public class Autonomous implements OpMode {
                 if (!isSimulation()) {
                     double angleGoal;
 
-                    if(mDriveThetaController != null) {
-                        angleGoal = mDriveThetaController.calculate(mDrivetrain.getAngle().getValue(DEGREE));
-                    } else {
-                        angleGoal = 0;
-                    }
+//                    if(mDriveThetaController != null) {
+                        angleGoal = -mDriveThetaController.calculate(mDrivetrain.getAngle().getValue(DEGREE));
+                        angleGoal = Math.min(Math.abs(angleGoal), 10) * Math.signum(angleGoal);
+                        SmartDashboard.putNumber("ThetaController", angleGoal);
+////                    } else {
+//                        angleGoal = 1;
+////                    }
 
                     SwerveModuleState[] states = mDrivetrain.calculateSwerveMotorSpeedsFieldCentric(new Velocity(xVel, FEET_PER_SECOND), new Velocity(yVel, FEET_PER_SECOND), new AngularVelocity(angleGoal, DEGREE_PER_SECOND));
+//                    SwerveModuleState[] states = mDrivetrain.calculateSwerveMotorSpeedsFieldCentric(new Velocity(-yVel, FEET_PER_SECOND), new Velocity(xVel, FEET_PER_SECOND), new AngularVelocity(angleGoal, DEGREE_PER_SECOND));
                     mDrivetrain.setSwerveModuleStates(states);
                 } else {
                     mDrivetrain.swerveKinematics.reset(new Point2d<Distance>(
@@ -391,62 +423,6 @@ public class Autonomous implements OpMode {
                 break;
             case STATE_FINISH:
 
-                break;
-        }
-    }
-    //endregion
-
-    //region Swerve Autonomous Commands
-    /**
-     * Command that sets the Swerve Drivetrain X,Y,R velocities
-     *
-     * Step layout:
-     *  -XDistance is X Velocity
-     *  -YDistance is Y Velocity
-     *  -Parm 0 is the R Velocity
-     *
-     *  Command Mode:
-     *   -
-     *
-     * @param step Provided Step
-     */
-    public void setSwerveDrivetrainVelocity(Step step) {
-        logger.setTag("setSwerveDrivetrainVelocity()");
-        switch (step.getStepState()) {
-            case STATE_INIT:
-                SwerveDrivetrain swerve = mDrivetrain;
-
-                Velocity xVelocity = new Velocity(step.getXDistance(), FEET_PER_SECOND);
-                Velocity yVelocity = new Velocity(step.getYDistance(), FEET_PER_SECOND);
-                Velocity rotationVelocity = new Velocity(step.getParm(0, 0.0), FEET_PER_SECOND);
-
-                SmartDashboard.putNumber(logger.getTag() + "-XVelocity", xVelocity.getValue(FEET_PER_SECOND));
-                SmartDashboard.putNumber(logger.getTag() + "-YVelocity", yVelocity.getValue(FEET_PER_SECOND));
-                SmartDashboard.putNumber(logger.getTag() + "-RVelocity", rotationVelocity.getValue(FEET_PER_SECOND));
-
-                //TODO fix the axel track
-                swerve.setSwerveModuleStates(swerve.calculateSwerveMotorSpeeds(xVelocity.getValue(FEET_PER_SECOND), yVelocity.getValue(FEET_PER_SECOND), rotationVelocity.getValue(FEET_PER_SECOND), 1, 1, Constants.DriveControlType.VELOCITY));
-
-                step.changeStepState(StepState.STATE_RUNNING);
-                step.StartTimer();
-
-                this.logger.writeEvent(5, EventType.Status, "Init Finished for set Swerve Drivetrain Velocity {" + xVelocity + ", " + yVelocity + ", " + rotationVelocity + "}");
-                break;
-
-            case STATE_RUNNING:
-
-                if(step.getParm(2, 0d) == 1) {
-
-                }
-
-                if(step.getParm(1, 0d) != 0 && step.hasTimeElapsed(new Time(step.getParm(1, 0d), SECONDS))) {
-                    mDrivetrain.setSpeed(0);
-                    step.changeStepState(StepState.STATE_FINISH);
-                    this.logger.writeEvent(5, EventType.Status, "Finished Timed Set Swerve Drive Train Velocity");
-                }
-                break;
-
-            case STATE_FINISH:
                 break;
         }
     }
