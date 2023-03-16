@@ -25,7 +25,7 @@ public class AprilTags {
 
     private static double rotation;
 
-    public static void init() {
+    public static synchronized void init() {
         table = NetworkTableInstance.getDefault().getTable("limelight-atag");
         botpose = table.getEntry("botpose");
     }
@@ -33,7 +33,7 @@ public class AprilTags {
     /**
      * Updates the position of the robot using the aprilTags
      */
-    public static void updateValues() {
+    public static synchronized void updateValues() {
         pose = botpose.getDoubleArray(new double[6]);
 
         double poseX = pose[0];
@@ -65,35 +65,35 @@ public class AprilTags {
     /**
      * @return the x position of the robot relative to the bottom left corner of the field (inches)
      */
-    public static double getX() {
+    public static synchronized double getX() {
         return posX;
     }
 
     /**
      * @return the amount the robot moved on the x axis since the last update (inches)
      */
-    public static double getXVelocity() {
+    public static synchronized double getXVelocity() {
         return velocityX;
     }
     
     /**
      * @return the y position of the robot relative to the bottom left corner of the field (inches)
      */
-    public static double getY() {
+    public static synchronized double getY() {
         return posY;
     }
 
     /**
      * @return the amount the robot moved on the y axis since the last update (inches)
      */
-    public static double getYVelocity() {
+    public static synchronized double getYVelocity() {
         return velocityY;
     }
 
      /**
      * @return the z rotation of the robot (degrees)
      */
-    public static double getRotation() {
+    public static synchronized double getRotation() {
         return rotation;
     }
 

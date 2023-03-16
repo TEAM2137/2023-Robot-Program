@@ -31,7 +31,7 @@ public class VisionPID {
      * in the camera's vision
      * @param objectPosition the position of the object that is being targeted
      */
-    public void move(Point objectPosition) {
+    public synchronized void move(Point objectPosition) {
         // PID calculations
         double xVelocity = Math.max(-1, Math.min(1, drivePIDController.calculate(objectPosition.x)));
 

@@ -3,17 +3,41 @@ package frc.robot.vision.limelight;
 import java.util.ArrayList;
 import org.opencv.core.Point;
 
-import frc.robot.vision.limelight.field.RectArea;
+import frc.robot.vision.limelight.field.FieldArea;
 
 public class AreaDetection {
 
-    // A list of rectangular areas around the left side of the field
-    ArrayList<RectArea> leftSideAreas = new ArrayList<>(3);
-    ArrayList<RectArea> rightSideAreas = new ArrayList<>(3);
+    private ArrayList<FieldArea> fieldAreas = new ArrayList<>(20);
 
-    // A list of the positions of the aprilTags on the left side of the field
-    ArrayList<Point> leftSideTags = new ArrayList<>(3);
-    ArrayList<Point> rightSideTags = new ArrayList<>(3);
+    private ArrayList<FieldArea> leftSideTagAreas = new ArrayList<>(3);
+    private ArrayList<FieldArea> rightSideTagAreas = new ArrayList<>(3);
+    private ArrayList<Point> leftSideTags = new ArrayList<>(3);
+    private ArrayList<Point> rightSideTags = new ArrayList<>(3);
+
+    private double xPos;
+    private double yPos;
+    private double rw;
+    private double rh;
+
+    /*
+     * POINTS (INCHES)
+     * 
+     * Left community, blue: 56.25
+     * Right community, blue: 190.93
+     * Left community, red: 458.10
+     * Right community, red:
+     * Community width, large: 132.38
+     * Community width, small: 74.75
+     * Community width difference: 57.63
+     * Charge station, blue: (116.94, 59.39)
+     * AprilTag to center line X: 285.16
+     * Half field size X: 325.61
+     * Half field size Y: 159.50
+     * Community to center line: 269.36
+     * Community edge to center line: 136.98
+     * 
+     * These are just so I can calculate the positions more easily
+     */
 
     public AreaDetection() {
         // Adds the coordinates of the apriltags
@@ -25,101 +49,117 @@ public class AreaDetection {
         rightSideTags.add(new Point(610.7, 108.19));
         rightSideTags.add(new Point(610.7, 42.19));
 
-        addRightSideAreas();
-        addLeftSideAreas();
+        addFieldAreas();
+        addRightSideTagAreas();
+        addLeftSideTagAreas();
     }
 
-    public Point getNearestTagCoordinates() {
-        int id = getAreaId();
-        if (id >= 0) {
-            Point tagPos = leftSideTags.get(id);
-            return tagPos;
-        } else {
-            return null;
-        }
+    private synchronized void addFieldAreas() {
+        fieldAreas.add(new FieldArea("community-blue1", 56.26, 0, 132.38, 159.50));
+        fieldAreas.add(new FieldArea("community-blue2", 56.26, 0, 74.75, 216.03));
+        fieldAreas.add(new FieldArea("community-red1", 458.10, 0, 132.38, 159.50));
+        fieldAreas.add(new FieldArea("community-red2", 515.73, 0, 74.75, 216.03));
+        fieldAreas.add(new FieldArea("chargestation-blue", 116.94, 59.39, 148.125, 193.25));
+        fieldAreas.add(new FieldArea("chargestation-red", 458.10, 59.39, 148.125, 193.25));
     }
 
-    public double xDstToNearestTag() {
-        Point p = dstToNearestTag();
-        if (p == null) {
-            return 0;
-        } else {
-            return p.x;
-        }
-    }
-
-    public double yDstToNearestTag() {
-        Point p = dstToNearestTag();
-        if (p == null) {
-            return 0;
-        } else {
-            return p.y;
-        }
-    }
-
-    public Point dstToNearestTag() {
-        int id = getAreaId();
-        if (id >= 0) {
-            Point tagPos = leftSideTags.get(id);
-            return new Point(tagPos.x - AprilTags.getX(), tagPos.y = AprilTags.getY());
-        } else {
-            return null;
-        }
-    }
-
-    private void addLeftSideAreas() {
+    private synchronized void addLeftSideTagAreas() {
         for (int i = 0; i < leftSideTags.size(); i++) {
             Point position = new Point(leftSideTags.get(i).x, leftSideTags.get(i).y - 30);
-            leftSideAreas.add(new RectArea(i, position.x, position.y, 60, 60));        
+            leftSideTagAreas.add(new FieldArea("AprilTagArea#" + i, position.x, position.y, 60, 60));
         }
     }
 
-    private void addRightSideAreas() {
+    private synchronized void addRightSideTagAreas() {
         for (int i = 0; i < rightSideTags.size(); i++) {
             Point position = new Point(rightSideTags.get(i).x - 60, rightSideTags.get(i).y - 30);
-            rightSideAreas.add(new RectArea(i, position.x, position.y, 60, 60));        
+            rightSideTagAreas.add(new FieldArea("AprilTagArea#" + i, position.x, position.y, 60, 60));
         }
     }
 
-    public int getAreaId() {
-        
-        if (getArea() == null) {
-            return -1;
-        } else {
-            return getArea().id;
-        }
+    /**
+     * Updates the position of the robot.
+     * @param x the X position of the robot, in inches, with (0,0) as the bottom left corner of the field.
+     * @param y the Y position of the robot, in inches, with (0,0) as the bottom left corner of the field.
+     */
+    public synchronized void setPosition(double x, double y) {
+        xPos = x;
+        yPos = y;
     }
 
-    public RectArea getArea() {
+    /**
+     * @return a list of all the areas that the robot is currently in
+     */
+    public synchronized FieldArea[] getAreas() {
+        for (int i = 0; i < fieldAreas.size(); i++) {
+            if (fieldAreas.get(i).insideArea(xPos, yPos, rw, rh)) {
 
-        // if on left side
-        if (AprilTags.getX() < AprilTags.fieldSizeX) {
-            for (int i = 0; i < leftSideAreas.size(); i++) {
-                if (leftSideAreas.get(i).insideArea(AprilTags.getX(), AprilTags.getY())) {
-                    // in this area
-                    return leftSideAreas.get(i);
-                }
             }
         }
-
-        // not in any area
         return null;
     }
 
-    public boolean inAnyAreas() {
+    /**
+     * Checks if the robot is within the specified field area.
+     * <p> List of all the valid names to check:
+     * <p><code>"communityblue-1"
+     * <p>"communityblue-2"
+     * <p>"communityred-1"
+     * <p>"communityred-2"
+     * <p>"chargestation-blue"
+     * <p>"chargestation-red"
+     * </code>
+     * @param name the name of the area to check (use one of the above)
+     * @return true if the robot is in the desired area, false if it isn't.
+     */
+    public synchronized boolean isInArea(String name) {
+        FieldArea[] areas = getAreas();
+        for (int i = 0; i < areas.length; i++) {
+            if (areas[i].id == name) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-        // if on left side
-        if (AprilTags.getX() < AprilTags.fieldSizeX) {
-            for (int i = 0; i < leftSideAreas.size(); i++) {
-                if (leftSideAreas.get(i).insideArea(AprilTags.getX(), AprilTags.getY())) {
-                    // in an area
+    /**
+     * Checks if the robot is within ANY of the specified field areas.
+     * <p>NOTE: This function should be used instead of <code>isInArea()</code> if you are
+     * checking if the robot is in a red community/blue community, by checking for both community
+     * names of each color.
+     * <p>List of all the valid names to check:
+     * <p><code>"communityblue-1"
+     * <p>"communityblue-2"
+     * <p>"communityred-1"
+     * <p>"communityred-2"
+     * <p>"chargestation-blue"
+     * <p>"chargestation-red"
+     * </code>
+     * @param name the name of the area to check (use one of the above)
+     * @return true if the robot is in any of the desired areas, false if it isn't.
+     */
+    public synchronized boolean isInAreas(String[] names) {
+        FieldArea[] areas = getAreas();
+        for (int i = 0; i < areas.length; i++) {
+            for (int j = 0; j < names.length; j++) {
+                if (areas[i].id == names[i]) {
                     return true;
                 }
             }
         }
-
-        // not in any area
         return false;
+    }
+
+    /**
+     * Checks if the robot is in any of the preset field areas
+     * @return true if the robot is in any area, false if it isn't.
+     */
+    public synchronized boolean inAnyAreas() {
+        if (getAreas().length > 0) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
 }

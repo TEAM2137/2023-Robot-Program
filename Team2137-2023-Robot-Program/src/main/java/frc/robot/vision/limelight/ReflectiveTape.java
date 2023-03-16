@@ -18,11 +18,11 @@ public class ReflectiveTape {
     private static int tx;
     private static int ty;
 
-    public static void init() {
+    public static synchronized void init() {
         table = NetworkTableInstance.getDefault().getTable("limelight-rtape");
     }
 
-    public static void updateValues() {
+    public static synchronized void updateValues() {
         tv = (int) table.getEntry("tv").getDouble(0);
         tx = (int) table.getEntry("tx").getDouble(0);
         ty = (int) table.getEntry("ty").getDouble(0);
@@ -31,7 +31,7 @@ public class ReflectiveTape {
     /**
      * @return <code>true</code> if the limelight has one or more targets, and <code>false</code> if it doesn't.
      */
-    public static boolean hasTarget() {
+    public static synchronized boolean hasTarget() {
         return tv > 0;
     }
 
@@ -41,7 +41,7 @@ public class ReflectiveTape {
      * <p> Returns (0, 0) if there is no target. Use <code>hasTarget()</code> to detect if there is a 
      * target being seen by the limelight.
      */
-    public static Point targetPosition() {
+    public static synchronized Point targetPosition() {
         return new Point(tx, ty);
     }
 }

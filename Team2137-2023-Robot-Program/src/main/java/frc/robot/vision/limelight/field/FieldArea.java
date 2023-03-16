@@ -1,7 +1,6 @@
 package frc.robot.vision.limelight.field;
 
-public class RectArea {
-
+public class FieldArea {
     // x and y represent the bottom left corner of the area
     public double x;
     public double y;
@@ -9,9 +8,9 @@ public class RectArea {
     public double width;
     public double height;
 
-    public int id;
+    public String id;
 
-    public RectArea(int id, double x, double y, double width, double height) {
+    public FieldArea(String id, double x, double y, double width, double height) {
         this.x = x;
         this.y = y;
         this.width = width;
@@ -19,7 +18,7 @@ public class RectArea {
         this.id = id;
     }
 
-    public boolean insideArea(double px, double py) {
+    public synchronized boolean insideArea(double px, double py, double robotWidth, double robotHeight) {
         boolean insideX = px > x && px < x + width;
         boolean insideY = py > y && py < y + height;
         return insideX && insideY;

@@ -60,7 +60,7 @@ public class ObjectTracker {
     /**
      * @return an <code>ArrayList</code> of rectangles outlining the cones in the camera's vision.
      */
-    public ArrayList<Rect> getConeBounds() {
+    public synchronized ArrayList<Rect> getConeBounds() {
         ArrayList<Rect> positions = new ArrayList<>();
         for (int i = 0; i < amountOfCones; i++) {
             positions.add(new Rect((int) coneXPositions[i], (int) coneYPositions[i], (int) coneWidths[i], (int) coneHeights[i]));
@@ -71,14 +71,14 @@ public class ObjectTracker {
     /**
      * @return an array of rectangles outlining the cones in the camera's vision.
      */
-    public Rect[] getConeBoundsArray() {
+    public synchronized Rect[] getConeBoundsArray() {
         return (Rect[]) getConeBounds().toArray();
     }
 
     /**
      * @return an <code>ArrayList</code> of rectangles outlining the cubes in the camera's vision.
      */
-    public ArrayList<Rect> getCubeBounds() {
+    public synchronized ArrayList<Rect> getCubeBounds() {
         ArrayList<Rect> positions = new ArrayList<>();
         for (int i = 0; i < amountOfCubes; i++) {
             positions.add(new Rect((int) cubeXPositions[i], (int) cubeYPositions[i], (int) cubeWidths[i], (int) cubeHeights[i]));
@@ -89,14 +89,14 @@ public class ObjectTracker {
     /**
      * @return an array of rectangles outlining the cubes in the camera's vision.
      */
-    public Rect[] getCubeBoundsArray() {
+    public synchronized Rect[] getCubeBoundsArray() {
         return (Rect[]) getCubeBounds().toArray();
     }
 
     /**
      * @return an <code>ArrayList</code> of points at the center positions of the cones in the camera's vision.
      */
-    public ArrayList<Point> getConePositions() {
+    public synchronized ArrayList<Point> getConePositions() {
         ArrayList<Point> positions = new ArrayList<>();
         for (int i = 0; i < amountOfCones; i++) {
             positions.add(new Point((int) coneXPositions[i], (int) coneYPositions[i]));
@@ -107,14 +107,14 @@ public class ObjectTracker {
     /**
      * @return an array of points at the center positions of the cones in the camera's vision.
      */
-    public Point[] getConePositionsArray() {
+    public synchronized Point[] getConePositionsArray() {
         return (Point[]) getConePositions().toArray();
     }
 
     /**
      * @return a list of points at the center positions of the cubes in the camera's vision.
      */
-    public ArrayList<Point> getCubePositions() {
+    public synchronized ArrayList<Point> getCubePositions() {
         ArrayList<Point> positions = new ArrayList<>();
         for (int i = 0; i < amountOfCubes; i++) {
             positions.add(new Point((int) cubeXPositions[i], (int) cubeYPositions[i]));
@@ -125,7 +125,7 @@ public class ObjectTracker {
     /**
      * @return an array of points at the center positions of the cubes in the camera's vision.
      */
-    public Point[] getCubePositionsArray() {
+    public synchronized Point[] getCubePositionsArray() {
         return (Point[]) getCubePositions().toArray();
     }
 
@@ -133,7 +133,7 @@ public class ObjectTracker {
      * @return an <code>ArrayList</code> of points for the sizes of cones in the camera's vision. 
      * <p> The x positions are the widths, and the y positions are the heights.
      */
-    public ArrayList<Point> getConeSizes() {
+    public synchronized ArrayList<Point> getConeSizes() {
         ArrayList<Point> positions = new ArrayList<>();
         for (int i = 0; i < amountOfCones; i++) {
             positions.add(new Point((int) coneWidths[i], (int) coneHeights[i]));
@@ -145,7 +145,7 @@ public class ObjectTracker {
      * @return an array of points for the sizes of cones in the camera's vision. 
      * <p> The x positions are the widths, and the y positions are the heights.
      */
-    public Point[] getConeSizesArray() {
+    public synchronized Point[] getConeSizesArray() {
         return (Point[]) getConeSizes().toArray();
     }
 
@@ -153,7 +153,7 @@ public class ObjectTracker {
      * @return an <code>ArrayList</code> of points for the sizes of cubes in the camera's vision. 
      * <p> The x positions are the widths, and the y positions are the heights.
      */
-    public ArrayList<Point> getCubeSizes() {
+    public synchronized ArrayList<Point> getCubeSizes() {
         ArrayList<Point> positions = new ArrayList<>();
         for (int i = 0; i < amountOfCubes; i++) {
             positions.add(new Point((int) cubeWidths[i], (int) cubeHeights[i]));
@@ -165,28 +165,28 @@ public class ObjectTracker {
      * @return an array of rectangles outlining the cones in the camera's vision.
      * <p> The x positions are the widths, and the y positions are the heights.
      */
-    public Point[] getCubeSizesArray() {
+    public synchronized Point[] getCubeSizesArray() {
         return (Point[]) getCubeSizes().toArray();
     }
 
     /**
      * @return the total number of objects in the camera's vision (cones or cubes).
      */
-    public int getTotalObjectCount() {
+    public synchronized int getTotalObjectCount() {
         return amountOfCones + amountOfCubes;
     }
 
     /**
      * @return the total number of cubes in the camera's vision
      */
-    public int getCubeCount() {
+    public synchronized int getCubeCount() {
         return amountOfCubes;
     }
 
     /**
      * @return the total number of cubes in the camera's vision
      */
-    public int getConeCount() {
+    public synchronized int getConeCount() {
         return amountOfCones;
     }
 
@@ -194,7 +194,7 @@ public class ObjectTracker {
      * @param index the cone to distance check
      * @return the distance of the specified cone, in inches.
      */
-    public double getConeDistance(int index) {
+    public synchronized double getConeDistance(int index) {
         double dst = 0;
         if (isConeUpright(index)) {
             dst = coneWidths[index] * CONE_UP_DST_INCHES;
@@ -208,7 +208,7 @@ public class ObjectTracker {
      * @param index the cube to distance check
      * @return the distance of the specified cube, in inches.
      */
-    public double getCubeDistance(int index) {
+    public synchronized double getCubeDistance(int index) {
         double area = 0;
         double dst = 0;
         area = cubeWidths[index] * cubeHeights[index];
@@ -220,7 +220,7 @@ public class ObjectTracker {
      * @return the index closest clone to the camera.
      * <p> The index can be used to get distance or determine if the cone is upright.
      */
-    public int getClosestCone() {
+    public synchronized int getClosestCone() {
         if (coneWidths.length > 0) {
             double closest = 0;
             int index = 0;
@@ -242,7 +242,7 @@ public class ObjectTracker {
      * @param index which cone to check
      * <p>Should be run once every update
      */
-    public boolean isConeUpright(int index) {
+    public synchronized boolean isConeUpright(int index) {
         boolean output = true;
         Point cone = new Point(coneWidths[index], coneHeights[index]);
         if (cone.x + 10 > cone.y){
@@ -266,7 +266,7 @@ public class ObjectTracker {
     /**
      * Gets the data from the networktables. Should be run every time camera data is needed.
      */
-    public void update() {
+    public synchronized void update() {
         inst = NetworkTableInstance.getDefault();
         cubeTable = inst.getTable("RPI").getSubTable(subTable).getSubTable("cubes");
         cubeTable = inst.getTable("RPI").getSubTable(subTable).getSubTable("cones");
