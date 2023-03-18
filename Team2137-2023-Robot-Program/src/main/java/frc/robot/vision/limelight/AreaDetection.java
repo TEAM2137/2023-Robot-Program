@@ -9,8 +9,6 @@ public class AreaDetection {
 
     private ArrayList<FieldArea> fieldAreas = new ArrayList<>(20);
 
-    private ArrayList<FieldArea> leftSideTagAreas = new ArrayList<>(3);
-    private ArrayList<FieldArea> rightSideTagAreas = new ArrayList<>(3);
     private ArrayList<Point> leftSideTags = new ArrayList<>(3);
     private ArrayList<Point> rightSideTags = new ArrayList<>(3);
 
@@ -66,14 +64,14 @@ public class AreaDetection {
     private synchronized void addLeftSideTagAreas() {
         for (int i = 0; i < leftSideTags.size(); i++) {
             Point position = new Point(leftSideTags.get(i).x, leftSideTags.get(i).y - 30);
-            leftSideTagAreas.add(new FieldArea("AprilTagArea#" + i, position.x, position.y, 60, 60));
+            fieldAreas.add(new FieldArea("AprilTagArea#" + i, position.x, position.y, 60, 60));
         }
     }
 
     private synchronized void addRightSideTagAreas() {
         for (int i = 0; i < rightSideTags.size(); i++) {
             Point position = new Point(rightSideTags.get(i).x - 60, rightSideTags.get(i).y - 30);
-            rightSideTagAreas.add(new FieldArea("AprilTagArea#" + i, position.x, position.y, 60, 60));
+            fieldAreas.add(new FieldArea("AprilTagArea#" + i, position.x, position.y, 60, 60));
         }
     }
 
