@@ -44,4 +44,14 @@ public class ReflectiveTape {
     public static synchronized Point targetPosition() {
         return new Point(tx, ty);
     }
+
+    /**
+     * @return true if the targeted tape is on the top pole, false if it is on the middle pole or no target is detected
+     */
+    public static synchronized boolean isTopPole() {
+        if (ty > 80) {
+            return true;
+        }
+        return false;
+    }
 }

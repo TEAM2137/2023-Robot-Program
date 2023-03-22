@@ -97,4 +97,15 @@ public class AprilTags {
         return rotation;
     }
 
+    /**
+     * @return true if the limelight is detecting an aprilTag, false if it isn't
+     */
+    public static synchronized boolean hasTarget() {
+        pose = botpose.getDoubleArray(new double[6]);
+        if (pose[0] == 0.0) {
+            return false;
+        }
+        return true;
+    }
+
 }
