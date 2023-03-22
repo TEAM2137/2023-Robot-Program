@@ -1,10 +1,12 @@
 package frc.robot.library.units.AngleUnits;
 
+import frc.robot.library.units.Time;
 import frc.robot.library.units.Unit;
 import frc.robot.library.units.UnitEnum;
 import frc.robot.library.units.UnitUtil;
 
 import static frc.robot.library.units.AngleUnits.Angle.AngleUnits.RADIAN;
+import static frc.robot.library.units.AngleUnits.AngularVelocity.AngularVelocityUnits.DEGREE_PER_SECOND;
 import static frc.robot.library.units.UnitUtil.System.Generic;
 import static frc.robot.library.units.UnitUtil.UnitType.Angle;
 
@@ -76,6 +78,10 @@ public class Angle implements AngleUnit<Angle, Angle.AngleUnits> {
     @Override
     public Angle divide(double scalar) {
         return new Angle(getValue(RADIAN) / scalar, RADIAN);
+    }
+
+    public AngularVelocity divide(Time dt) {
+        return new AngularVelocity(getValue(AngleUnits.DEGREE) / dt.getValue(Time.TimeUnits.SECONDS), DEGREE_PER_SECOND);
     }
 
     @Override

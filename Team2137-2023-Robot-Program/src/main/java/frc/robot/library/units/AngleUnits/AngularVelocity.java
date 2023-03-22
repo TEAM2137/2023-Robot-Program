@@ -6,6 +6,7 @@ import frc.robot.library.units.UnitEnum;
 import frc.robot.library.units.UnitUtil;
 
 import static frc.robot.library.units.AngleUnits.Angle.AngleUnits.RADIAN;
+import static frc.robot.library.units.AngleUnits.AngularAcceleration.AngularAccelerationUnits.DEGREE_PER_SECOND2;
 import static frc.robot.library.units.UnitUtil.System.Generic;
 import static frc.robot.library.units.UnitUtil.UnitType.AngularVelocity;
 
@@ -79,6 +80,10 @@ public class AngularVelocity implements AngleUnit<AngularVelocity, AngularVeloci
     @Override
     public AngularVelocity divide(double scalar) {
         return new AngularVelocity(getValue(frc.robot.library.units.AngleUnits.AngularVelocity.AngularVelocityUnits.RADIAN_PER_SECOND) / scalar, frc.robot.library.units.AngleUnits.AngularVelocity.AngularVelocityUnits.RADIAN_PER_SECOND);
+    }
+
+    public AngularAcceleration divide(Time dt) {
+        return new AngularAcceleration(getValue(AngularVelocityUnits.DEGREE_PER_SECOND) / dt.getValue(Time.TimeUnits.SECONDS), DEGREE_PER_SECOND2);
     }
 
     @Override

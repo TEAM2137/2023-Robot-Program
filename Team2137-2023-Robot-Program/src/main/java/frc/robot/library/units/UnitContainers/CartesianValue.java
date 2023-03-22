@@ -1,8 +1,10 @@
 package frc.robot.library.units.UnitContainers;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import frc.robot.library.units.Unit;
+import frc.robot.library.units.UnitEnum;
 
-public class CartesianValue<T> {
+public class CartesianValue<T extends Unit<?, ? extends UnitEnum>> {
     private T x;
     private T y;
     private T z;
@@ -36,4 +38,5 @@ public class CartesianValue<T> {
     public void setZ(T z) {
         this.z = z;
     }
+
 }

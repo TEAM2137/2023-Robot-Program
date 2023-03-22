@@ -15,44 +15,48 @@ import frc.robot.library.units.UnitContainers.Point2d;
 import frc.robot.library.units.UnitContainers.Pose2d;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import static frc.robot.library.units.TranslationalUnits.Acceleration.AccelerationUnits.METER_PER_SECOND2;
+import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.METER;
+import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.FEET_PER_SECOND;
 import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.METER_PER_SECOND;
 
 public class FusedTrackingAlgorithm {
 
     private Point2d<Distance> currentEstimatedRobotPosition;
 
-    private Callable<Point2d<Distance>> mOdometryCallback;
-    private Callable<Point2d<Distance>> mAprilTagCallback;
+    private ArrayList<Callable<Point2d<Distance>>> mPositionCallbacks;
+    private ArrayList<Double> mPositionWeights;
 
-    private static double mAprilTagWeight = 0.5;
+    public FusedTrackingAlgorithm(ArrayList<Callable<Point2d<Distance>>> positionCallbacks, ArrayList<Double> weights, int updatePeriod) {
+        mPositionCallbacks = positionCallbacks;
+        mPositionWeights = weights;
 
-    public FusedTrackingAlgorithm(Callable<Point2d<Distance>> odometryReading, Callable<Point2d<Distance>> aprilTagReading, int updatePeriod) {
-        mOdometryCallback = odometryReading;
-        mAprilTagCallback = aprilTagReading;
-
-        Robot.threadPoolExecutor.scheduleAtFixedRate(this::update, 0, 50, TimeUnit.MILLISECONDS);
+        Robot.threadPoolExecutor.scheduleAtFixedRate(this::update, 0, updatePeriod, TimeUnit.MILLISECONDS);
     }
 
     private void update() {
         try {
-            Point2d<Distance> odometryResults = mOdometryCallback.call();
-            Point2d<Distance> apriltagResults = mAprilTagCallback.call();
+            Distance estimatedX = new Distance(0, FOOT);
+            Distance estimatedY = new Distance(0, FOOT);
 
-            Distance estimatedX = odometryResults.getX().times(mAprilTagWeight).add(apriltagResults.getX().times(1 - mAprilTagWeight));
-            Distance estimatedY = odometryResults.getY().times(mAprilTagWeight).add(apriltagResults.getY().times(1 - mAprilTagWeight));
+            for(int i = 0; i < mPositionCallbacks.size(); i++) {
+                Point2d<Distance> results = mPositionCallbacks.get(i).call();
+
+                estimatedX = estimatedX.add(results.getX().times(mPositionWeights.get(i)));
+                estimatedY = estimatedY.add(results.getY().times(mPositionWeights.get(i)));
+            }
 
             currentEstimatedRobotPosition = new Point2d<Distance>(estimatedX, estimatedY);
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
 }

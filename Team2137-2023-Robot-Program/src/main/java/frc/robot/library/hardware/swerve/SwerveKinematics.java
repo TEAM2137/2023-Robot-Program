@@ -154,7 +154,7 @@ public class SwerveKinematics {
             moduleStates[2] = getStateValue(states.get(4, 0), states.get(5, 0), unit, unitRotation, SwerveModuleState.SwerveModulePositions.LEFT_BACK);
             moduleStates[3] = getStateValue(states.get(6, 0), states.get(7, 0), unit, unitRotation, SwerveModuleState.SwerveModulePositions.RIGHT_BACK);
 
-            moduleStates = normalizeStates(moduleStates, maximum);
+//            moduleStates = normalizeStates(moduleStates, maximum);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -162,23 +162,26 @@ public class SwerveKinematics {
         return moduleStates;
     }
 
-    private SwerveModuleState[] normalizeStates(SwerveModuleState[] states, Unit<?, ? extends UnitEnum> max) {
-        double maxValue = max.getValueInPrimaryUnit();
-
-        for(SwerveModuleState state : states) {
-            double value = Math.abs(state.getDirectionalValue().getValueInPrimaryUnit());
-            if(value > maxValue)
-                maxValue = value;
-        }
-
-        SwerveModuleState[] newStates = new SwerveModuleState[states.length];
-
-        for(int i = 0; i < newStates.length; i++) {
-            newStates[i] = new SwerveModuleState((Unit<?, ? extends UnitEnum>) states[i].getDirectionalValue().divide(maxValue), states[i].getRotation2d(), states[i].getPosition());
-        }
-
-        return newStates;
-    }
+//    private SwerveModuleState[] normalizeStates(SwerveModuleState[] states, Unit<?, ? extends UnitEnum> max) {
+//        double maxValue = 0;
+//
+//        for(SwerveModuleState state : states) {
+//            double value = Math.abs(state.getDirectionalValue().getValueInPrimaryUnit());
+//            if(value > maxValue)
+//                maxValue = value;
+//        }
+//
+//        if (maxValue < max.getValueInPrimaryUnit())
+//            return states;
+//
+//        SwerveModuleState[] newStates = new SwerveModuleState[states.length];
+//
+//        for(int i = 0; i < newStates.length; i++) {
+//            newStates[i] = new SwerveModuleState((Unit<?, ? extends UnitEnum>) states[i].getDirectionalValue().divide(maxValue), states[i].getRotation2d(), states[i].getPosition());
+//        }
+//
+//        return newStates;
+//    }
 
     public void reset(Point2d<Distance> newPosition) {
         latestRobotPosition = new Point2d<Distance>(newPosition.getX(), newPosition.getY());

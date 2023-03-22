@@ -48,9 +48,12 @@ import frc.robot.library.units.UnitContainers.Pose2d;
 import frc.robot.library.units.UnitEnum;
 import frc.robot.library.units.UnitUtil;
 import frc.robot.vision.limelight.AprilTags;
+import frc.robot.vision.limelight.ReflectiveTape;
 import org.ejml.simple.SimpleMatrix;
 import org.w3c.dom.Element;
 
+import java.util.ArrayList;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import static frc.robot.library.units.AngleUnits.Angle.AngleUnits.DEGREE;
@@ -73,7 +76,11 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
     private double mInitialPitch = 0;
 
-    private PID mThetaController;
+    private PID mSplineThetaPIDValues;
+    private PID mThetaPIDValues;
+
+    private PIDController mSplineThetaController;
+    private PIDController mThetaController;
 
     public SwerveKinematics swerveKinematics;
 
@@ -112,7 +119,12 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
         PID thetaLevel = (PID) getEntity("ThetaController");
         if(thetaLevel != null) {
-            mThetaController = thetaLevel;
+            mThetaPIDValues = thetaLevel;
+        }
+
+        PID splineThetaController = (PID) getEntity("SplineThetaController");
+        if(splineThetaController != null) {
+            mSplineThetaPIDValues = splineThetaController;
         }
 
         Number velocityVal = (Number) getEntity("MaxVelocity");
@@ -154,10 +166,16 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         Robot.threadPoolExecutor.scheduleAtFixedRate(this::updateKinematics, 0, 50, TimeUnit.MILLISECONDS);
 
         AprilTags.init();
+//        double[] test = new double[] {};
 
-        fusedTrackingAlgorithm = new FusedTrackingAlgorithm(swerveKinematics::getCurrentRobotPosition, () -> {
-            return new Point2d<Distance>(new Distance(AprilTags.getX(), INCH), new Distance(AprilTags.getY(), INCH));
-        }, 50);
+//        ArrayList<Callable<Point2d<Distance>>> callables = new ArrayList<>();
+//        ArrayList<>
+//        callables.add(swerveKinematics::getCurrentRobotPosition);
+//        callables.add(() -> new Point2d<Distance>(new Distance(AprilTags.getX(), INCH), new Distance(AprilTags.getY(), INCH)));
+//
+//        fusedTrackingAlgorithm = new FusedTrackingAlgorithm(swerveKinematics::getCurrentRobotPosition, () -> {
+//            return new Point2d<Distance>(new Distance(AprilTags.getX(), INCH), new Distance(AprilTags.getY(), INCH));
+//        }, 50);
     }
 
     /**
@@ -208,7 +226,6 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
     }
 
     public PIDController mAutoLevelPIDController;
-    public PIDController mAutoLevelPIDThetaController;
     public Timer mAutoLevelSustainedTargetTimer;
     public boolean mAutoLevelTimerStarted;
 
@@ -318,6 +335,9 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
                 step.changeStepState(Constants.StepState.STATE_RUNNING);
                 break;
             case STATE_RUNNING:
+                SwerveModuleState[] states2 = calculateSwerveMotorSpeedsFieldCentric(new Velocity(step.getXDistance(), FEET_PER_SECOND), new Velocity(step.getYDistance(), FEET_PER_SECOND), new AngularVelocity(step.getParm(1), DEGREE_PER_SECOND));
+                setSwerveModuleStates(states2);
+
                 if(step.hasTimeoutElapsed()) {
                     step.changeStepState(Constants.StepState.STATE_FINISH);
                     setSpeed(0);
@@ -345,10 +365,14 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
     @PersistentCommand
     public void rawDrive(Step step) {
         if (step.getStepState() == Constants.StepState.STATE_INIT) {
+            double scaler = step.getParm(2, 1.0);
+
             Pair<Double, Double> xy = Pair.of(step.getXDistance(), -step.getYDistance());
             xy = Constants.joyStickSlopedDeadband(xy.getFirst(), xy.getSecond(), true, 0.1);
+            xy = Pair.of(xy.getFirst() * scaler, xy.getSecond() * scaler);
 
-            double rMag = Math.pow(Math.sin(Constants.deadband(step.getParm(1), 0.08) * (Math.PI / 2)), 3);
+            double rMag = Math.pow(Math.sin(Constants.deadband(step.getParm(1), 0.08) * (Math.PI / 2)), 5);
+            rMag *= scaler;
 
             if(xy.getFirst() == 0 && xy.getSecond() == 0 && rMag == 0) {
                 setSpeed(0);
@@ -364,17 +388,31 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         if (step.getStepState() == Constants.StepState.STATE_INIT) {
             if(step.getParm(1) > 0.5) {
                 step.changeStepState(Constants.StepState.STATE_RUNNING);
+
+                mThetaController.setSetpoint(0);
             }
         }
 
         if(step.getStepState() == Constants.StepState.STATE_RUNNING) {
+
+            //Check if driver is still holding the command
             if(step.getParm(1) <= 0.5) {
+                //Change step state to INIT (Canceling Current Step)
                 step.changeStepState(Constants.StepState.STATE_INIT);
 
                 setSpeed(0);
                 return;
             }
 
+            Angle robotAngle = getAngle();
+
+            double omegaVelocity = -mThetaController.calculate(robotAngle.getValue(DEGREE));;
+            double xVelocity;
+            double YVelocity;
+
+            if(ReflectiveTape.hasTarget()) {
+//                omegaVelocity =
+            }
 
         }
     }
@@ -384,7 +422,7 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
     }
 
     public PID getThetaPIDController() {
-        return mThetaController;
+        return mThetaPIDValues;
     }
 
     @Override
@@ -392,8 +430,9 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
     }
 
     @Override
-    public Pose2d<Distance> getCurrentOdometryPosition() {
+    public Pose2d<Distance, Angle> getCurrentOdometryPosition() {
         Point2d<Distance> pos = swerveKinematics.getCurrentRobotPosition();
+//        fusedTrackingAlgorithm.
 
         return new Pose2d<>(pos.getX(), pos.getY(), getAngle());
     }
@@ -454,6 +493,11 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         return new Angle(raw, DEGREE);
     }
 
+    @Override
+    public CartesianValue<Angle> getCartesianAngles() {
+        return new CartesianValue<>(new Angle(pigeonIMU.getRoll() % 360, DEGREE), new Angle(pigeonIMU.getPitch() % 360, DEGREE), new Angle(pigeonIMU.getYaw() % 360, DEGREE));
+    }
+
     public Velocity getMaxDrivetrainVelocity() {
         return maxDrivetrainVelocity;
     }
@@ -475,8 +519,4 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         return driveTrainType;
     }
 
-    @Override
-    public CartesianValue<Rotation2d> getGyroReading() {
-        return new CartesianValue<>(Rotation2d.fromRadians(pigeonIMU.getPitch()), Rotation2d.fromRadians(pigeonIMU.getRoll()), Rotation2d.fromRadians(pigeonIMU.getYaw()));
-    }
 }

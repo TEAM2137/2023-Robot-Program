@@ -192,19 +192,19 @@ public final class Constants {
 
     //////Utility Functions//////
 
-    public static CartesianValue<Distance> rotate3DInertialFrame(CartesianValue<Distance> distances, CartesianValue<Rotation2d> rotations) {
-        SimpleMatrix distanceMatrix = new SimpleMatrix(new double[][] {
-                new double[] {distances.getX().getValue(FOOT)},
-                new double[] {distances.getY().getValue(FOOT)},
-                new double[] {distances.getZ().getValue(FOOT)}
-        });
-
-        SimpleMatrix values = rotate3DInertialFrame(distanceMatrix, rotations);
-
-        return new CartesianValue<Distance>(new Distance(values.get(0, 0), FOOT),
-                new Distance(values.get(1, 0), FOOT),
-                new Distance(values.get(2, 0), FOOT));
-    }
+//    public static CartesianValue<Distance> rotate3DInertialFrame(CartesianValue<Distance> distances, CartesianValue<Rotation2d> rotations) {
+//        SimpleMatrix distanceMatrix = new SimpleMatrix(new double[][] {
+//                new double[] {distances.getX().getValue(FOOT)},
+//                new double[] {distances.getY().getValue(FOOT)},
+//                new double[] {distances.getZ().getValue(FOOT)}
+//        });
+//
+//        SimpleMatrix values = rotate3DInertialFrame(distanceMatrix, rotations);
+//
+//        return new CartesianValue<Distance>(new Distance(values.get(0, 0), FOOT),
+//                new Distance(values.get(1, 0), FOOT),
+//                new Distance(values.get(2, 0), FOOT));
+//    }
 
     /**
      * Uses Euler 3-2-1 Rotational Matrix
@@ -212,20 +212,20 @@ public final class Constants {
      * @param rotation
      * @return
      */
-    public static SimpleMatrix rotate3DInertialFrame(SimpleMatrix distance, CartesianValue<Rotation2d> rotation) {
-        Rotation2d theta = rotation.getY();
-        Rotation2d phi = rotation.getX();
-        Rotation2d psi = rotation.getZ();
-
-        SimpleMatrix rotationalMatrix = new SimpleMatrix(new double[][] {
-                new double[] { theta.getCos() * psi.getCos(),   phi.getSin() * theta.getSin() * psi.getCos() - phi.getCos() * phi.getSin(), phi.getCos() * theta.getSin() * psi.getCos() + phi.getSin() * psi.getSin()},
-                new double[] { theta.getCos() * psi.getSin(),   phi.getSin() * theta.getSin() * psi.getSin() + phi.getCos() * psi.getCos(), phi.getCos() * theta.getSin() * psi.getSin() - phi.getSin() * psi.getCos()},
-                new double[] { -theta.getSin(),                 phi.getSin() * theta.getCos(),                                              phi.getCos() * theta.getCos()}
-        });
-
-
-        return rotationalMatrix.mult(distance);
-    }
+//    public static SimpleMatrix rotate3DInertialFrame(SimpleMatrix distance, CartesianValue<Rotation2d> rotation) {
+//        Rotation2d theta = rotation.getY();
+//        Rotation2d phi = rotation.getX();
+//        Rotation2d psi = rotation.getZ();
+//
+//        SimpleMatrix rotationalMatrix = new SimpleMatrix(new double[][] {
+//                new double[] { theta.getCos() * psi.getCos(),   phi.getSin() * theta.getSin() * psi.getCos() - phi.getCos() * phi.getSin(), phi.getCos() * theta.getSin() * psi.getCos() + phi.getSin() * psi.getSin()},
+//                new double[] { theta.getCos() * psi.getSin(),   phi.getSin() * theta.getSin() * psi.getSin() + phi.getCos() * psi.getCos(), phi.getCos() * theta.getSin() * psi.getSin() - phi.getSin() * psi.getCos()},
+//                new double[] { -theta.getSin(),                 phi.getSin() * theta.getCos(),                                              phi.getCos() * theta.getCos()}
+//        });
+//
+//
+//        return rotationalMatrix.mult(distance);
+//    }
 
     /**
      * input matrix ->

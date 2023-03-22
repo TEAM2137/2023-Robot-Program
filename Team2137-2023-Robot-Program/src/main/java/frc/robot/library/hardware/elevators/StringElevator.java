@@ -1,5 +1,6 @@
 package frc.robot.library.hardware.elevators;
 
+import edu.wpi.first.math.Num;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -43,6 +44,7 @@ public class StringElevator extends EntityGroup implements Elevator {
     private Distance mCurrentPosition;
     private Distance mTolerance;
     private Number mGravityGain;
+    private Number mRatchetFlip;
 
     private ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(1);
 
@@ -90,7 +92,7 @@ public class StringElevator extends EntityGroup implements Elevator {
                 String[] parts = name.split(" ");
                 int idx = Integer.parseInt(parts[parts.length - 1]) - 1;
                 mLiftMotors[idx] = (SimpleMotorControl) a;
-            } else if(name.contains("Ratchet")) {
+            } else if(name.contains("-Ratchet")) {
                 fileLogger.writeEvent(0, "Found Double Solenoid Ratchet with name: " + name);
                 mRatchet = (DoubleSolenoid) a;
             }
@@ -130,6 +132,12 @@ public class StringElevator extends EntityGroup implements Elevator {
             mTolerance = (Distance) getEntity("Tolerance");
         } else {
             mTolerance = new Distance(1, INCH);
+        }
+
+        if(this.getEntity("RatchetFlip") != null) {
+            mRatchetFlip = (Number) getEntity("RatchetFlip");
+        } else {
+            mRatchetFlip = new Number(0);
         }
 
         mLiftMotors[0].setDistancePerRevolution(new Distance(mSpoolDiameter.getValue(INCH) * Math.PI, INCH));
@@ -210,12 +218,19 @@ public class StringElevator extends EntityGroup implements Elevator {
 
     @Override
     public void setSpeed(final double speed) {
-
         if(mRatchet != null) {
-            if (speed > 0) {
-                mRatchet.set(DoubleSolenoid.Value.kReverse);
+            if (mRatchetFlip.getValue() == 0) {
+                if (speed > 0) {
+                    mRatchet.set(DoubleSolenoid.Value.kReverse);
+                } else {
+                    mRatchet.set(DoubleSolenoid.Value.kForward);
+                }
             } else {
-                mRatchet.set(DoubleSolenoid.Value.kForward);
+                if (speed < 0) {
+                    mRatchet.set(DoubleSolenoid.Value.kReverse);
+                } else {
+                    mRatchet.set(DoubleSolenoid.Value.kForward);
+                }
             }
 
             threadPoolExecutor.schedule(() -> {

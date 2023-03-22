@@ -35,7 +35,9 @@ public class PurePursuitGenerator {
 
     public List<Translation2d> pointList;
     public List<Velocity> velocityList;
+    public List<Distance> distanceList;
     private final Distance lookAheadDistance;
+    private Distance totalDistance;
 
     public PurePursuitGenerator(List<Translation2d> points, Distance _lookAheadDistance) {
         pointList = points;
@@ -44,34 +46,32 @@ public class PurePursuitGenerator {
 
     public PurePursuitGenerator(Distance _lookAheadDistance, List<PoseWithCurvature> pose, List<Velocity> velocities) {
         pointList = new ArrayList<>();
-        for(PoseWithCurvature a : pose) {
-            pointList.add(a.poseMeters.getTranslation());
+//        for(PoseWithCurvature a : pose) {
+//            pointList.add(a.poseMeters.getTranslation());
+//        }
+
+        pointList.add(pose.get(0).poseMeters.getTranslation());
+
+        double dist = 0;
+        for(int i = 1; i < pose.size(); i++) {
+            PoseWithCurvature last = pose.get(i - 1);
+            PoseWithCurvature current = pose.get(i);
+
+            dist += last.poseMeters.getTranslation().getDistance(current.poseMeters.getTranslation());
+
+            pointList.add(pose.get(i).poseMeters.getTranslation());
+            distanceList.add(new Distance(dist, FOOT));
         }
+        totalDistance = new Distance(dist, FOOT);
+
         velocityList = velocities;
         lookAheadDistance = _lookAheadDistance;
     }
 
-    public Map.Entry<Pose2d, Velocity> calculateGoalPose(Translation2d currentPosition) {
-        Map.Entry<Translation2d, Velocity> lookAheadInfo = getLookaheadPoint(currentPosition.getX(), currentPosition.getY(), lookAheadDistance.getValue(FOOT));
+    public PurePursuitOutput calculateGoalPose(Translation2d currentPosition) {
+        PurePursuitInternalOutput lookAheadInfo = getLookaheadPoint(currentPosition.getX(), currentPosition.getY(), lookAheadDistance.getValue(FOOT));
 
-//        if (lookAhead == null) {
-//            for(int i = 1; i < pointList.size(); i++) {
-//                Translation2d upperPoint = pointList.get(i);
-//                Translation2d lowerPoint = pointList.get(i - 1);
-//
-//                System.out.println("Current X: " + currentPosition.getX() + " y: " + currentPosition.getY());
-//                System.out.println("X Lower: " + lowerPoint.getX() + " Y Lower: " + lowerPoint.getY());
-//                System.out.println("X Upper: " + upperPoint.getX() + " Y Upper: " + upperPoint.getY());
-//
-//                if ((currentPosition.getX() <= upperPoint.getX() && currentPosition.getX() >= lowerPoint.getX())
-//                    && (currentPosition.getY() <= upperPoint.getY() && currentPosition.getY() >= lowerPoint.getY())) {
-//
-//                    lookAhead = upperPoint;
-//                }
-//            }
-//        }
-
-        Translation2d lookAhead = lookAheadInfo.getKey();
+        Translation2d lookAhead = lookAheadInfo.translation;
 
         Rotation2d rotation;
         try {
@@ -79,7 +79,8 @@ public class PurePursuitGenerator {
         } catch (Exception e) {
             rotation = null;
         }
-        return Map.entry(new Pose2d(lookAhead, rotation), lookAheadInfo.getValue());
+
+        return new PurePursuitOutput(new Pose2d(lookAhead, rotation), lookAheadInfo.velocity, lookAheadInfo.distance);
     }
 
     /**
@@ -103,9 +104,10 @@ public class PurePursuitGenerator {
      * @return A float[] coordinate pair if the lookahead point exists, or null.
      * @see <a href="http://mathworld.wolfram.com/Circle-LineIntersection.html">Circle-Line Intersection</a>
      */
-    private Map.Entry<Translation2d, Velocity> getLookaheadPoint(double x, double y, double r) {
+    private PurePursuitInternalOutput getLookaheadPoint(double x, double y, double r) {
         Translation2d lookahead = null;
         Velocity startAndEnd = null;
+        Distance distance = null;
 
         // iterate through all pairs of points
         for (int i = 0; i < pointList.size() - 1; i++) {
@@ -148,6 +150,7 @@ public class PurePursuitGenerator {
             if (validIntersection1) {
                 lookahead = new Translation2d(x1 + x, y1 + y);
                 startAndEnd = velocityList.get(i);
+                distance = distanceList.get(i);
             }
 
             // select the second one if it's valid and either lookahead is none,
@@ -156,6 +159,7 @@ public class PurePursuitGenerator {
                 if (lookahead == null || Math.abs(x1 - p2[0]) > Math.abs(x2 - p2[0]) || Math.abs(y1 - p2[1]) > Math.abs(y2 - p2[1])) {
                     lookahead = new Translation2d(x2 + x, y2 + y);
                     startAndEnd = velocityList.get(i);
+                    distance = distanceList.get(i);
                 }
             }
         }
@@ -169,19 +173,19 @@ public class PurePursuitGenerator {
 
             // if we are closer than lookahead distance to the end, set it as the lookahead
             if (Math.sqrt((endX - x) * (endX - x) + (endY - y) * (endY - y)) <= r) {
-                return Map.entry(new Translation2d(endX, endY), getVelocity(x, y,pointList.size() - 1));
+                return new PurePursuitInternalOutput(new Translation2d(endX, endY), getVelocity(x, y,pointList.size() - 1), distanceList.get(pointList.size() - 1));
             }
         }
 
         if(lookahead == null) {
             //System.out.printf("Could not find lookahead for: (%.4f, %.4f)\n", x, y);
-            return Map.entry(new Translation2d(x, y), new Velocity(0, FEET_PER_SECOND));
+            return new PurePursuitInternalOutput(new Translation2d(x, y), new Velocity(0, FEET_PER_SECOND), new Distance(0, FOOT));
         }
 
         if(startAndEnd == null)
-            return Map.entry(lookahead, new Velocity(0, FEET_PER_SECOND));
+            return new PurePursuitInternalOutput(lookahead, new Velocity(0, FEET_PER_SECOND), new Distance(0, FOOT));
 
-        return Map.entry(lookahead, startAndEnd);
+        return new PurePursuitInternalOutput(lookahead, startAndEnd, distance);
     }
 
     public Velocity getVelocity(double x, double y, int position) {
@@ -195,15 +199,35 @@ public class PurePursuitGenerator {
 
             index--;
         }
-
-//        for(double dist = 0; dist < lookAheadDistance.getValue(FOOT); dist += Math.abs(pointList.get(index).getDistance(pointList.get(index - 1)))) {
-//            if(index <= 1)
-//                break;
-//
-//            index--;
-//        }
-
         return velocityList.get(index);
+    }
+
+    public Distance getTotalDistance() {
+        return totalDistance;
+    }
+
+    public static class PurePursuitOutput {
+        public final Pose2d pose2d;
+        public final Velocity velocity;
+        public final Distance distance;
+
+        private PurePursuitOutput(Pose2d _pose2d, Velocity _velocity, Distance _distance) {
+            pose2d = _pose2d;
+            velocity = _velocity;
+            distance = _distance;
+        }
+    }
+
+    private static class PurePursuitInternalOutput {
+        final Translation2d translation;
+        final Velocity velocity;
+        final Distance distance;
+
+        private PurePursuitInternalOutput(Translation2d _translation, Velocity _velocity, Distance _distance) {
+            translation = _translation;
+            velocity = _velocity;
+            distance = _distance;
+        }
     }
 }
 

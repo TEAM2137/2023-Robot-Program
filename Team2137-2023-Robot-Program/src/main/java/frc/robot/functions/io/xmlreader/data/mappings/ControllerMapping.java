@@ -48,6 +48,8 @@ public class ControllerMapping extends EntityImpl implements Mapping {
     private final Gamepad[] controllers;
     private final int controllerNumber;
     private final double deadband;
+    private final double booleanDoubleValueTrue;
+    private final double booleanDoubleValueFalse;
     private final String valueName;
     private Axis controllerAxis;
     private Button controllerButton;
@@ -70,6 +72,8 @@ public class ControllerMapping extends EntityImpl implements Mapping {
         controllerNumber = Integer.parseInt(getNodeOrAttribute(element, "controller", "0"));
         String id = getNodeOrAttribute(element, "id", "X");
         valueName = getNodeOrAttribute(element, "value", "value");
+        booleanDoubleValueTrue = Double.parseDouble(getNodeOrAttribute(element, "doublevaluetrue", "1"));
+        booleanDoubleValueFalse = Double.parseDouble(getNodeOrAttribute(element, "doublevaluefalse", "0"));
         deadband = Double.parseDouble(getNodeOrAttribute(element, "deadband", "0"));
 
         for (Axis axis : Axis.values()) {
@@ -105,7 +109,8 @@ public class ControllerMapping extends EntityImpl implements Mapping {
                 return 0;
 
         } else if (controllerButton != null) {
-            return controllers[controllerNumber].getRawButton(controllerButton.value) ? 1 : 0;
+            return controllers[controllerNumber].getRawButton(controllerButton.value) ? booleanDoubleValueTrue : booleanDoubleValueFalse;
+//            return controllers[controllerNumber].getRawButton(controllerButton.value) ? 1 : 0;
         } else if (controllerDPAD != null) {
             return controllers[controllerNumber].getPOV();
         }else {
@@ -133,7 +138,7 @@ public class ControllerMapping extends EntityImpl implements Mapping {
 
     @Override
     public Boolean isBooleanValue() {
-        return controllerButton != null || controllerDPAD != null;
+        return (controllerButton != null || controllerDPAD != null) && (booleanDoubleValueTrue == 1 && booleanDoubleValueFalse == 0);
     }
 
     @Override

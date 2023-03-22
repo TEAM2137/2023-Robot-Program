@@ -33,11 +33,11 @@ public interface DriveTrain {
 
     Angle getAngle();
 
-    CartesianValue<Rotation2d> getGyroReading();
+    CartesianValue<Angle> getCartesianAngles();
 
     void setAngleOffset(Rotation2d offset);
 
     void configDrivetrainControlType(Constants.DriveControlType control);
 
-    Pose2d<Distance> getCurrentOdometryPosition();
+    Pose2d<Distance, Angle> getCurrentOdometryPosition();
 }

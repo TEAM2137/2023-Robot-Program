@@ -53,6 +53,7 @@ public class EndEffector extends EntityGroup {
     private final FileLogger logger;
 
     private Angle pitchTarget = new Angle(180, DEGREE);
+    private long lastPitchSpeedTime;
     private boolean rawPitchControl = true;
     private boolean mLastAutoCloseSensorValue = false;
     private Timer mLastManualControlTime = new Timer();
@@ -84,6 +85,9 @@ public class EndEffector extends EntityGroup {
             mTolerance = new Number(4);
         }
 
+        pitchMotor.configureForwardLimit(new Angle(158, DEGREE));
+        pitchMotor.configureReverseLimit(new Angle(0, DEGREE));
+
         autoCloseMapping = (Mapping) getEntity("AutoCloseSensorMap");
 
         this.addSubsystemCommand(getName() + "-SetRawClaw", this::setRawClaw);
@@ -91,16 +95,24 @@ public class EndEffector extends EntityGroup {
         this.addSubsystemCommand(getName() + "-RawWristSpeed", this::setWristSpeed);
     }
 
+    //20 deg/sec
     @PersistentCommand
     public void setWristSpeed(Step step) {
         if(step.getStepState() == Constants.StepState.STATE_INIT) {
             if(step.getParm(1) != 0) {
-                rawPitchControl = true;
-                pitchMotor.set(Math.min(Math.pow(Math.sin(step.getParm(1) * (Math.PI / 2)), 3), 0.2));
+                if(!rawPitchControl) {
+                    lastPitchSpeedTime = System.currentTimeMillis();
+                    rawPitchControl = true;
+                } else {
+                    double dP = Math.pow(Math.sin(step.getParm(1) * (Math.PI / 2)), 3) * 45 * ((System.currentTimeMillis() - lastPitchSpeedTime) / 1000.0);
+                    Angle newTarget = getPitch().add(new Angle(dP, DEGREE));
+
+                    setTargetPitch(newTarget);
+                }
             } else if (rawPitchControl) {
                 rawPitchControl = false;
-                pitchMotor.set(0.0);
-                setTargetPitch(getPitch());
+//                pitchMotor.set(0.0);
+                //setTargetPitch(getPitch());
             }
         }
     }
@@ -139,8 +151,12 @@ public class EndEffector extends EntityGroup {
 
     @Override
     public void periodic() {
-        if(mLastManualControlTime.hasElapsed(1) && !mLastAutoCloseSensorValue && autoCloseMapping.getBooleanValue()) {
-            setEffectorState(true);
+        if(autoCloseMapping != null) {
+            if (mLastManualControlTime.hasElapsed(1) && !mLastAutoCloseSensorValue && autoCloseMapping.getBooleanValue()) {
+                setEffectorState(true);
+            }
+
+            mLastAutoCloseSensorValue = autoCloseMapping.getBooleanValue();
         }
 
 
@@ -151,8 +167,6 @@ public class EndEffector extends EntityGroup {
         SmartDashboard.putNumber("Pitch (Degrees)", getPitch().getValue(DEGREE));
         SmartDashboard.putNumber("Target Pitch (Degrees)", pitchTarget.getValue(DEGREE));
         SmartDashboard.putNumber("Pitch Allowed Error", pitchAllowedErr);
-
-        mLastAutoCloseSensorValue = autoCloseMapping.getBooleanValue();
     }
 
     /**
@@ -201,7 +215,7 @@ public class EndEffector extends EntityGroup {
      */
     public void setTargetPitch(Angle degrees){
         pitchTarget = degrees;
-        pitchMotor.setPosition(pitchTarget, -Math.sin((Math.PI) - getPitch().getValue(RADIAN)) * feedforward);
+        pitchMotor.setPosition(pitchTarget, -Math.sin((Math.PI) - degrees.getValue(RADIAN)) * feedforward);
         //pitchPIDController.setReference(pitchTarget.getDegrees() * 360 / 4096, CANSparkMax.ControlType.kSmartMotion);
     }
 

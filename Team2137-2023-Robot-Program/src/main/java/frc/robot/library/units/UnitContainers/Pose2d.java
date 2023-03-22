@@ -2,16 +2,17 @@ package frc.robot.library.units.UnitContainers;
 
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.library.units.AngleUnits.Angle;
+import frc.robot.library.units.AngleUnits.AngleUnit;
 import frc.robot.library.units.TranslationalUnits.TranslationUnit;
 import frc.robot.library.units.Unit;
 import frc.robot.library.units.UnitEnum;
 
-public class Pose2d<T extends Unit<T, ?>> {
+public class Pose2d<T extends Unit<T, ?>, V extends AngleUnit<V, ?>> {
     T x;
     T y;
-    Angle theta;
+    V theta;
 
-    public Pose2d(T _x, T _y, Angle _theta) {
+    public Pose2d(T _x, T _y, V _theta) {
         x = _x;
         y = _y;
         theta = _theta;
@@ -25,11 +26,11 @@ public class Pose2d<T extends Unit<T, ?>> {
         return y;
     }
 
-    public Angle getTheta() {
+    public V getTheta() {
         return theta;
     }
 
-    public void mutableAddVector(Vector2d<T> vector, Angle angle) {
+    public void mutableAddVector(Vector2d<T> vector, V angle) {
         x = x.add(vector.x);
         y = y.add(vector.y);
 

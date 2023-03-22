@@ -21,6 +21,7 @@ import frc.robot.functions.io.xmlreader.data.*;
 import frc.robot.functions.io.xmlreader.data.mappings.CANifierMapping;
 import frc.robot.functions.io.xmlreader.data.mappings.ControllerMapping;
 import frc.robot.functions.io.xmlreader.data.mappings.DIOMapping;
+import frc.robot.functions.io.xmlreader.data.mappings.NetworkTableMapping;
 import frc.robot.functions.io.xmlreader.objects.canifier.DIO;
 import frc.robot.functions.io.xmlreader.objects.motor.FalconMotor;
 import frc.robot.functions.io.xmlreader.objects.motor.NeoMotor;
@@ -38,6 +39,7 @@ import frc.robot.library.hardware.swerve.module.SwerveFALCONDriveModule;
 import frc.robot.library.hardware.swerve.module.SwerveNEODriveModule;
 import frc.robot.library.hardware.swerve.module.SwerveSimulationDriveModule;
 import frc.robot.library.units.TranslationalUnits.Distance;
+import frc.robot.vision.objects.AutoAlignment;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -101,6 +103,10 @@ public class EntityGroup extends EntityImpl {
         usbCameraImplements.put("DEFAULT", Camera.class);
         entityClassMappings.put("USBCAMERA", usbCameraImplements);
 
+        HashMap<String, Class<? extends Entity>> autoAlignmentImplements = new HashMap<>();
+        autoAlignmentImplements.put("DEFAULT", AutoAlignment.class);
+        entityClassMappings.put("AUTOALIGN", autoAlignmentImplements);
+
         HashMap<String, Class<? extends Entity>> encoderImplements = new HashMap<>();
         encoderImplements.put("DEFAULT", Encoder.class);
         entityClassMappings.put("ENCODER", encoderImplements);
@@ -144,6 +150,7 @@ public class EntityGroup extends EntityImpl {
         mapImplements.put("CONTROLLER", ControllerMapping.class);
         mapImplements.put("DIO", DIOMapping.class);
         mapImplements.put("CANIFIER", CANifierMapping.class);
+        mapImplements.put("NETWORKTABLE", NetworkTableMapping.class);
         entityClassMappings.put("MAP", mapImplements);
 
         HashMap<String, Class<? extends Entity>> stepImplements = new HashMap<>();

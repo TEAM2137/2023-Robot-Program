@@ -107,23 +107,23 @@ public class NeoMotor extends CANSparkMax implements Entity, SimpleMotorControl 
         pidController.setD(pid.getD());
         pidController.setFF(pid.getFF());
 
+        setID(Integer.parseInt(Entity.getOrDefault(element, "ID", "0")));
+        setMotorType(Motor.MotorTypes.valueOf(Entity.getOrDefault(element, "Type", "FALCON").toUpperCase()));
+        setInverted(Boolean.parseBoolean(Entity.getOrDefault(element, "Inverted", "false").toLowerCase()));
+        setCurrentLimit(Integer.parseInt(Entity.getOrDefault(element, "CurrentLimit", "-1")));
+        setRampRate(Double.parseDouble(Entity.getOrDefault(element, "RampRate", "0")));
+
         if(absoluteEncoder != null) {
             pidController.setOutputRange(-1, 1);
             pidController.setPositionPIDWrappingEnabled(true);
             pidController.setPositionPIDWrappingMinInput(0);
-            pidController.setPositionPIDWrappingMaxInput(360);
+            pidController.setPositionPIDWrappingMaxInput(1 * getGearRatio());
             pidController.setFeedbackDevice(absoluteEncoder);
 
             super.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 100);
         } else {
             pidController.setFeedbackDevice(relativeEncoder);
         }
-
-        setID(Integer.parseInt(Entity.getOrDefault(element, "ID", "0")));
-        setMotorType(Motor.MotorTypes.valueOf(Entity.getOrDefault(element, "Type", "FALCON").toUpperCase()));
-        setInverted(Boolean.parseBoolean(Entity.getOrDefault(element, "Inverted", "false").toLowerCase()));
-        setCurrentLimit(Integer.parseInt(Entity.getOrDefault(element, "CurrentLimit", "-1")));
-        setRampRate(Double.parseDouble(Entity.getOrDefault(element, "RampRate", "0")));
 
         super.setClosedLoopRampRate(rampRate);
 
@@ -141,6 +141,12 @@ public class NeoMotor extends CANSparkMax implements Entity, SimpleMotorControl 
         super.enableSoftLimit(SoftLimitDirection.kForward, true);
         super.setSoftLimit(SoftLimitDirection.kForward, (float) ((d.getValue(INCH) / distancePerRevolution.getValue(INCH)) * getGearRatio() * getCountPerRevolution()));
     }
+
+    public void configureForwardLimit(Angle angle) {
+        //DriverStation.reportWarning(getName() + "-SoftLimit" + ((float) ((d.getValue(INCH) / distancePerRevolution.getValue(INCH)) * getGearRatio() * getCountPerRevolution()), false);
+        super.enableSoftLimit(SoftLimitDirection.kForward, true);
+        super.setSoftLimit(SoftLimitDirection.kForward, (float) ((angle.getValue(Angle.AngleUnits.DEGREE) / 360.0) * getGearRatio()));
+    }
     @Override
     public void enableForwardLimit() {
         super.enableSoftLimit(SoftLimitDirection.kForward, true);
@@ -154,6 +160,12 @@ public class NeoMotor extends CANSparkMax implements Entity, SimpleMotorControl 
     public void configureReverseLimit(Distance d) {
         super.enableSoftLimit(SoftLimitDirection.kReverse, true);
         super.setSoftLimit(SoftLimitDirection.kReverse, (float) ((d.getValue(INCH) / distancePerRevolution.getValue(INCH)) * getGearRatio() * getCountPerRevolution()));
+    }
+
+    public void configureReverseLimit(Angle angle) {
+        //DriverStation.reportWarning(getName() + "-SoftLimit" + ((float) ((d.getValue(INCH) / distancePerRevolution.getValue(INCH)) * getGearRatio() * getCountPerRevolution()), false);
+        super.enableSoftLimit(SoftLimitDirection.kForward, true);
+        super.setSoftLimit(SoftLimitDirection.kForward, (float) ((angle.getValue(Angle.AngleUnits.DEGREE) / 360.0) * getGearRatio()));
     }
     @Override
     public void enableReverseLimit() {
