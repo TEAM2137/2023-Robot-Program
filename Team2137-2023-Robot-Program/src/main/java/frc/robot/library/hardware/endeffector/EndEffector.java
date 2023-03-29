@@ -1,5 +1,6 @@
 package frc.robot.library.hardware.endeffector;
 
+import edu.wpi.first.wpilibj.PneumaticHub;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
@@ -82,11 +83,11 @@ public class EndEffector extends EntityGroup {
         if(this.getEntity("Tolerance") != null) {
             mTolerance = (Number) getEntity("Tolerance");
         } else {
-            mTolerance = new Number(4);
+            mTolerance = new Number(10);
         }
 
-        pitchMotor.configureForwardLimit(new Angle(158, DEGREE));
-        pitchMotor.configureReverseLimit(new Angle(0, DEGREE));
+//        pitchMotor.configureReverseLimit(new Angle(158, DEGREE));
+//        pitchMotor.configureForwardLimit(new Angle(0, DEGREE));
 
         autoCloseMapping = (Mapping) getEntity("AutoCloseSensorMap");
 
@@ -161,6 +162,7 @@ public class EndEffector extends EntityGroup {
 
 
         SmartDashboard.putNumber("Claw Current", pitchMotor.getOutputAmperage());
+        SmartDashboard.putNumber("Claw Output", pitchMotor.getAppliedOutput());
 
         // Update dashboard stats
         SmartDashboard.putBoolean("End Effector Closed", isJawClosed());

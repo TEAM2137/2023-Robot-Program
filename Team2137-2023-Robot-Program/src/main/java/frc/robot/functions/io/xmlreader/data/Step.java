@@ -104,7 +104,7 @@ public class Step extends EntityImpl {
             timeout = null;
     }
 
-    public Step (String _COMMAND, String _TIMEOUT, String _SPEED, String _XDISTANCE, String _YDISTANCE, String _PARALLEL, String[] _PARMs) {
+    public Step (String _COMMAND, String _TIMEOUT, String _SPEED, String _XDISTANCE, String _YDISTANCE, String _PARALLEL, String... _PARMs) {
         super("Step");
         this.values.put(StepValues.COMMAND.toString(),  new ValueEntry(_COMMAND));
         this.values.put(StepValues.TIMEOUT.toString(), new ValueEntry(_TIMEOUT));
@@ -116,6 +116,10 @@ public class Step extends EntityImpl {
         for (int i = 0; i < _PARMs.length; i++) {
             this.values.put("PARM" + i,  new ValueEntry(_PARMs[i]));
         }
+    }
+
+    public Step (String _COMMAND, double _TIMEOUT, double _SPEED, double _XDISTANCE, double _YDISTANCE, boolean _PARALLEL, String... _PARMs) {
+        this(_COMMAND, String.valueOf(_TIMEOUT), String.valueOf(_SPEED), String.valueOf(_XDISTANCE), String.valueOf(_YDISTANCE), String.valueOf(_PARALLEL), _PARMs);
     }
 
     public Step (String _COMMAND, String _TIMEOUT, String _SPEED, String _DISTANCE, String _PARALLEL, String[] _PARMs) {
@@ -237,7 +241,7 @@ public class Step extends EntityImpl {
     }
 
     public Time getTime() {
-        return new Time(System.currentTimeMillis() - startTime, SECONDS);
+        return new Time(System.currentTimeMillis() - startTime, MILLISECONDS);
     }
 
     public boolean hasTimeElapsed(Time time) {

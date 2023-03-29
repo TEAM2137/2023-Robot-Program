@@ -202,7 +202,7 @@ public class SwerveSimulationDriveModule extends EntityGroup implements SwerveMo
 //            case DISTANCE:
 //                return new SwerveModuleState(mDriveDistanceCurrent, turningCurrent, mSwerveDrivePosition);
 //            case VELOCITY:
-                return new SwerveModuleState(mDriveVelocityCurrent, turningCurrent, mSwerveDrivePosition);
+        return new SwerveModuleState(mDriveVelocityCurrent, turningCurrent, mSwerveDrivePosition);
 //            default:
 //                return new SwerveModuleState(mDriveRawPercent, turningCurrent, mSwerveDrivePosition);
 //        }

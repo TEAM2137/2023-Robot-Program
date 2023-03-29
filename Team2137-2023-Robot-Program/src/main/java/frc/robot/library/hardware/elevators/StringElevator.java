@@ -51,6 +51,8 @@ public class StringElevator extends EntityGroup implements Elevator {
     private Constants.StepState mHomingStepState = STATE_NOT_STARTED;
 
     private final Mapping mHomingSensorMap;
+    private Mapping mForwardLimitSensorMap;
+    private Mapping mReverseLimitSensorMap;
 
     private final PIDController pidController;
 
@@ -140,6 +142,14 @@ public class StringElevator extends EntityGroup implements Elevator {
             mRatchetFlip = new Number(0);
         }
 
+        if(this.getEntity("ForwardLimitMap") != null) {
+            mForwardLimitSensorMap = (Mapping) getEntity("ForwardLimitMap");
+        }
+
+        if(this.getEntity("ReverseLimitMap") != null) {
+            mForwardLimitSensorMap = (Mapping) getEntity("ReverseLimitMap");
+        }
+
         mLiftMotors[0].setDistancePerRevolution(new Distance(mSpoolDiameter.getValue(INCH) * Math.PI, INCH));
         mLiftMotors[0].setIntegratedSensorDistance(mZeroPosition);
 
@@ -179,6 +189,13 @@ public class StringElevator extends EntityGroup implements Elevator {
         mCurrentPosition = mLiftMotors[0].getPosition();
         SmartDashboard.putNumber(getName() + "-CurrentPosition", mCurrentPosition.getValue(FOOT));
         SmartDashboard.putNumber(getName() + "-RawOutput", mLiftMotors[0].get());
+
+        double appliedOutput = mLiftMotors[0].get();
+
+        if(mForwardLimitSensorMap != null) {
+            if(appliedOutput > 0 && mForwardLimitSensorMap.getBooleanValue())
+                mLiftMotors[0].set(0);
+        }
 
         switch (mHomingStepState) {
             case STATE_INIT:
@@ -318,6 +335,9 @@ public class StringElevator extends EntityGroup implements Elevator {
     public void setPosition(Distance distance) {
         DriverStation.reportWarning(getName() + "-SetPosition to " + distance.getValue(FOOT), false);
         logger.writeEvent(2, FileLogger.EventType.Debug, "Setting " + getName() + " Position to " + distance.getValue(FOOT) + "ft");
+
+        if(distance.greaterThan(mMaxTravel))
+            distance = mMaxTravel;
 
         mGoalPosition = distance;
 

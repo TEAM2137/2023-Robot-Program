@@ -65,7 +65,7 @@ public class Teleop implements OpMode {
                 logger.writeEvent(0, mRobotSubsystem.getEntityGroupByType("DriveTrain").getName());
                 this.mDrivetrain = (SwerveDrivetrain) mRobotSubsystem.getEntityGroupByType("DriveTrain");
                 this.mDrivetrain.configDrivetrainControlType(Constants.DriveControlType.VELOCITY);
-                this.mDrivetrain.resetOdometry();
+//                this.mDrivetrain.resetOdometry();
                 break;
         }
 

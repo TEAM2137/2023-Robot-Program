@@ -43,24 +43,27 @@ import frc.robot.library.Constants;
 import frc.robot.library.Constants.StepState;
 import frc.robot.library.OpMode;
 import frc.robot.library.PurePursuit.PurePursuitGenerator;
+import frc.robot.library.hardware.endeffector.EndEffector;
 import frc.robot.library.hardware.swerve.SwerveDrivetrain;
 import frc.robot.library.hardware.swerve.module.SwerveModuleState;
 import frc.robot.library.units.AngleUnits.Angle;
 import frc.robot.library.units.AngleUnits.AngularVelocity;
+import frc.robot.library.units.Number;
 import frc.robot.library.units.Time;
 import frc.robot.library.units.TranslationalUnits.Acceleration;
 import frc.robot.library.units.TranslationalUnits.Distance;
 import frc.robot.library.units.TranslationalUnits.Velocity;
 import frc.robot.library.units.UnitContainers.Point2d;
 import frc.robot.library.units.UnitContainers.Pose2d;
+import frc.robot.library.units.UnitContainers.Vector2d;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 
 import static edu.wpi.first.wpilibj.RobotBase.isSimulation;
 import static frc.robot.library.units.AngleUnits.Angle.AngleUnits.DEGREE;
@@ -69,7 +72,6 @@ import static frc.robot.library.units.TranslationalUnits.Acceleration.Accelerati
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.INCH;
 import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.FEET_PER_SECOND;
-
 
 @SuppressWarnings(value = "FieldCanBeLocal")
 public class Autonomous implements OpMode {
@@ -83,6 +85,7 @@ public class Autonomous implements OpMode {
 
     private EntityGroup mRobotSubsystem;
     private SwerveDrivetrain mDrivetrain;
+    private EndEffector mClaw;
 
     private int currentSplineIndex = 0;
     private List<List<PoseWithCurvature>> mPregeneratedSplines = new ArrayList<>();
@@ -145,6 +148,15 @@ public class Autonomous implements OpMode {
         this.mDrivetrain = (SwerveDrivetrain) mRobotSubsystem.getEntityGroupByType("DriveTrain");
         this.mDrivetrain.resetOdometry();
 
+        this.mClaw = (EndEffector) mRobotSubsystem.getEntityGroupByType("Claw");
+
+        mCurrentPreloadedXMLFilePath = xmlStepChooserForDrew.getSelected();
+        Robot.fileLogger.writeEvent(0, FileLogger.EventType.Status, "Opening Step XML File...");
+        this.mStepReader = new XMLStepReader(xmlStepChooserForDrew.getSelected(), Robot.fileLogger);
+        Robot.fileLogger.writeEvent(0, "Step Count: " + this.mStepReader.getSteps().size());
+
+//        pregeneratedSplines();
+
 //        fileLogger.writeEvent(0, EventType.Status, "Starting Spline Pregeneration...");
 //        mCurrentSplineIndex = -1;
 //        preGenerateSplines();
@@ -158,7 +170,6 @@ public class Autonomous implements OpMode {
     public void pregeneratedSplines() {
         boolean generatedLast = true;
         List<PoseWithCurvature> catchList = new ArrayList<>();
-        int currentCatchListSplineCount = 0;
         int currentSplineIdx = 0;
 
         currentSplineIndex = 0;
@@ -169,27 +180,34 @@ public class Autonomous implements OpMode {
         while (mStepReader.hasSteps()) {
             Step step = mStepReader.pullNextStep();
 
+            if(mStepReader.isFirstDriveStep()) {
+                System.out.println("First Drive Step " + step.getCommand());
+            }
+
             if (XMLStepReader.isDriveStep(step.getCommand()) && !mStepReader.isFirstDriveStep()) {
                 List<edu.wpi.first.math.geometry.Pose2d> poses = new ArrayList<>();
-                Pose2d<Distance, Angle> currentPosition = mDrivetrain.getCurrentOdometryPosition();
 
-                if (mStepReader.hasPastDriveStep()) {
+//                Pose2d<Distance, Angle> currentPosition = new Pose2d<>(new Distance(0, FOOT), new Distance(0, FOOT), new Angle(0, DEGREE));
+//                if(mDrivetrain != null)
+//                    currentPosition = mDrivetrain.getCurrentOdometryPosition();
+
+//                if (mStepReader.hasPastDriveStep()) {
                     Step lds = mStepReader.getLastDriveStep();
 
                     if (mStepReader.lastStepsContainsDrive()) { //&& !mStepReader.isLastStep()) {
                         System.out.printf("Start Point %s (%.4f, %.4f) R%.4f\n", lds.getCommand(), lds.getXDistance(), lds.getYDistance(), lds.getParm(1));
                         poses.add(new edu.wpi.first.math.geometry.Pose2d(lds.getXDistance(), lds.getYDistance(), Rotation2d.fromDegrees(lds.getParm(1))));
                     } else {
-                        double dx = currentPosition.getX().getValue(FOOT) - lds.getXDistance();
-                        double dy = currentPosition.getY().getValue(FOOT) - lds.getYDistance();
+                        double dx = step.getXDistance() - lds.getXDistance();
+                        double dy = step.getYDistance() - lds.getYDistance();
                         System.out.printf("Start Point %s (%.4f, %.4f) R%.4f\n", lds.getCommand(), lds.getXDistance(), lds.getYDistance(), Math.toDegrees(Math.atan2(dy, dx)));
                         poses.add(new edu.wpi.first.math.geometry.Pose2d(lds.getXDistance(), lds.getYDistance(), Rotation2d.fromRadians(Math.atan2(dy, dx))));
                     }
-                } else {
+//                } else {
 //                    System.out.printf("Start Point CURRENT (%.4f, %.4f) R%.4f", currentPosition.getX().getValue(FOOT), currentPosition.getY().getValue(FOOT), Rotation2d.fromDegrees(0));
-                    poses.add(new edu.wpi.first.math.geometry.Pose2d(currentPosition.getX().getValue(FOOT), currentPosition.getY().getValue(FOOT), Rotation2d.fromDegrees(0))); //currentPosition.getTheta().getValue(DEGREE)
+//                    poses.add(new edu.wpi.first.math.geometry.Pose2d(currentPosition.getX().getValue(FOOT), currentPosition.getY().getValue(FOOT), Rotation2d.fromDegrees(0))); //currentPosition.getTheta().getValue(DEGREE)
 //                    poses.add(new edu.wpi.first.math.geometry.Pose2d(0, 0, Rotation2d.fromDegrees(currentPosition.getTheta().getValue(DEGREE))));
-                }
+//                }
 
                 System.out.printf("End Point %s (%.4f, %.4f) R%.4f\n", step.getCommand(), step.getXDistance(), step.getYDistance(), step.getParm(1));
                 poses.add(new edu.wpi.first.math.geometry.Pose2d(step.getXDistance(), step.getYDistance(), Rotation2d.fromDegrees(step.getParm(1))));
@@ -200,7 +218,6 @@ public class Autonomous implements OpMode {
                 System.out.printf("Generated %d points for spline\n", tmp.size());
                 mPregeneratedSplines.add(tmp);
                 catchList.addAll(tmp);
-                currentCatchListSplineCount++;
                 System.out.printf("Catch List Size Grew To %d\n", catchList.size());
             }
 
@@ -234,7 +251,6 @@ public class Autonomous implements OpMode {
                 }
 
                 catchList = new ArrayList<>();
-                currentCatchListSplineCount = 0;
             } else {
                 generatedLast = false;
             }
@@ -242,12 +258,12 @@ public class Autonomous implements OpMode {
 
         mStepReader.resetCounter();
 
-//        for (int i = 0; i < mPregeneratedSplines.size(); i++) {
-//            logSplineToFile(Constants.StandardFileAndDirectoryLocations.GenericFileLoggerDir.getFileLocation(false) + "Spline" + mLogCount + ".txt",
-//                    mPregeneratedSplines.get(i),
-//                    mPregeneratedVelocities.get(Math.min(i, mPregeneratedVelocities.size() - 1)));
-//            mLogCount++;
-//        }
+        for (int i = 0; i < mPregeneratedSplines.size(); i++) {
+            logSplineToFile(Constants.StandardFileAndDirectoryLocations.GenericFileLoggerDir.getFileLocation(false) + "Spline" + mLogCount + ".txt",
+                    mPregeneratedSplines.get(i),
+                    mPregeneratedVelocities.get(Math.min(i, mPregeneratedVelocities.size() - 1)));
+            mLogCount++;
+        }
     }
 
     public void logSplineToFile(String pathAndName, List<PoseWithCurvature> poses, List<Velocity> velocities) {
@@ -283,6 +299,10 @@ public class Autonomous implements OpMode {
 
 //        System.out.println("Count:" + Robot.currentActiveAutonomousSteps.size());
         for (int i = 0; i < Robot.currentActiveAutonomousSteps.size(); i++) {
+            if(i == 0) {
+                SmartDashboard.putString("CurrentRunningStep", Robot.currentActiveAutonomousSteps.get(i).getCommand());
+            }
+
             Step tmpStep = Robot.currentActiveAutonomousSteps.get(i);
 //            System.out.println("Running: " + tmpStep.getCommand());
 
@@ -355,7 +375,6 @@ public class Autonomous implements OpMode {
     private PIDController mDriveThetaController;
     private Distance mPurePursuitLookaheadDistance;
     private Distance mDriveMarginOfError = new Distance(1, INCH);
-    private Angle mDriveAngleChange;
 
     //region Generic Drive Command
     public void swerveDrivePurePursuit(Step step) {
@@ -366,18 +385,17 @@ public class Autonomous implements OpMode {
                     return;
                 }
 
-                mPurePursuitLookaheadDistance = new Distance(2, FOOT);
+                mPurePursuitLookaheadDistance = new Distance(1.5, FOOT);
                 mDrivePurePursuitGenerator = new PurePursuitGenerator(mPurePursuitLookaheadDistance,
                         mPregeneratedSplines.get(currentSplineIndex),
                         mPregeneratedVelocities.get(currentSplineIndex));
 
-                mDriveAngleChange = new Angle(step.getParm(2) - mDrivetrain.getAngle().getValue(DEGREE), DEGREE);
-//                PID values = mDrivetrain.getThetaPIDController();
-//                mDriveThetaController = new PIDController(values.getP(), values.getI(), values.getD());
-//
-//                mDriveThetaController.setTolerance(1);
-//                mDriveThetaController.enableContinuousInput(-180, 180);
-//                mDriveThetaController.setSetpoint(step.getParm(2));
+                PID values = mDrivetrain.getThetaPIDController();
+                mDriveThetaController = new PIDController(values.getP(), values.getI(), values.getD());
+
+                mDriveThetaController.setTolerance(1);
+                mDriveThetaController.enableContinuousInput(-180, 180);
+                mDriveThetaController.setSetpoint(step.getParm(2));
 
                 DriverStation.reportError("Starting the Drive seqence for spline " + currentSplineIndex, false);
 
@@ -390,14 +408,6 @@ public class Autonomous implements OpMode {
                 PurePursuitGenerator.PurePursuitOutput results = mDrivePurePursuitGenerator.calculateGoalPose(new Translation2d(currentPositionRun.getX().getValue(FOOT), currentPositionRun.getY().getValue(FOOT)));
                 SmartDashboard.putNumber("GoalX", results.pose2d.getX());
                 SmartDashboard.putNumber("GoalY", results.pose2d.getY());
-
-
-                //(current len / total len) * total time = current time
-                //
-                //total time estimate = (total length / current completed length) * current run time
-                //angular velocity goal = dAngle / total time estimate
-                double totalDriveEstimate = mDrivePurePursuitGenerator.getTotalDistance().divide(results.distance).getValue(FOOT) * step.getTime().getValue(Time.TimeUnits.SECONDS);
-                AngularVelocity angularVelocityGoal = new AngularVelocity(mDriveAngleChange.getValue(DEGREE) / totalDriveEstimate, DEGREE_PER_SECOND);
 
                 double xVel = (results.pose2d.getX() - currentPositionRun.getX().getValue(FOOT)); //* results.getValue().getValue(FEET_PER_SECOND);
                 double yVel = (results.pose2d.getY() - currentPositionRun.getY().getValue(FOOT)); //* results.getValue().getValue(FEET_PER_SECOND);
@@ -415,12 +425,10 @@ public class Autonomous implements OpMode {
                 SmartDashboard.putNumber("GoalVelX", xVel);
                 SmartDashboard.putNumber("GoalVelY", yVel);
 
-//                double angleGoal;
-//
-//                angleGoal = -mDriveThetaController.calculate(mDrivetrain.getAngle().getValue(DEGREE));
-//                SmartDashboard.putNumber("ThetaController", angleGoal);
+                double angleGoal = -mDriveThetaController.calculate(mDrivetrain.getAngle().getValue(DEGREE));
+                SmartDashboard.putNumber("ThetaController", angleGoal);
 
-                SwerveModuleState[] states = mDrivetrain.calculateSwerveMotorSpeedsFieldCentric(new Velocity(xVel, FEET_PER_SECOND), new Velocity(yVel, FEET_PER_SECOND), angularVelocityGoal);
+                SwerveModuleState[] states = mDrivetrain.calculateSwerveMotorSpeedsFieldCentric(new Velocity(xVel, FEET_PER_SECOND), new Velocity(yVel, FEET_PER_SECOND), new AngularVelocity(angleGoal, DEGREE_PER_SECOND));
                 mDrivetrain.setSwerveModuleStates(states);
 
                 if (lastPose.getDistance(new Translation2d(currentPositionRun.getX().getValue(FOOT), currentPositionRun.getY().getValue(FOOT))) < mDriveMarginOfError.getValue(FOOT)) {
@@ -435,6 +443,28 @@ public class Autonomous implements OpMode {
                 break;
             case STATE_FINISH:
 
+                break;
+        }
+    }
+
+    private PIDController mSeekThetaController;
+
+    public void SeekGameElement2023(Step step) {
+        switch (step.getStepState()) {
+            case STATE_INIT:
+                step.changeStepState(StepState.STATE_RUNNING);
+                step.StartTimer();
+                break;
+            case STATE_RUNNING:
+
+                SwerveModuleState[] swerveModuleStates = mDrivetrain.calculateSwerveMotorSpeedsFieldCentric(new Number(step.getSpeed()), new Number(0), );
+                mDrivetrain.setSwerveModuleStates(swerveModuleStates);
+
+                if(mClaw.isJawClosed() || step.hasTimeoutElapsed()) {
+                    step.changeStepState(StepState.STATE_FINISH);
+                    mDrivetrain.setSpeed(0);
+                    mClaw.setEffectorState(true);
+                }
                 break;
         }
     }

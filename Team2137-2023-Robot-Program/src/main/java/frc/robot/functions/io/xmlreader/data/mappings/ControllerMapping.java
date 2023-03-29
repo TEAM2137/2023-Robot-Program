@@ -50,6 +50,7 @@ public class ControllerMapping extends EntityImpl implements Mapping {
     private final double deadband;
     private final double booleanDoubleValueTrue;
     private final double booleanDoubleValueFalse;
+    private final boolean inverted;
     private final String valueName;
     private Axis controllerAxis;
     private Button controllerButton;
@@ -75,6 +76,7 @@ public class ControllerMapping extends EntityImpl implements Mapping {
         booleanDoubleValueTrue = Double.parseDouble(getNodeOrAttribute(element, "doublevaluetrue", "1"));
         booleanDoubleValueFalse = Double.parseDouble(getNodeOrAttribute(element, "doublevaluefalse", "0"));
         deadband = Double.parseDouble(getNodeOrAttribute(element, "deadband", "0"));
+        inverted = Boolean.parseBoolean(getNodeOrAttribute(element, "inverted", "false"));
 
         for (Axis axis : Axis.values()) {
             if(axis.toString().equalsIgnoreCase(id)) {
@@ -104,7 +106,7 @@ public class ControllerMapping extends EntityImpl implements Mapping {
                 value *= -1;
 
             if(Math.abs(value) > deadband)
-                return value;
+                return value * (inverted ? -1 : 1);
             else
                 return 0;
 
@@ -121,11 +123,11 @@ public class ControllerMapping extends EntityImpl implements Mapping {
     @Override
     public boolean getBooleanValue() {
         if(controllerAxis != null) {
-            return controllers[controllerNumber].getAxisType(controllerAxis.value) == 1;
+            return (controllers[controllerNumber].getAxisType(controllerAxis.value) == 1) == (!inverted);
         } else if (controllerButton != null) {
-            return controllers[controllerNumber].getRawButtonPressed(controllerButton.value);
+            return controllers[controllerNumber].getRawButtonPressed(controllerButton.value) == (!inverted);
         } else if (controllerDPAD != null) {
-            return getDPADValues(controllers[controllerNumber].getPOV())[controllerDPAD.getDirection()];
+            return getDPADValues(controllers[controllerNumber].getPOV())[controllerDPAD.getDirection()] == (!inverted);
         } else {
             return false;
         }

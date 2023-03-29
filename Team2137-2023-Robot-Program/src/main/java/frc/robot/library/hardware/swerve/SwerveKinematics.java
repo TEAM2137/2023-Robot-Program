@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
 import frc.robot.functions.io.FileLogger;
+import frc.robot.library.Constants;
 import frc.robot.library.hardware.swerve.module.SwerveModuleState;
 import frc.robot.library.units.*;
 import frc.robot.library.units.AngleUnits.Angle;
@@ -21,6 +22,7 @@ import org.ejml.simple.SimpleMatrix;
 
 import java.io.File;
 
+import static frc.robot.library.units.AngleUnits.Angle.AngleUnits.DEGREE;
 import static frc.robot.library.units.AngleUnits.Angle.AngleUnits.RADIAN;
 import static frc.robot.library.units.AngleUnits.AngularAcceleration.AngularAccelerationUnits.RADIAN_PER_SECOND2;
 import static frc.robot.library.units.AngleUnits.AngularVelocity.AngularVelocityUnits.RADIAN_PER_SECOND;
@@ -71,7 +73,7 @@ public class SwerveKinematics {
         return inverseKinematicForm.mult(robotComponentVelocity);
     }
 
-    public Vector2d<Velocity> getSwerveKinematics(SwerveModuleState[] currentVelocityState) {
+    public Vector2d<Velocity> getSwerveKinematics(SwerveModuleState[] currentVelocityState, Angle currentAngle) {
         Vector2d<Velocity> module1Components = null;
         Vector2d<Velocity> module2Components = null;
         Vector2d<Velocity> module3Components = null;
@@ -108,12 +110,28 @@ public class SwerveKinematics {
         SimpleMatrix robotComponents = getForwardKinematic(current);
 
 //        Vector2d<Velocity> velocityVector = new Vector2d<Velocity>(robotComponents.get(1, 0), -robotComponents.get(0, 0), METER_PER_SECOND);
-        Vector2d<Velocity> velocityVector = new Vector2d<Velocity>(-robotComponents.get(0, 0), -robotComponents.get(1, 0), METER_PER_SECOND);
+//        Vector2d<Velocity> velocityVector = new Vector2d<Velocity>(-robotComponents.get(0, 0), -robotComponents.get(1, 0), METER_PER_SECOND);
 
-        SmartDashboard.putNumber("XVel", velocityVector.getX().getValue(FEET_PER_SECOND));
-        SmartDashboard.putNumber("YVel", velocityVector.getY().getValue(FEET_PER_SECOND));
+        SimpleMatrix fieldCentric = Constants.convertFrame(currentAngle.times(-1).add(new Angle(90, DEGREE)), Constants.createFrameMatrix(-robotComponents.get(0, 0), -robotComponents.get(1, 0), 0.0));
 
-        return velocityVector;
+//        double x = Math.cos(currentAngle.times(-1).getValue(RADIAN)) * robotComponents.get(0,0)
+//                - Math.sin(currentAngle.times(-1).getValue(RADIAN)) * robotComponents.get(1, 0);
+//
+//        double y = Math.sin(currentAngle.times(-1).getValue(RADIAN)) * robotComponents.get(0,0)
+//                + Math.cos(currentAngle.times(-1).getValue(RADIAN)) * robotComponents.get(1, 0);
+
+//        Velocity x = new Velocity(Math.cos(currentAngle.getValue(RADIAN)) * -robotComponents.get(0, 0), METER_PER_SECOND);
+//        Velocity x = new Velocity(Math.cos(currentAngle.getValue(RADIAN)) * -robotComponents.get(0, 0), METER_PER_SECOND);
+        Velocity x = new Velocity(fieldCentric.get(0, 0), METER_PER_SECOND);
+//        Velocity y = new Velocity(Math.sin(currentAngle.getValue(RADIAN)) * robotComponents.get(1, 0), METER_PER_SECOND);
+//        Velocity y = new Velocity(Math.sin(currentAngle.getValue(RADIAN)) * -robotComponents.get(1, 0), METER_PER_SECOND);
+        Velocity y = new Velocity(fieldCentric.get(1, 0), METER_PER_SECOND);
+
+        SmartDashboard.putNumber("XVel", x.getValue(FEET_PER_SECOND));
+        SmartDashboard.putNumber("YVel", y.getValue(FEET_PER_SECOND));
+        SmartDashboard.putNumber("VelocityVectorAngle", Math.toDegrees(Math.atan2(y.getValue(FEET_PER_SECOND), x.getValue(FEET_PER_SECOND))));
+
+        return new Vector2d<Velocity>(x, y);
     }
 
     public void resetSwerveKinematics() {
@@ -121,8 +139,8 @@ public class SwerveKinematics {
         latestRobotPosition = new Point2d<Distance>(new Distance(0, INCH), new Distance(0, INCH));
     }
 
-    public Point2d<Distance> updateSwerveKinematics(SwerveModuleState[] currentVelocityState) {
-        Vector2d<Velocity> velocityVector = getSwerveKinematics(currentVelocityState);
+    public Point2d<Distance> updateSwerveKinematics(SwerveModuleState[] currentVelocityState, Angle driveTrainAngle) {
+        Vector2d<Velocity> velocityVector = getSwerveKinematics(currentVelocityState, driveTrainAngle);
 
         Time dt = new Time(System.currentTimeMillis() - lastTime, MILLISECONDS);
         Vector2d<Distance> result = (Vector2d<Distance>) velocityVector.times(dt);

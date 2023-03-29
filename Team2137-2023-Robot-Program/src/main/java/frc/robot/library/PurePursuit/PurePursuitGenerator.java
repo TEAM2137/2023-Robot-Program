@@ -19,6 +19,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.spline.PoseWithCurvature;
+import frc.robot.library.units.Time;
 import frc.robot.library.units.TranslationalUnits.Distance;
 import frc.robot.library.units.TranslationalUnits.Velocity;
 
@@ -27,6 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static frc.robot.library.units.Time.TimeUnits.SECONDS;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
 import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.FEET_PER_SECOND;
 
@@ -38,6 +40,7 @@ public class PurePursuitGenerator {
     public List<Distance> distanceList;
     private final Distance lookAheadDistance;
     private Distance totalDistance;
+    private double timeTotal;
 
     public PurePursuitGenerator(List<Translation2d> points, Distance _lookAheadDistance) {
         pointList = points;
@@ -46,22 +49,29 @@ public class PurePursuitGenerator {
 
     public PurePursuitGenerator(Distance _lookAheadDistance, List<PoseWithCurvature> pose, List<Velocity> velocities) {
         pointList = new ArrayList<>();
+        distanceList = new ArrayList<>();
 //        for(PoseWithCurvature a : pose) {
 //            pointList.add(a.poseMeters.getTranslation());
 //        }
 
         pointList.add(pose.get(0).poseMeters.getTranslation());
+        distanceList.add(new Distance(0, FOOT));
 
         double dist = 0;
         for(int i = 1; i < pose.size(); i++) {
             PoseWithCurvature last = pose.get(i - 1);
             PoseWithCurvature current = pose.get(i);
 
-            dist += last.poseMeters.getTranslation().getDistance(current.poseMeters.getTranslation());
+            double dDistance = last.poseMeters.getTranslation().getDistance(current.poseMeters.getTranslation());
+            dist += dDistance;
+
+            if(velocities.get(i).getValue(FEET_PER_SECOND) > 0.001)
+                timeTotal += (dDistance / velocities.get(i).getValue(FEET_PER_SECOND));
 
             pointList.add(pose.get(i).poseMeters.getTranslation());
             distanceList.add(new Distance(dist, FOOT));
         }
+//        timeTotal += 2;
         totalDistance = new Distance(dist, FOOT);
 
         velocityList = velocities;
@@ -204,6 +214,10 @@ public class PurePursuitGenerator {
 
     public Distance getTotalDistance() {
         return totalDistance;
+    }
+
+    public Time getTotalTime() {
+        return new Time(timeTotal, SECONDS);
     }
 
     public static class PurePursuitOutput {

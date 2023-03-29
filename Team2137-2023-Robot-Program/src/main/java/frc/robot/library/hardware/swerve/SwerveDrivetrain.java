@@ -188,7 +188,7 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         SwerveModuleState rfVelState = rightFrontModule.getSwerveModuleState();
         SwerveModuleState rbVelState = rightBackModule.getSwerveModuleState();
 
-        Point2d<Distance> dist = swerveKinematics.updateSwerveKinematics(new SwerveModuleState[]{lfVelState, lbVelState, rfVelState, rbVelState});
+        Point2d<Distance> dist = swerveKinematics.updateSwerveKinematics(new SwerveModuleState[]{lfVelState, lbVelState, rfVelState, rbVelState}, getAngle());
 
         SmartDashboard.putNumber("Dist X", dist.getX().getValue(FOOT));
         SmartDashboard.putNumber("Dist Y", dist.getY().getValue(FOOT));

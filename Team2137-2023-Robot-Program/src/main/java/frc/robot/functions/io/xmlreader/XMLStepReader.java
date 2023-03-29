@@ -20,6 +20,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.data.Step;
+import frc.robot.library.Constants;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -40,7 +41,7 @@ import java.util.*;
 public class XMLStepReader {
     private final File stepFile;
     private final FileLogger logger;
-    private final List<Step> steps = new ArrayList<>();
+    private final ArrayList<Step> steps = new ArrayList<>();
     private int currentStepCounter = -1;
     //private int currentSplinePrePullCounter = -1;
 
@@ -185,8 +186,14 @@ public class XMLStepReader {
             }
         }
 
-        return 0;
+        return -1;
     }
+
+//    public void insertStep(Step step) {
+//        step.changeStepState(Constants.StepState.STATE_INIT);
+//
+//        steps.add(currentStepCounter, step);
+//    }
 
     public boolean hasSteps() {
         return !(currentStepCounter == steps.size() - 1);

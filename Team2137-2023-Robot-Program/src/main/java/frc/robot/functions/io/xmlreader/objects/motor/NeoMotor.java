@@ -48,7 +48,6 @@ public class NeoMotor extends CANSparkMax implements Entity, SimpleMotorControl 
     private Distance distancePerRevolution;
 
     private static final int CountsPerRevolution = 1;
-
     public NeoMotor(Element element) {
         super(Integer.parseInt(Entity.getOrDefault(element, "ID", "0")), MotorType.kBrushless);
         savedElement = element;
@@ -208,7 +207,6 @@ public class NeoMotor extends CANSparkMax implements Entity, SimpleMotorControl 
         if(relativeEncoder != null) {
             return new Angle(relativeEncoder.getPosition() / getGearRatio() / getCountPerRevolution(), REVOLUTIONS);
         } else {
-            SmartDashboard.putNumber(getName() + "-TestOutput", getGearRatio());
             return new Angle(absoluteEncoder.getPosition() / getGearRatio() / getCountPerRevolution(), REVOLUTIONS);
         }
     }
