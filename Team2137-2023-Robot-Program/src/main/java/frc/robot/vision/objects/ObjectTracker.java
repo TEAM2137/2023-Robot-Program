@@ -205,6 +205,13 @@ public class ObjectTracker {
     }
 
     /**
+     * @return the x position of the closest cone to the robot, in pixels with 0 being the center of the camera's vision.
+     */
+    public synchronized double getClosestConeX() {
+        return getConePositions().get(0).x;
+    }
+
+    /**
      * @param index the cube to distance check
      * @return the distance of the specified cube, in inches.
      */
