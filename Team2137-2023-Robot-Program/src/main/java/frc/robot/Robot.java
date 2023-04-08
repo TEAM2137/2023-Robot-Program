@@ -25,6 +25,7 @@ import frc.robot.functions.io.xmlreader.data.Step;
 import frc.robot.library.Constants;
 import frc.robot.library.Gamepad;
 import frc.robot.library.OpMode;
+import frc.robot.vision.objects.ObjectTracker;
 
 import java.io.File;
 import java.time.format.DateTimeFormatter;
@@ -70,6 +71,8 @@ public class Robot extends TimedRobot {
 
   public static Gamepad primaryController = new Gamepad(0);
   public static Gamepad secondaryController = new Gamepad(1);
+
+  public static ObjectTracker mGameElementTracker;
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -145,6 +148,8 @@ public class Robot extends TimedRobot {
     });
 
     Robot.subSystemCommandList.put("Delay", this::delay);
+
+    mGameElementTracker = new ObjectTracker();
   }
 
   private Timer mDelayStepTimer;
@@ -185,6 +190,9 @@ public class Robot extends TimedRobot {
     for (EntityGroup subSystem : subSystemCallList) {
       subSystem.periodic();
     }
+
+
+    mGameElementTracker.update();
   }
 
   /** This function is called once each time the robot enters Disabled mode. */

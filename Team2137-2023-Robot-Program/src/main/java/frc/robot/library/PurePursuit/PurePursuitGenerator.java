@@ -189,7 +189,19 @@ public class PurePursuitGenerator {
 
         if(lookahead == null) {
             //System.out.printf("Could not find lookahead for: (%.4f, %.4f)\n", x, y);
-            return new PurePursuitInternalOutput(new Translation2d(x, y), new Velocity(0, FEET_PER_SECOND), new Distance(0, FOOT));
+            Translation2d current = new Translation2d(x, y);
+
+            double closestPointDistance = pointList.get(0).getDistance(current);
+            int closestPointIndex = 0;
+
+            for(int i = 1; i < pointList.size(); i++) {
+                if(pointList.get(i).getDistance(current) < closestPointDistance) {
+                    closestPointIndex = i;
+                }
+            }
+
+//            return new PurePursuitInternalOutput(pointList.get(closestPointIndex), new Velocity(4, FEET_PER_SECOND), new Distance(0, FOOT));
+            return new PurePursuitInternalOutput(new Translation2d(x, y), new Velocity(4, FEET_PER_SECOND), new Distance(0, FOOT));
         }
 
         if(startAndEnd == null)

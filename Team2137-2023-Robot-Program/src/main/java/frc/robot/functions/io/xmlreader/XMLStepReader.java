@@ -119,7 +119,8 @@ public class XMLStepReader {
     }
 
     public boolean isFirstDriveStep() {
-        return getLastDriveStep() == null;
+        return getLastDriveStep() == null && isDriveStep(steps.get(currentStepCounter).getCommand());
+//        return getLastDriveStep() == null;
     }
 
     public Step getLastDriveStep() {

@@ -2,6 +2,7 @@ package frc.robot.vision.objects;
 
 import java.util.ArrayList;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 
@@ -211,6 +212,17 @@ public class ObjectTracker {
         return getConePositions().get(0).x;
     }
 
+    public synchronized double getClosestConeXPercent()  {
+        try {
+            if (getConePositions() != null && getConePositions().size() > 0)
+                return (getConePositions().get(0).x - 150.0) / 150.0;
+            else
+                return 0;
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
     /**
      * @param index the cube to distance check
      * @return the distance of the specified cube, in inches.
@@ -274,20 +286,24 @@ public class ObjectTracker {
      * Gets the data from the networktables. Should be run every time camera data is needed.
      */
     public synchronized void update() {
-        inst = NetworkTableInstance.getDefault();
-        cubeTable = inst.getTable("RPI").getSubTable(subTable).getSubTable("cubes");
-        cubeTable = inst.getTable("RPI").getSubTable(subTable).getSubTable("cones");
+        SmartDashboard.putNumber("ConeTX", getClosestConeXPercent());
 
-        cubeXPositions = cubeTable.getEntry("xPositions").getDoubleArray(new double[10]);
-        cubeYPositions = cubeTable.getEntry("yPositions").getDoubleArray(new double[10]);
-        cubeWidths = cubeTable.getEntry("widths").getDoubleArray(new double[10]);
-        cubeHeights = cubeTable.getEntry("heights").getDoubleArray(new double[10]);
-        amountOfCubes = (int) cubeTable.getEntry("amountDetected").getInteger((long)0);
+        try {
+            inst = NetworkTableInstance.getDefault();
+            cubeTable = inst.getTable("RPI").getSubTable(subTable).getSubTable("cubes");
+            coneTable = inst.getTable("RPI").getSubTable(subTable).getSubTable("cones");
 
-        coneXPositions = coneTable.getEntry("xPositions").getDoubleArray(new double[10]);
-        coneYPositions = coneTable.getEntry("yPositions").getDoubleArray(new double[10]);
-        coneWidths = coneTable.getEntry("widths").getDoubleArray(new double[10]);
-        coneHeights = coneTable.getEntry("heights").getDoubleArray(new double[10]);
-        amountOfCones = (int) coneTable.getEntry("amountDetected").getInteger((long)0);
+            cubeXPositions = cubeTable.getEntry("xPositions").getDoubleArray(new double[10]);
+            cubeYPositions = cubeTable.getEntry("yPositions").getDoubleArray(new double[10]);
+            cubeWidths = cubeTable.getEntry("widths").getDoubleArray(new double[10]);
+            cubeHeights = cubeTable.getEntry("heights").getDoubleArray(new double[10]);
+            amountOfCubes = (int) cubeTable.getEntry("amountDetected").getInteger((long) 0);
+
+            coneXPositions = coneTable.getEntry("xPositions").getDoubleArray(new double[10]);
+            coneYPositions = coneTable.getEntry("yPositions").getDoubleArray(new double[10]);
+            coneWidths = coneTable.getEntry("widths").getDoubleArray(new double[10]);
+            coneHeights = coneTable.getEntry("heights").getDoubleArray(new double[10]);
+            amountOfCones = (int) coneTable.getEntry("amountDetected").getInteger((long) 0);
+        } catch (Exception e) {}
     }
 }

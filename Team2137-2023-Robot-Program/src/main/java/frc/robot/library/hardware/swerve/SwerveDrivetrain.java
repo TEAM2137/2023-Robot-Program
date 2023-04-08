@@ -76,10 +76,10 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
     private double mInitialPitch = 0;
 
-    private PID mSplineThetaPIDValues;
     private PID mThetaPIDValues;
 
-    private PIDController mSplineThetaController;
+    private PIDController mSeekGameElementPIDController;
+    private PID mSeekGameElementPIDValues;
     private PIDController mThetaController;
 
     public SwerveKinematics swerveKinematics;
@@ -122,9 +122,9 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
             mThetaPIDValues = thetaLevel;
         }
 
-        PID splineThetaController = (PID) getEntity("SplineThetaController");
-        if(splineThetaController != null) {
-            mSplineThetaPIDValues = splineThetaController;
+        mSeekGameElementPIDValues = (PID) getEntity("SeekThetaController");
+        if(mSeekGameElementPIDValues != null) {
+            mSeekGameElementPIDController = new PIDController(mSeekGameElementPIDValues.getP(), mSeekGameElementPIDValues.getI(), mSeekGameElementPIDValues.getD());
         }
 
         Number velocityVal = (Number) getEntity("MaxVelocity");
@@ -153,7 +153,7 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         pigeonIMU = new Pigeon2(gyroObj.getID());
         pigeonIMU.configFactoryDefault();
         pigeonIMU.configMountPose(gyroObj.getOffset(), 0, 0);
-        mInitialPitch = pigeonIMU.getPitch();
+        mInitialPitch = pigeonIMU.getRoll();
 
         this.addSubsystemCommand("rawDrive", this::rawDrive);
         this.addSubsystemCommand("SetDrivetrainVelocity", this::setDrivetrainVelocity);
@@ -242,10 +242,12 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
                 mAutoLevelPIDController.setSetpoint(0);
 
                 mAutoLevelSustainedTargetTimer = new Timer();
+                mAutoLevelSustainedTargetTimer.stop();
+
                 mAutoLevelTimerStarted = false;
                 break;
             case STATE_RUNNING:
-                Angle angle = new Angle(pigeonIMU.getPitch() - mInitialPitch, DEGREE);
+                Angle angle = new Angle(-(pigeonIMU.getRoll() - mInitialPitch), DEGREE);
                 double output = mAutoLevelPIDController.calculate(-angle.getValue(DEGREE));
 
                 SwerveModuleState[] swerveModuleState = new SwerveModuleState[]{
@@ -261,7 +263,7 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
                 if(Math.abs(angle.getValue(DEGREE)) < 2) {
                     if (!mAutoLevelTimerStarted) {
                         mAutoLevelSustainedTargetTimer.reset();
-                        mAutoLevelSustainedTargetTimer.start();
+//                        mAutoLevelSustainedTargetTimer.start();
                         mAutoLevelTimerStarted = true;
                     } else if (mAutoLevelSustainedTargetTimer.hasElapsed(3)) {
                         mAutoLevelSustainedTargetTimer.stop();
@@ -296,30 +298,72 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         switch(step.getStepState()) {
             case STATE_INIT:
 
-                SwerveModuleState[] moduleStates = calculateSwerveMotorSpeedsFieldCentric(new Number(0), new Number(-step.getSpeed()), new AngularVelocity(0, DEGREE_PER_SECOND), new Number(1));
+                SwerveModuleState[] moduleStates = calculateSwerveMotorSpeedsFieldCentric(new Number(-step.getSpeed()), new Number(0), new AngularVelocity(0, DEGREE_PER_SECOND), new Number(1));
                 this.setSwerveModuleStates(moduleStates);
 
                 step.changeStepState(Constants.StepState.STATE_RUNNING);
                 break;
             case STATE_RUNNING:
-                Angle angle = new Angle(pigeonIMU.getPitch() - mInitialPitch, DEGREE);
+                Angle angle = new Angle(-(pigeonIMU.getRoll() - mInitialPitch), DEGREE);
 
                 if(angle.getValue(DEGREE) < -14.0 && !mDriveOnChargePeakFlag) { //&& mAutoLevelAtTarget) {
                     mDriveOnChargePeakFlag = true;
 
                     if(step.hasValue("parm1") && step.getParm(1) != 0) {
-                        SwerveModuleState[] slowDownState = calculateSwerveMotorSpeedsFieldCentric(new Number(0), new Number(-step.getParm(1)), new AngularVelocity(0, DEGREE_PER_SECOND), new Number(1));
+                        SwerveModuleState[] slowDownState = calculateSwerveMotorSpeedsFieldCentric(new Number(-step.getParm(1)), new Number(0), new AngularVelocity(0, DEGREE_PER_SECOND), new Number(1));
                         this.setSwerveModuleStates(slowDownState);
                     }
                 }
 
-                if(mDriveOnChargePeakFlag && angle.getValue(DEGREE) > -10) {
+                if(mDriveOnChargePeakFlag && angle.getValue(DEGREE) > -8) {
                     this.setSpeed(0);
                     xLock();
 
                     step.changeStepState(Constants.StepState.STATE_FINISH);
                 }
 
+                break;
+        }
+    }
+
+    private int mDriveOverChargeStationStepState = 0;
+    private Angle mDriveOverChargeStationLastAngle; //High peak, Low peak, High peak, Low peak
+    
+    @InstantCommand
+    public void DriveOverChargeStep(Step step) {
+        switch(step.getStepState()) {
+            case STATE_INIT:
+
+                SwerveModuleState[] moduleStates = calculateSwerveMotorSpeedsFieldCentric(new Number(-step.getSpeed()), new Number(0), new AngularVelocity(0, DEGREE_PER_SECOND), new Number(1));
+                this.setSwerveModuleStates(moduleStates);
+
+                mDriveOverChargeStationStepState = 0;
+                mDriveOverChargeStationLastAngle = new Angle(-(pigeonIMU.getRoll() - mInitialPitch), DEGREE);
+
+                step.changeStepState(Constants.StepState.STATE_RUNNING);
+                break;
+            case STATE_RUNNING:
+                Angle currentAngle = new Angle(-(pigeonIMU.getRoll() - mInitialPitch), DEGREE);
+
+                if(currentAngle.getValue(DEGREE) < -14.0 && mDriveOverChargeStationStepState == 0) {
+                    mDriveOverChargeStationStepState++;
+                }
+
+                if(currentAngle.getValue(DEGREE) > 4.0 && mDriveOverChargeStationLastAngle.getValue(DEGREE) < -4.0 && mDriveOverChargeStationStepState == 1) {
+                    mDriveOverChargeStationStepState++;
+                }
+
+                if(currentAngle.getValue(DEGREE) < 14.0 && mDriveOverChargeStationStepState == 2) {
+                    mDriveOverChargeStationStepState++;
+                }
+
+                if(Math.abs(currentAngle.getValue(DEGREE)) < 2.0 && mDriveOverChargeStationStepState == 3) {
+                    this.setSpeed(0);
+
+                    step.changeStepState(Constants.StepState.STATE_FINISH);
+                }
+
+                mDriveOverChargeStationLastAngle = currentAngle;
                 break;
         }
     }
@@ -389,7 +433,7 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
             if(step.getParm(1) > 0.5) {
                 step.changeStepState(Constants.StepState.STATE_RUNNING);
 
-                mThetaController.setSetpoint(0);
+                mSeekGameElementPIDController.setSetpoint(0);
             }
         }
 
@@ -406,7 +450,7 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
             Angle robotAngle = getAngle();
 
-            double omegaVelocity = -mThetaController.calculate(robotAngle.getValue(DEGREE));;
+            double omegaVelocity = -mSeekGameElementPIDController.calculate(robotAngle.getValue(DEGREE));;
             double xVelocity;
             double YVelocity;
 
@@ -427,6 +471,7 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
     @Override
     public void periodic() {
+        SmartDashboard.putNumber("Roll Drivetrain", -(pigeonIMU.getRoll() - mInitialPitch));
     }
 
     @Override
@@ -447,6 +492,10 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
         return swerveKinematics.getSwerveModuleState(x, y, w, maximum);
     }
 
+    public SwerveModuleState[] calculateSwerveMotorSpeeds(Unit<?, ? extends UnitEnum> xMag, Unit<?, ? extends UnitEnum> yMag, AngleUnit<?, ? extends UnitEnum> rMag, Unit<?, ? extends UnitEnum> maximum) {
+        return swerveKinematics.getSwerveModuleState(xMag, yMag, rMag, maximum);
+    }
+
     public SwerveModuleState[] calculateSwerveMotorSpeedsFieldCentric(Unit<?, ? extends UnitEnum> xMag, Unit<?, ? extends UnitEnum> yMag, AngleUnit<?, ? extends UnitEnum> rMag) {
         if(xMag instanceof Velocity)
             return calculateSwerveMotorSpeedsFieldCentric(xMag, yMag, rMag, maxDrivetrainVelocity);
@@ -454,6 +503,15 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
             return calculateSwerveMotorSpeedsFieldCentric(xMag, yMag, rMag, new Number(1));
 
         return calculateSwerveMotorSpeedsFieldCentric(xMag, yMag, rMag, new Number(Double.POSITIVE_INFINITY));
+    }
+
+    public SwerveModuleState[] calculateSwerveMotorSpeeds(Unit<?, ? extends UnitEnum> xMag, Unit<?, ? extends UnitEnum> yMag, AngleUnit<?, ? extends UnitEnum> rMag) {
+        if(xMag instanceof Velocity)
+            return calculateSwerveMotorSpeeds(xMag, yMag, rMag, maxDrivetrainVelocity);
+        if(xMag instanceof Number)
+            return calculateSwerveMotorSpeeds(xMag, yMag, rMag, new Number(1));
+
+        return calculateSwerveMotorSpeeds(xMag, yMag, rMag, new Number(Double.POSITIVE_INFINITY));
     }
 
     public void setSwerveModuleStates(SwerveModuleState[] swerveModuleStates) {
@@ -517,6 +575,10 @@ public class SwerveDrivetrain extends EntityGroup implements DriveTrain {
 
     public Motor.MotorTypes getDrivetrainType() {
         return driveTrainType;
+    }
+
+    public PID getSeekGameElementPIDValues() {
+        return mSeekGameElementPIDValues;
     }
 
 }

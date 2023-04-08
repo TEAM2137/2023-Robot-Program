@@ -227,7 +227,7 @@ public class StringElevator extends EntityGroup implements Elevator {
             default:
                 if(!rawSpeedControl && mGoalPosition != null) {
                     double desiredSpeed = pidController.calculate(mCurrentPosition.getValue(INCH));
-                    setSpeed(desiredSpeed + ((desiredSpeed > 0) ? mGravityGain.getValue() : 0));
+                    setSpeed(desiredSpeed); //+ mGravityGain.getValue());
                 }
                 break;
         }

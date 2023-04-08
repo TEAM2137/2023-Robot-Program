@@ -89,6 +89,8 @@ public class EndEffector extends EntityGroup {
 //        pitchMotor.configureReverseLimit(new Angle(158, DEGREE));
 //        pitchMotor.configureForwardLimit(new Angle(0, DEGREE));
 
+        mLastManualControlTime.start();
+
         autoCloseMapping = (Mapping) getEntity("AutoCloseSensorMap");
 
         this.addSubsystemCommand(getName() + "-SetRawClaw", this::setRawClaw);
