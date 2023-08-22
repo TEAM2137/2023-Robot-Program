@@ -245,7 +245,7 @@
                 <ID>42</ID>
                 <Type>FALCON</Type>
                 <Inverted>false</Inverted>
-                <GearRatio>9</GearRatio>
+                <GearRatio>16</GearRatio>
                 <CurrentLimit>1000</CurrentLimit>
                 <RampRate>0</RampRate>
             </Motor>
