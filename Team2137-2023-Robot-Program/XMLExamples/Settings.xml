@@ -231,7 +231,7 @@
                 <ID>43</ID>
                 <Type>NEO</Type>
                 <Inverted>false</Inverted>
-                <GearRatio>9.0</GearRatio>
+                <GearRatio>16.0</GearRatio>
                 <CurrentLimit>60</CurrentLimit>
                 <PID>
                     <P>0.10</P>
@@ -368,22 +368,36 @@
         </Binding>
         <!--endregion-->
 
-        <!--region Manual Elevator Control -->
         <Binding>
-            <Map controller="1" id="LeftY" value="YValue" deadband="0.2"/>
-            <Map controller="1" id="LeftX" value="XValue" deadband="0.2"/>
+            <Map controller="1" id="DPAD-RIGHT" value="gyro"/>
 
             <Step>
                 <command>VerticalElevator-SetRawSpeed</command>
                 <timeout>1000</timeout>
-                <speed><YValue/></speed> <!-- Speed Value -1 to 1 -->
+                <speed>1</speed> <!-- Speed Value -1 to 1 -->
                 <parallel>True</parallel>
             </Step>
+        </Binding>
+
+        <Binding>
+            <Map controller="0" id="DPAD-LEFT" value="gyro"/>
+
+            <Step>
+                <command>VerticalElevator-SetRawSpeed</command>
+                <timeout>1000</timeout>
+                <speed>-1</speed> <!-- Speed Value -1 to 1 -->
+                <parallel>True</parallel>
+            </Step>
+        </Binding>
+
+        <!--region Manual Elevator Control -->
+        <Binding>
+            <Map controller="1" id="LeftY" value="YValue" deadband="0.2"/>
 
             <Step>
                 <command>HorizontalElevator-SetRawSpeed</command>
                 <timeout>1000</timeout>
-                <speed><XValue/></speed> <!-- Speed Value -1 to 1 -->
+                <speed><YValue/></speed> <!-- Speed Value -1 to 1 -->
                 <parallel>True</parallel>
             </Step>
         </Binding>
