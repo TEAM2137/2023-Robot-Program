@@ -1,350 +1,702 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <Robot>
     <Hardware>
-        <DriveTrain type="SWERVE" name="Swerve Falcon">
+        <DriveTrain name="Swerve Falcon" type="SWERVE">
             <Gyro>
                 <Name>Pigeon</Name>
-                <ID>4</ID>
+                <ID>5</ID>
                 <Type>PIGEON</Type>
                 <Inverted>false</Inverted>
-                <Offset>0</Offset>
+                <Offset>-90.0</Offset>
             </Gyro>
 
-            <SwerveModule type="SIMULATION" name="LeftFront">
+            <SwerveModule name="LeftFront" type="Falcon">
                 <Motor>
                     <Note>This is the Left Front Turn Motor on the Swerve Module</Note>
                     <Name>Turn Motor</Name>
                     <ID>11</ID>
+                    <CANLoop>Drivetrain</CANLoop>
                     <Type>FALCON</Type>
-                    <Inverted>false</Inverted>
-                    <GearRatio>1</GearRatio>
+                    <Inverted>true</Inverted>
+                    <GearRatio>21.4285714</GearRatio>
                     <CurrentLimit>60</CurrentLimit>
-                    <RampRate>0</RampRate>
+                    <RampRate>0.0</RampRate>
                     <PID Slot="0">
-                        <P>0.2</P>
+                        <P>0.3</P>
                         <I>0.0</I>
                         <D>0.1</D>
-                        <FF>0.75</FF>
                     </PID>
                 </Motor>
 
                 <Motor>
                     <Name>Drive Motor</Name>
-                    <ID>10</ID>
+                    <ID>9</ID>
+                    <CANLoop>Drivetrain</CANLoop>
                     <Type>FALCON</Type>
                     <Inverted>false</Inverted>
-                    <GearRatio>1</GearRatio>
+                    <GearRatio>6.75</GearRatio>
                     <CurrentLimit>60</CurrentLimit>
-                    <RampRate>0</RampRate>
+                    <RampRate>0.0</RampRate>
                     <PID Slot="0">
-                        <P>0.10237</P>
+                        <P>0.1</P>
                         <I>0.0</I>
                         <D>0.0</D>
 
-                        <S>0.64728</S>
-                        <V>2.2607</V>
-                        <A>0.15911</A>
+                        <S>0.5</S>
+                        <V>2.15</V>
+                        <A>0.0</A>
                     </PID>
                 </Motor>
 
                 <Encoder>
                     <Name>Turn Encoder</Name>
                     <ID>12</ID>
+                    <CANLoop>Drivetrain</CANLoop>
                     <Type>CTRE_CAN_ABS</Type>
                     <Inverted>false</Inverted>
-                    <Offset>-199.2507</Offset>
+                    <Offset>-92.02</Offset>
                 </Encoder>
             </SwerveModule>
 
-            <SwerveModule type="SIMULATION" name="LeftBack">
+            <SwerveModule name="LeftBack" type="Falcon">
                 <Motor>
                     <Note>This is the Left Front Back Motor on the Swerve Module</Note>
                     <Name>Turn Motor</Name>
                     <ID>21</ID>
+                    <CANLoop>Drivetrain</CANLoop>
                     <Type>FALCON</Type>
-                    <Inverted>false</Inverted>
-                    <GearRatio>1</GearRatio>
+                    <Inverted>true</Inverted>
+                    <GearRatio>21.4285714</GearRatio>
                     <CurrentLimit>60</CurrentLimit>
-                    <RampRate>0</RampRate>
+                    <RampRate>0.0</RampRate>
                     <PID Slot="0">
-                        <P>0.2</P>
+                        <P>0.3</P>
                         <I>0.0</I>
                         <D>0.1</D>
-                        <FF>0.75</FF>
                     </PID>
                 </Motor>
 
                 <Motor>
                     <Name>Drive Motor</Name>
                     <ID>20</ID>
+                    <CANLoop>Drivetrain</CANLoop>
                     <Type>FALCON</Type>
                     <Inverted>false</Inverted>
-                    <GearRatio>1</GearRatio>
+                    <GearRatio>6.75</GearRatio>
                     <CurrentLimit>60</CurrentLimit>
-                    <RampRate>0</RampRate>
+                    <RampRate>0.0</RampRate>
                     <PID Slot="0">
-                        <P>0.10237</P>
+                        <P>0.1</P>
                         <I>0.0</I>
                         <D>0.0</D>
 
-                        <S>0.64728</S>
-                        <V>2.2607</V>
-                        <A>0.15911</A>
+                        <S>0.5</S>
+                        <V>2.15</V>
+                        <A>0.0</A>
                     </PID>
                 </Motor>
 
                 <Encoder>
                     <Name>Turn Encoder</Name>
                     <ID>22</ID>
+                    <CANLoop>Drivetrain</CANLoop>
                     <Type>CTRE_CAN_ABS</Type>
                     <Inverted>false</Inverted>
-                    <Offset>-152.6001</Offset>
+                    <Offset>-96.94</Offset>
                 </Encoder>
             </SwerveModule>
 
-            <SwerveModule type="SIMULATION" name="RightFront">
+            <SwerveModule name="RightFront" type="Falcon">
                 <Motor>
                     <Note>This is the Right Front Motor on the Swerve Module</Note>
                     <Name>Turn Motor</Name>
                     <ID>16</ID>
+                    <CANLoop>Drivetrain</CANLoop>
                     <Type>FALCON</Type>
-                    <Inverted>false</Inverted>
-                    <GearRatio>1</GearRatio>
+                    <Inverted>true</Inverted>
+                    <GearRatio>21.4285714</GearRatio>
                     <CurrentLimit>60</CurrentLimit>
-                    <RampRate>0</RampRate>
+                    <RampRate>0.0</RampRate>
                     <PID Slot="0">
-                        <P>0.2</P>
+                        <P>0.3</P>
                         <I>0.0</I>
                         <D>0.1</D>
-                        <FF>0.75</FF>
                     </PID>
                 </Motor>
 
                 <Motor>
                     <Name>Drive Motor</Name>
                     <ID>15</ID>
+                    <CANLoop>Drivetrain</CANLoop>
                     <Type>FALCON</Type>
-                    <Inverted>false</Inverted>
-                    <GearRatio>1</GearRatio>
+                    <Inverted>true</Inverted>
+                    <GearRatio>6.75</GearRatio>
                     <CurrentLimit>60</CurrentLimit>
-                    <RampRate>0</RampRate>
+                    <RampRate>0.0</RampRate>
                     <PID Slot="0">
-                        <P>0.10237</P>
+                        <P>0.1</P>
                         <I>0.0</I>
                         <D>0.0</D>
 
-                        <S>0.64728</S>
-                        <V>2.2607</V>
-                        <A>0.15911</A>
+                        <S>0.5</S>
+                        <V>2.15</V>
+                        <A>0.0</A>
                     </PID>
                 </Motor>
 
                 <Encoder>
                     <Name>Turn Encoder</Name>
                     <ID>17</ID>
+                    <CANLoop>Drivetrain</CANLoop>
                     <Type>CTRE_CAN_ABS</Type>
                     <Inverted>false</Inverted>
-                    <Offset>-169.1894</Offset>
+                    <Offset>50.888672</Offset>
                 </Encoder>
             </SwerveModule>
 
-            <SwerveModule type="SIMULATION" name="RightBack">
+            <SwerveModule name="RightBack" type="Falcon">
                 <Motor>
                     <Note>This is the Right Back Back Motor on the Swerve Module</Note>
                     <Name>Turn Motor</Name>
                     <ID>26</ID>
+                    <CANLoop>Drivetrain</CANLoop>
                     <Type>FALCON</Type>
-                    <Inverted>false</Inverted>
-                    <GearRatio>1</GearRatio>
+                    <Inverted>true</Inverted>
+                    <GearRatio>21.4285714</GearRatio>
                     <CurrentLimit>60</CurrentLimit>
-                    <RampRate>0</RampRate>
+                    <RampRate>0.0</RampRate>
                     <PID Slot="0">
-                        <P>0.2</P>
+                        <P>0.3</P>
                         <I>0.0</I>
                         <D>0.1</D>
-                        <FF>0.75</FF>
                     </PID>
                 </Motor>
 
                 <Motor>
                     <Name>Drive Motor</Name>
                     <ID>25</ID>
+                    <CANLoop>Drivetrain</CANLoop>
                     <Type>FALCON</Type>
-                    <Inverted>false</Inverted>
-                    <GearRatio>1</GearRatio>
+                    <Inverted>true</Inverted>
+                    <GearRatio>6.75</GearRatio>
                     <CurrentLimit>60</CurrentLimit>
-                    <RampRate>0</RampRate>
+                    <RampRate>0.0</RampRate>
                     <PID Slot="0">
-                        <P>0.10237</P>
+                        <P>0.1</P>
                         <I>0.0</I>
                         <D>0.0</D>
 
-                        <S>0.64728</S>
-                        <V>2.2607</V>
-                        <A>0.15911</A>
+                        <S>0.5</S>
+                        <V>2.15</V>
+                        <A>0.0</A>
                     </PID>
                 </Motor>
 
                 <Encoder>
                     <Name>Turn Encoder</Name>
+                    <CANLoop>Drivetrain</CANLoop>
                     <ID>27</ID>
                     <Type>CTRE_CAN_ABS</Type>
                     <Inverted>false</Inverted>
-                    <Offset>-21.6156</Offset>
+                    <Offset>-137.636719</Offset>
                 </Encoder>
             </SwerveModule>
 
-            <Binding>
-                <Map controller="0" id="LeftYAxis" value="YValue"/>
-                <Map controller="0" id="LeftXAxis" value="XValue"/>
-                <Map controller="0" id="RightXAxis" value="RValue"/>
+            <PID name="AutoLevel">
+                <P>0.2</P>
+                <I>0</I>
+                <D>0</D>
+            </PID>
 
-                <Step>
-                    <command>rawDrive</command>
-                    <timeout>1000</timeout>
-                    <speed>1.0</speed>
-                    <xdistance><XValue/></xdistance>
-                    <ydistance><YValue/></ydistance>
-                    <parallel>False</parallel>
-                    <parm1><RValue/></parm1>
-                    <parm2>0</parm2>
-                    <parm3>0</parm3>
-                    <parm4>0</parm4>
-                    <parm5>0</parm5>
-                    <parm6>0</parm6>
-                    <parm7>0</parm7>
-                </Step>
-            </Binding>
+            <PID name="ThetaController">
+                <P>1</P>
+                <I>0</I>
+                <D>0.05</D>
+            </PID>
+
+            <PID name="SeekThetaController">
+                <P>0.1</P>
+                <I>0</I>
+                <D>0.005</D>
+            </PID>
         </DriveTrain>
 
-        <Elevator type="String" name="VerticalElevator">
-            <Motor>
+        <Elevator type="String" name="HorizontalElevator">
+            <Distance unit="in" name="SpoolDiameter">0.9</Distance>
+            <Distance unit="in" name="MaxTravel">32</Distance>
+            <Map type="DIO" id="8" value="HomingMap" inverted="true" name="HomingMap"/>
+
+            <Motor type="NEO">
                 <Name>Lift Motor 1</Name>
-                <ID>40</ID>
+                <ID>43</ID>
                 <Type>NEO</Type>
                 <Inverted>false</Inverted>
-                <GearRatio>9</GearRatio>
-                <CurrentLimit>1000</CurrentLimit>
-                <RampRate>0</RampRate>
+                <GearRatio>9.0</GearRatio>
+                <CurrentLimit>60</CurrentLimit>
+                <PID>
+                    <P>0.10</P>
+                    <I>0.0</I>
+                    <D>0.0</D>
+                    <FF>0.0</FF>
+                </PID>
             </Motor>
 
-            <Motor>
-                <Name>Lift Motor 2</Name>
+            <DoubleSolenoid>
+                <Name>Horizontal-Ratchet</Name>
+                <IDF>10</IDF>
+                <IDR>9</IDR>
+            </DoubleSolenoid>
+        </Elevator>
+
+        <Elevator type="String" name="VerticalElevator">
+            <Distance unit="in" name="SpoolDiameter">0.9</Distance>
+            <Distance unit="in" name="MaxTravel">17</Distance>
+            <Number name="RatchetFlip">1.0</Number>
+            <Number name="GravityGain">0</Number>
+            <Map type="DIO" id="9" value="HomingMap" inverted="true" name="HomingMap"/>
+            <Map type="DIO" id="6" value="ForwardLimitMap" inverted="false" name="ForwardLimitMap"/>
+
+            <Motor type="NEO">
+                <Name>Lift Motor 1</Name>
                 <ID>41</ID>
                 <Type>NEO</Type>
-                <Inverted>false</Inverted>
-                <GearRatio>9</GearRatio>
-                <CurrentLimit>1000</CurrentLimit>
-                <RampRate>0</RampRate>
+                <Inverted>true</Inverted>
+                <GearRatio>9.0</GearRatio>
+                <CurrentLimit>50</CurrentLimit>
+                <PID>
+                    <P>0.15</P>
+                    <I>0.0</I>
+                    <D>0.00</D>
+                    <FF>0.0</FF>
+                </PID>
             </Motor>
-        </Elevator>
 
-        <Elevator type="String" name="HorizontalElevator">
-            <Motor>
-                <Name>Lift Motor 1</Name>
+            <Motor type="NEO">
+                <Name>Lift Motor 2</Name>
                 <ID>42</ID>
-                <Type>FALCON</Type>
+                <Type>NEO</Type>
                 <Inverted>false</Inverted>
-                <GearRatio>16</GearRatio>
-                <CurrentLimit>1000</CurrentLimit>
-                <RampRate>0</RampRate>
+                <GearRatio>9.0</GearRatio>
+                <CurrentLimit>50</CurrentLimit>
+                <PID>
+                    <P>0.15</P>
+                    <I>0.0</I>
+                    <D>0.0</D>
+                    <FF>0.0</FF>
+                </PID>
             </Motor>
+
+            <DoubleSolenoid>
+                <Name>Vertical-Ratchet</Name>
+                <IDF>11</IDF>
+                <IDR>12</IDR>
+            </DoubleSolenoid>
         </Elevator>
 
+        <Claw name="Claw">
+            <Map type="DIO" id="7" value="AutoCloseSensorMap" inverted="true" name="AutoCloseSensorMap"/>
+
+            <Motor type="NEO">
+                <Name>WristMotor</Name>
+                <ID>45</ID>
+                <Type>NEO</Type>
+                <Inverted>true</Inverted>
+                <GearRatio>19.125</GearRatio>
+                <CurrentLimit>60</CurrentLimit>
+                <RampRate>1</RampRate>
+                <PID>
+                    <P>3.5</P> <Note>Was 0.75</Note>
+                    <I>0.0</I>
+                    <D>0.0</D>
+                    <FF>0.06</FF>
+                </PID>
+
+                <Encoder>
+                    <Name>Bore Encoder</Name>
+                    <Absolute>true</Absolute>
+                    <Inverted>false</Inverted>
+                    <Type>REV_BORE_ABS</Type>
+                    <Offset>142.5</Offset> <!--232.5-->
+                </Encoder>
+            </Motor>
+
+            <DoubleSolenoid>
+                <Name>JawSolenoid</Name>
+                <IDF>7</IDF>
+                <IDR>8</IDR>
+            </DoubleSolenoid>
+        </Claw>
+
+        <!--region Driving Controls -->
         <Binding>
-            <Map controller="1" id="YButton" value="YButton"/>
+            <Map controller="0" id="LeftY" value="YValue"/>
+            <Map controller="0" id="LeftX" value="XValue"/>
+            <Map controller="0" id="RightX" value="RValue"/>
+            <Map controller="0" id="LeftBumper" value="Slowmo" doublevaluetrue="0.25" doublevaluefalse="1"/>
 
             <Step>
-                <command>VerticalElevator-SetPosition</command>
-                <timeout>10</timeout>
+                <command>rawDrive</command>
+                <timeout>1000</timeout>
                 <speed>1.0</speed>
-                <xdistance>0</xdistance>
-                <ydistance>0</ydistance>
-                <parallel>False</parallel>
-                <parm1>12</parm1> <Note>Value in Inches</Note>
-                <parm2>0</parm2>
-                <parm3>0</parm3>
-                <parm4>0</parm4>
-                <parm5>0</parm5>
-                <parm6>0</parm6>
-                <parm7>0</parm7>
-            </Step>
-
-            <Step>
-                <command>HorizontalElevator-SetPosition</command>
-                <timeout>10</timeout>
-                <speed>1.0</speed>
-                <xdistance>0</xdistance>
-                <ydistance>0</ydistance>
-                <parallel>False</parallel>
-                <parm1>24</parm1> <Note>Value in Inches</Note>
-                <parm2>0</parm2>
-                <parm3>0</parm3>
-                <parm4>0</parm4>
-                <parm5>0</parm5>
-                <parm6>0</parm6>
-                <parm7>0</parm7>
+                <xdistance><YValue/></xdistance>
+                <ydistance><XValue/></ydistance>
+                <parallel>True</parallel>
+                <parm1><RValue/></parm1>
+                <parm2><Slowmo/></parm2>
             </Step>
         </Binding>
 
-        <Shooter>
-            <Motor>
-                <Name>FlywheelMotor1</Name>
-                <ID>42</ID>
-                <Type>FALCON</Type>
-                <Inverted>false</Inverted>
-                <GearRatio>1</GearRatio>
-                <CurrentLimit>60</CurrentLimit>
-                <RampRate>2</RampRate>
-                <PID>
-                    <P>5.0</P>
-                    <I>0.0</I>
-                    <D>0.55</D>
-                    <S>0.4</S>
-                    <V>0.106</V>
-                    <A>0.0225</A>
-                </PID>
-            </Motor>
+        <Binding>
+            <Map controller="0" id="DPAD-DOWN" value="gyro"/>
 
-            <Motor>
-                <Name>FlywheelMotor2</Name>
-                <ID>43</ID>
-                <Type>FALCON</Type>
-                <Inverted>true</Inverted>
-                <GearRatio>1</GearRatio>
-                <CurrentLimit>60</CurrentLimit>
-                <RampRate>2</RampRate>
-            </Motor>
+            <Step>
+                <command>GyroReset</command>
+                <timeout>1000</timeout>
+                <parallel>True</parallel>
+            </Step>
+        </Binding>
 
-            <Motor>
-                <Name>PreRollerMotor</Name>
-                <ID>44</ID>
-                <Type>NEO550</Type>
-                <Inverted>true</Inverted>
-                <GearRatio>1</GearRatio>
-                <CurrentLimit>35</CurrentLimit>
-                <RampRate>0</RampRate>
-            </Motor>
+        <Binding>
+            <Map controller="0" id="XButton" value="DriverXLock"/>
 
-            <Motor>
-                <Name>HoodMotor</Name>
-                <ID>41</ID>
-                <Type>NEO550</Type>
-                <Inverted>false</Inverted>
-                <GearRatio>1.828571429</GearRatio>
-                <CurrentLimit>35</CurrentLimit>
-                <RampRate>2</RampRate>
-                <PID>
-                    <P>0.03</P>
-                    <I>0.0</I>
-                    <D>0.0</D>
-                </PID>
-            </Motor>
-        </Shooter>
+            <Step>
+                <command>xLock</command>
+                <timeout>1000</timeout>
+                <speed>0</speed>
+                <parallel>False</parallel>
+            </Step>
+        </Binding>
+        <!--endregion-->
+
+        <!--region Manual Elevator Control -->
+        <Binding>
+            <Map controller="1" id="LeftY" value="YValue" deadband="0.2"/>
+            <Map controller="1" id="LeftX" value="XValue" deadband="0.2"/>
+
+            <Step>
+                <command>VerticalElevator-SetRawSpeed</command>
+                <timeout>1000</timeout>
+                <speed><YValue/></speed> <!-- Speed Value -1 to 1 -->
+                <parallel>True</parallel>
+            </Step>
+
+            <Step>
+                <command>HorizontalElevator-SetRawSpeed</command>
+                <timeout>1000</timeout>
+                <speed><XValue/></speed> <!-- Speed Value -1 to 1 -->
+                <parallel>True</parallel>
+            </Step>
+        </Binding>
+        <!--endregion-->
+
+        <!--region Elevator Homing -->
+        <Binding>
+            <Map type="controller" controller="1" id="XButton" value="HomeAll"/>
+
+            <Step>
+                <command>VerticalElevator-HomeElevator</command>
+                <timeout>1000</timeout>
+                <parallel>True</parallel>
+            </Step>
+
+            <Step>
+                <command>HorizontalElevator-HomeElevator</command>
+                <timeout>1000</timeout>
+                <parallel>True</parallel>
+            </Step>
+
+            <Step>
+                <command>Claw-RawWristPosition</command>
+                <timeout>1000</timeout>
+                <parallel>True</parallel>
+                <parm1>70</parm1>
+            </Step>
+        </Binding>
+        <!--endregion-->
+
+        <!--region Claw Control -->
+        <Binding>
+            <Map type="controller" controller="1" id="RightBumper" value="ClawClose"/>
+
+            <Step>
+                <command>Claw-SetRawClaw</command>
+                <timeout>1000</timeout>
+                <parallel>True</parallel>
+                <parm1>0</parm1>
+            </Step>
+        </Binding>
+
+        <Binding>
+            <Map type="controller" controller="1" id="LeftBumper" value="ClawOpen"/>
+
+            <Step>
+                <command>Claw-SetRawClaw</command>
+                <timeout>1000</timeout>
+                <parallel>True</parallel>
+                <parm1>1</parm1>
+            </Step>
+        </Binding>
+        <!--endregion-->
+
+        <!--region Raw Wrist Control -->
+        <Binding>
+            <Map controller="1" id="RightY" value="WristValue" deadband="0.2" inverted="true"/>
+
+            <Step>
+                <command>Claw-RawWristSpeed</command>
+                <timeout>1000</timeout>
+                <parallel>True</parallel>
+                <parm1><WristValue/></parm1>
+            </Step>
+        </Binding>
+        <!--endregion-->
+
+        <!--region Wrist Position Presets-->
+
+        <Binding>
+            <Map type="controller" controller="1" id="DPAD-DOWN" value="GrabDown"/>
+
+            <Step>
+                <command>VerticalElevator-SetRawPosition</command>
+                <timeout>1000</timeout>
+                <speed>0.5</speed>
+                <parallel>True</parallel>
+                <delay>500</delay>
+                <parm1>0</parm1>
+                <parm2>0</parm2>
+            </Step>
+
+            <Step>
+                <command>HorizontalElevator-SetRawPosition</command>
+                <timeout>1000</timeout>
+                <speed>1.0</speed>
+                <parallel>True</parallel>
+                <parm1>0</parm1>
+                <parm2>0</parm2>
+            </Step>
+
+            <Step>
+                <command>Claw-RawWristPosition</command>
+                <timeout>1000</timeout>
+                <parallel>True</parallel>
+                <parm1>95</parm1>
+            </Step>
+
+            <Step>
+                <command>Claw-SetRawClaw</command>
+                <timeout>1000</timeout>
+                <parallel>True</parallel>
+                <parm1>0</parm1>
+            </Step>
+        </Binding>
+
+        <Binding>
+            <Map controller="1" id="StartButton" value="HumanGrab"/>
+
+            <Step>
+                <command>VerticalElevator-SetRawPosition</command>
+                <timeout>1000</timeout>
+                <speed>1.0</speed>
+                <parallel>True</parallel>
+                <parm1>18</parm1>
+            </Step>
+
+            <Step>
+                <command>HorizontalElevator-SetRawPosition</command>
+                <timeout>1000</timeout>
+                <speed>1.0</speed>
+                <parallel>True</parallel>
+                <parm1>5</parm1>
+            </Step>
+
+            <Step>
+                <command>Claw-RawWristPosition</command>
+                <timeout>1000</timeout>
+                <speed>1.0</speed>
+                <parallel>True</parallel>
+                <parm1>85</parm1>
+            </Step>
+
+            <Step>
+                <command>Claw-SetRawClaw</command>
+                <timeout>1000</timeout>
+                <parallel>True</parallel>
+                <parm1>0</parm1>
+            </Step>
+        </Binding>
+
+        <Binding>
+            <Map controller="1" id="BackButton" value="HumanGrabV2"/>
+
+            <Step>
+                <command>VerticalElevator-SetRawPosition</command>
+                <timeout>1000</timeout>
+                <speed>1.0</speed>
+                <parallel>True</parallel>
+                <parm1>0</parm1>
+            </Step>
+
+            <Step>
+                <command>HorizontalElevator-SetRawPosition</command>
+                <timeout>1000</timeout>
+                <speed>1.0</speed>
+                <parallel>True</parallel>
+                <parm1>0</parm1>
+            </Step>
+
+            <Step>
+                <command>Claw-RawWristPosition</command>
+                <timeout>1000</timeout>
+                <speed>1.0</speed>
+                <parallel>True</parallel>
+                <parm1>36</parm1>
+            </Step>
+
+            <Step>
+                <command>Claw-SetRawClaw</command>
+                <timeout>1000</timeout>
+                <parallel>True</parallel>
+                <parm1>0</parm1>
+            </Step>
+        </Binding>
+        <!--endregion-->
+
+        <!--region Drive Wrist Control-->
+        <!--
+        <Binding name="DropWrist">
+            <Map controller="0" id="LeftBumper" value="DropWrist"/>
+
+            <Step>
+                <command>Claw-RawWristPosition</command>
+                <timeout>1000</timeout>
+                <parallel>True</parallel>
+                <parm1>135</parm1>
+            </Step>
+        </Binding>-->
+
+        <Binding name="Stoe">
+            <Map controller="0" id="RightBumper" value="Stoe"/>
+
+            <Step>
+                <command>VerticalElevator-SetRawPosition</command>
+                <timeout>1000</timeout>
+                <speed>1.0</speed>
+                <parallel>True</parallel>
+                <parm1>0</parm1>
+            </Step>
+
+            <Step>
+                <command>HorizontalElevator-SetRawPosition</command>
+                <timeout>1000</timeout>
+                <speed>1.0</speed>
+                <parallel>True</parallel>
+                <parm1>0</parm1>
+            </Step>
+
+            <Step>
+                <command>Claw-RawWristPosition</command>
+                <timeout>1000</timeout>
+                <speed>1.0</speed>
+                <parallel>True</parallel>
+                <!--<delay>500</delay>-->
+                <parm1>330</parm1>
+            </Step>
+        </Binding>
+        <!--endregion-->
+
+        <!--region Position Preset Buttons -->
+        <Binding name="Level1">
+            <Map type="controller" controller="1" id="AButton" value="Level1"/>
+
+            <Step>
+                <command>VerticalElevator-SetRawPosition</command>
+                <timeout>1000</timeout>
+                <speed>1.0</speed>
+                <parallel>True</parallel>
+                <parm1>0</parm1>
+                <parm2>0</parm2>
+            </Step>
+
+            <Step>
+                <command>HorizontalElevator-SetRawPosition</command>
+                <timeout>1000</timeout>
+                <speed>1.0</speed>
+                <parallel>True</parallel>
+                <parm1>0</parm1>
+                <parm2>0</parm2>
+            </Step>
+
+            <Step>
+                <command>Claw-RawWristPosition</command>
+                <timeout>1000</timeout>
+                <parallel>True</parallel>
+                <parm1>80</parm1>
+            </Step>
+        </Binding>
+
+        <Binding name="Level2">
+            <Map type="controller" controller="1" id="BButton" value="Level2"/>
+
+            <Step>
+                <command>VerticalElevator-SetRawPosition</command>
+                <timeout>1000</timeout>
+                <speed>1.0</speed>
+                <parallel>True</parallel>
+                <parm1>16</parm1>
+                <parm2>0</parm2>
+            </Step>
+
+            <Step>
+                <command>HorizontalElevator-SetRawPosition</command>
+                <timeout>1000</timeout>
+                <speed>1.0</speed>
+                <parallel>True</parallel>
+                <parm1>8</parm1>
+                <parm2>0</parm2>
+            </Step>
+
+            <Step>
+                <command>Claw-RawWristPosition</command>
+                <timeout>1000</timeout>
+                <parallel>True</parallel>
+                <parm1>80</parm1>
+            </Step>
+        </Binding>
+
+        <Binding name="Level3">
+            <Map type="controller" controller="1" id="YButton" value="Level3"/>
+
+            <Step>
+                <command>VerticalElevator-SetRawPosition</command>
+                <timeout>1000</timeout>
+                <speed>1.0</speed>
+                <parallel>True</parallel>
+                <parm1>21</parm1>
+                <parm2>0</parm2>
+            </Step>
+
+            <Step>
+                <command>HorizontalElevator-SetRawPosition</command>
+                <timeout>1000</timeout>
+                <speed>1.0</speed>
+                <parallel>True</parallel>
+                <parm1>22</parm1>
+                <parm2>0</parm2>
+            </Step>
+
+            <Step>
+                <command>Claw-RawWristPosition</command>
+                <timeout>1000</timeout>
+                <parallel>True</parallel>
+                <parm1>60</parm1>
+            </Step>
+        </Binding>
+        <!--endregion-->
+
     </Hardware>
 
     <Settings>
-        <Number name="DriveTrain-WheelDiameter" unit="in">4.0</Number>
+        <Number name="DriveTrain-WheelDiameter">3.95</Number>
         <Number name="DriveTrain-ConversionFactor">1.53995</Number>
         <Number name="DriveTrain-Length" unit="in">24.5</Number>
         <Number name="DriveTrain-Width" unit="in">21.5</Number>
