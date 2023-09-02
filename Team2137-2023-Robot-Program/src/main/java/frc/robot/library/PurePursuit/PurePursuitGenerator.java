@@ -16,7 +16,6 @@ package frc.robot.library.PurePursuit;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.spline.PoseWithCurvature;
 import frc.robot.library.units.Time;
@@ -26,7 +25,6 @@ import frc.robot.library.units.TranslationalUnits.Velocity;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import static frc.robot.library.units.Time.TimeUnits.SECONDS;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
@@ -192,11 +190,8 @@ public class PurePursuitGenerator {
             Translation2d current = new Translation2d(x, y);
 
             double closestPointDistance = pointList.get(0).getDistance(current);
-            int closestPointIndex = 0;
-
             for(int i = 1; i < pointList.size(); i++) {
                 if(pointList.get(i).getDistance(current) < closestPointDistance) {
-                    closestPointIndex = i;
                 }
             }
 

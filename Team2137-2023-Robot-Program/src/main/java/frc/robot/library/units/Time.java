@@ -1,7 +1,5 @@
 package frc.robot.library.units;
 
-import frc.robot.library.units.AngleUnits.Angle;
-
 import static frc.robot.library.units.Time.TimeUnits.SECONDS;
 import static frc.robot.library.units.UnitUtil.System.Generic;
 import static frc.robot.library.units.UnitUtil.UnitType.Time;

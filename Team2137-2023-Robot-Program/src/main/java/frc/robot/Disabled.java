@@ -14,21 +14,14 @@
 
 package frc.robot;
 
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.XMLSettingReader;
-import frc.robot.functions.io.xmlreader.XMLStepReader;
-import frc.robot.library.Constants;
 import frc.robot.library.OpMode;
 
 public class Disabled implements OpMode {
 
-    private FileLogger logger;
-    private final int mintDebug = 0;
+    // private FileLogger logger;
+    // private final int mintDebug = 0;
 
     @Override
     public void init(XMLSettingReader xmlSettingReader, FileLogger fileLogger) {

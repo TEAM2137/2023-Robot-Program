@@ -11,23 +11,18 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.LogFactory;
 import frc.robot.functions.io.xmlreader.Entity;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.XMLSettingReader;
-import frc.robot.functions.io.xmlreader.XMLStepReader;
 import frc.robot.functions.io.xmlreader.data.Step;
 import frc.robot.library.Constants;
 import frc.robot.library.Gamepad;
 import frc.robot.library.OpMode;
 import frc.robot.vision.objects.ObjectTracker;
 
-import java.io.File;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -169,6 +164,8 @@ public class Robot extends TimedRobot {
           mDelayStepTimer.stop();
         }
         break;
+      default:
+        break;
     }
   }
 
@@ -301,6 +298,8 @@ public class Robot extends TimedRobot {
       case TEST:
         testClass.end();
         break;
+      default:
+        break;
     }
   }
 
@@ -317,6 +316,8 @@ public class Robot extends TimedRobot {
         break;
       case TEST:
         testClass.periodic();
+        break;
+      default:
         break;
     }
   }

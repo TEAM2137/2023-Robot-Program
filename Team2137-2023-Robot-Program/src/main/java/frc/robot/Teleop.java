@@ -14,30 +14,14 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.Pair;
-import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.EntityGroup;
 import frc.robot.functions.io.xmlreader.XMLSettingReader;
-import frc.robot.functions.io.xmlreader.XMLStepReader;
 import frc.robot.functions.io.xmlreader.data.Step;
 import frc.robot.library.Constants;
 import frc.robot.library.OpMode;
-import frc.robot.library.hardware.FusedTrackingAlgorithm;
 import frc.robot.library.hardware.swerve.SwerveDrivetrain;
-import frc.robot.library.hardware.swerve.SwerveKinematics;
-import frc.robot.library.hardware.swerve.module.SwerveModuleState;
-import frc.robot.library.units.AngleUnits.AngularVelocity;
-import frc.robot.library.units.TranslationalUnits.Distance;
-import frc.robot.library.units.Number;
-import frc.robot.library.units.TranslationalUnits.Velocity;
-import frc.robot.vision.limelight.AprilTags;
-import frc.robot.vision.limelight.ReflectiveTape;
-import frc.robot.vision.objects.ObjectTracker;
-
-import static frc.robot.library.units.AngleUnits.AngularVelocity.AngularVelocityUnits.RADIAN_PER_SECOND;
-import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.INCH;
-import static frc.robot.library.units.TranslationalUnits.Velocity.VelocityUnits.FEET_PER_SECOND;
+// import frc.robot.vision.objects.ObjectTracker;
 
 public class Teleop implements OpMode {
 
@@ -47,7 +31,7 @@ public class Teleop implements OpMode {
     private XMLSettingReader mSettingReader;
     private SwerveDrivetrain mDrivetrain;
 
-    private ObjectTracker objectTracker;
+    // private ObjectTracker objectTracker;
 
     @Override
     public void init(XMLSettingReader xmlSettingReader, FileLogger fileLogger) {

@@ -1,7 +1,6 @@
 package frc.robot.library;
 
 import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.XboxController;
 
 /**
  * Add your docs here.

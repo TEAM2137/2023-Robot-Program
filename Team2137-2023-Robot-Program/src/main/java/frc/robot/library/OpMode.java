@@ -16,7 +16,6 @@ package frc.robot.library;
 
 import frc.robot.functions.io.FileLogger;
 import frc.robot.functions.io.xmlreader.XMLSettingReader;
-import frc.robot.functions.io.xmlreader.XMLStepReader;
 
 public interface OpMode {
 

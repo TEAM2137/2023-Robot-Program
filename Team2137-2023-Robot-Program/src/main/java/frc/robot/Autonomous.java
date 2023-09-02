@@ -14,20 +14,14 @@
 
 package frc.robot;
 
-import edu.wpi.first.hal.REVPHJNI;
-import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.spline.PoseWithCurvature;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableEvent;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.PowerDistribution;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.functions.io.FileLogger;
@@ -53,27 +47,19 @@ import frc.robot.library.units.Time;
 import frc.robot.library.units.TranslationalUnits.Acceleration;
 import frc.robot.library.units.TranslationalUnits.Distance;
 import frc.robot.library.units.TranslationalUnits.Velocity;
-import frc.robot.library.units.UnitContainers.Point2d;
-import frc.robot.library.units.UnitContainers.Pose2d;
-import frc.robot.library.units.UnitContainers.Vector2d;
-import frc.robot.vision.objects.ObjectTracker;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.sql.Driver;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 
-import static edu.wpi.first.wpilibj.RobotBase.getRuntimeType;
 import static edu.wpi.first.wpilibj.RobotBase.isSimulation;
 import static frc.robot.Robot.mGameElementTracker;
 import static frc.robot.library.units.AngleUnits.Angle.AngleUnits.DEGREE;
 import static frc.robot.library.units.AngleUnits.AngularVelocity.AngularVelocityUnits.DEGREE_PER_SECOND;
-import static frc.robot.library.units.Time.TimeUnits.MILLISECONDS;
 import static frc.robot.library.units.Time.TimeUnits.SECONDS;
 import static frc.robot.library.units.TranslationalUnits.Acceleration.AccelerationUnits.FEET_PER_SECOND2;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
@@ -175,8 +161,6 @@ public class Autonomous implements OpMode {
 
         DriverStation.silenceJoystickConnectionWarning(true);
     }
-
-    private int mLogCount = 0;
 
     public void pregeneratedSplines() {
         boolean generatedLast = true;
@@ -381,6 +365,8 @@ public class Autonomous implements OpMode {
                     step.changeStepState(StepState.STATE_FINISH);
 
                 break;
+            default:
+                break;
         }
     }
 
@@ -459,6 +445,8 @@ public class Autonomous implements OpMode {
             case STATE_FINISH:
 
                 break;
+            default:
+                break;
         }
     }
 
@@ -499,24 +487,9 @@ public class Autonomous implements OpMode {
                     //mClaw.setEffectorState(true);
                 }
                 break;
+            default:
+                break;
         }
     }
     //endregion
-
-//    public void SeekPositionOverDistance(Step step) {
-//        switch (step.getStepState()) {
-//            case STATE_INIT:
-//
-//                step.changeStepState(StepState.STATE_RUNNING);
-//                step.StartTimer();
-//                break;
-//
-//            case STATE_RUNNING:
-//                Pose2d<Distance, Angle> current = mDrivetrain.getCurrentOdometryPosition();
-//                Point2d<Distance> desired = new Point2d<Distance>(new Distance(step.getXDistance(), FOOT), new Distance(step.getYDistance(), FOOT));
-//
-//                Angle angle = Math.atan2();
-//        }
-//
-//    }
 }

@@ -19,12 +19,11 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import frc.robot.library.units.AngleUnits.Angle;
 import frc.robot.library.units.TranslationalUnits.Distance;
 import frc.robot.functions.io.xmlreader.objects.motor.Motor;
-import frc.robot.library.units.UnitContainers.CartesianValue;
+
 import org.ejml.simple.SimpleMatrix;
 
 import java.io.File;
 
-import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.FOOT;
 import static frc.robot.library.units.TranslationalUnits.Distance.DistanceUnits.INCH;
 
 public final class Constants {
